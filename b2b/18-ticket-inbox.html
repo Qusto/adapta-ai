@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdaptaAI — Тикеты (эскалации)</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { font-size: 14px; background: var(--canvas); }
+
+    /* ===== Sidebar (shared) ===== */
+    .console-sidebar { grid-row: 1 / span 2; background: var(--canvas-soft); border-right: 1px solid var(--hairline); display: flex; flex-direction: column; padding: var(--space-5); }
+    .sidebar__logo { display:flex; align-items:center; gap:10px; font-size:17px; font-weight:700; margin-bottom: var(--space-6); }
+    .sidebar__logo .mark { width:32px; height:32px; border-radius:8px; background: var(--brand-gradient); display:inline-flex; align-items:center; justify-content:center; color: var(--on-brand); font-size:16px; }
+    .sidebar__logo .name { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .sidebar__logo .sub { font-size:11px; color: var(--ink-subtle); letter-spacing:0.6px; text-transform:uppercase; margin-left:4px; }
+    .sidebar__nav { display:flex; flex-direction:column; gap:2px; }
+    .nav-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius: var(--rounded-md); color: var(--ink-muted); font-size:14px; font-weight:500; cursor:pointer; transition: all var(--dur-fast); text-decoration:none; }
+    .nav-item:hover { background: var(--surface-2); color: var(--ink); text-decoration:none; }
+    .nav-item.is-active { background: var(--surface-2); color: var(--ink); }
+    .nav-item.is-active::before { content:''; width:3px; height:18px; background: var(--brand-gradient); border-radius:2px; margin-left:-6px; margin-right:4px; }
+    .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+    .nav-item .badge { margin-left:auto; background: var(--danger); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; }
+    .nav-item .badge-soft { margin-left:auto; background: var(--surface-3); color: var(--ink-muted); font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; }
+    .sidebar__section { font-size:10px; letter-spacing:1px; text-transform:uppercase; color: var(--ink-tertiary); padding:0 12px; margin: var(--space-5) 0 var(--space-2); }
+    .sidebar__employer { margin-top:auto; padding:14px; border:1px solid var(--hairline); border-radius: var(--rounded-lg); background: var(--surface-1); }
+    .sidebar__employer-header { display:flex; align-items:center; gap:10px; }
+    .sidebar__employer-logo { width:36px; height:36px; border-radius:8px; background: var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:18px; }
+    .sidebar__employer-name { font-weight:600; font-size:13px; }
+    .sidebar__employer-meta { font-size:11px; color: var(--ink-subtle); }
+    .sidebar__quota-bar { margin-top:10px; height:4px; background: var(--surface-3); border-radius:4px; overflow:hidden; }
+    .sidebar__quota-fill { height:100%; background: var(--brand-gradient); width:21%; }
+    .sidebar__quota-text { display:flex; justify-content:space-between; font-size:11px; color: var(--ink-subtle); margin-top:6px; }
+
+    /* ===== Topbar ===== */
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:0 var(--space-6); border-bottom:1px solid var(--hairline); background: var(--canvas); grid-row: 1; grid-column: 2; }
+    .topbar__title { display:flex; align-items:center; gap:12px; }
+    .topbar__title h1 { font-size:18px; font-weight:700; letter-spacing:-0.3px; }
+    .topbar__title .sub { font-size:12px; color: var(--ink-subtle); }
+    .topbar__right { display:flex; align-items:center; gap: var(--space-3); }
+    .avatar { width:28px; height:28px; border-radius:50%; background: var(--brand-gradient); color: var(--on-brand); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; }
+    .avatar-row { display:flex; align-items:center; gap:8px; padding:0 12px 0 4px; border-radius:18px; border:1px solid var(--hairline); background: var(--surface-1); height:36px; }
+    .avatar-row .name { font-size:13px; font-weight:600; line-height:1.1; }
+    .avatar-row .role { font-size:10px; color: var(--ink-subtle); line-height:1.1; }
+
+    /* ===== Stats bar ===== */
+    .stats-bar {
+      display: flex; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--hairline);
+      background: var(--canvas-soft);
+    }
+    .stats-bar__item {
+      flex: 1;
+      padding: var(--space-3);
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+    }
+    .stats-bar__item--main {
+      border-color: var(--brand-emerald);
+      background: rgba(16, 185, 129, 0.06);
+    }
+    .stats-bar__value {
+      font-size: 18px; font-weight: 700; font-family: var(--font-mono);
+      color: var(--ink); line-height: 1.2;
+    }
+    .stats-bar__item--main .stats-bar__value { color: var(--brand-emerald); }
+    .stats-bar__label { font-size: 11px; color: var(--ink-muted); margin-top: 3px; }
+
+    /* ===== Layout override — console-frame needs 3 content rows (topbar / stats / main) ===== */
+    /* design-tokens.css defines grid-template-rows: 64px 1fr (2 rows).
+       This page adds .stats-bar as a 3rd row, so we override locally. */
+    .console-frame {
+      grid-template-rows: 64px auto 1fr;
+    }
+    .console-sidebar {
+      grid-row: 1 / span 3; /* sidebar spans all 3 rows */
+    }
+    /* topbar sits in row 1 (default), stats-bar in row 2, .main in row 3 */
+    .stats-bar {
+      grid-row: 2;
+      grid-column: 2;
+    }
+    /* ===== Tickets layout ===== */
+    .main {
+      grid-row: 3;
+      grid-column: 2;
+      display: grid;
+      grid-template-columns: 240px 380px 1fr;
+      overflow: hidden;
+      min-height: 0; /* critical for overflow-y:auto children inside a grid row */
+    }
+
+    /* Filters column */
+    .filters-col { border-right: 1px solid var(--hairline); background: var(--canvas-soft); padding: var(--space-4); overflow-y: auto; min-height: 0; }
+    .filters-col__title { font-size:10px; letter-spacing:1px; text-transform:uppercase; color: var(--ink-tertiary); padding:0 12px; margin-bottom: var(--space-2); }
+    .filter-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--rounded-md); color: var(--ink-muted); font-size: 13px; font-weight: 500; cursor: pointer; transition: all var(--dur-fast); }
+    .filter-item:hover { background: var(--surface-2); color: var(--ink); }
+    .filter-item.is-active { background: var(--surface-2); color: var(--ink); font-weight: 600; }
+    .filter-item .ico { font-size: 14px; width: 18px; text-align: center; }
+    .filter-item .count { margin-left: auto; font-size: 11px; font-family: var(--font-mono); color: var(--ink-tertiary); }
+    .filter-item.is-active .count { color: var(--ink-muted); }
+    .filter-divider { height: 1px; background: var(--hairline); margin: var(--space-3) 0; }
+    .filter-stat { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: var(--rounded-md); padding: var(--space-3); display: flex; gap: var(--space-3); }
+    .filter-stat .ico { font-size: 18px; }
+    .filter-stat .val { font-size: 18px; font-weight: 700; }
+    .filter-stat .lbl { font-size: 11px; color: var(--ink-subtle); }
+
+    /* Tickets list column */
+    .tickets-col { border-right: 1px solid var(--hairline); background: var(--canvas); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
+    .tickets-col__head { padding: var(--space-4); border-bottom: 1px solid var(--hairline); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .tickets-col__title { font-size: 14px; font-weight: 600; }
+    .tickets-col__sort { font-size: 12px; color: var(--ink-subtle); display: flex; align-items: center; gap: 4px; }
+    .ticket-list { display: flex; flex-direction: column; }
+    .ticket-row { display: flex; gap: 10px; padding: var(--space-4); border-bottom: 1px solid var(--hairline); cursor: pointer; transition: background var(--dur-fast); position: relative; }
+    .ticket-row:hover { background: var(--surface-2); }
+    .ticket-row.is-active { background: var(--surface-2); }
+    .ticket-row.is-active::before { content:''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brand-gradient); }
+    .ticket-row__avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--surface-3); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--ink); flex-shrink: 0; position: relative; }
+    .ticket-row__avatar .flag { position: absolute; bottom: -2px; right: -2px; font-size: 13px; }
+    .ticket-row__main { flex: 1; min-width: 0; }
+    .ticket-row__head { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+    .ticket-row__name { font-weight: 600; color: var(--ink); font-size: 14px; }
+    .ticket-row__time { margin-left: auto; font-size: 11px; color: var(--ink-tertiary); flex-shrink: 0; }
+    .ticket-row__native { font-size: 12px; color: var(--brand-cyan-soft); font-style: italic; line-height: 1.4; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ticket-row__text { font-size: 13px; color: var(--ink-muted); line-height: 1.4; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ticket-row__bar { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+    .ticket-row.sev-critical .ticket-row__bar { background: var(--danger); }
+    .ticket-row.sev-high .ticket-row__bar { background: var(--warning); }
+    .ticket-row.sev-medium .ticket-row__bar { background: var(--brand-emerald); }
+
+    /* Emergency row */
+    .ticket-row--emergency { border-left: 4px solid #ff4d4f; background: rgba(255, 77, 79, 0.08); }
+    .ticket-row--emergency:hover { background: rgba(255, 77, 79, 0.13); }
+    .ticket-row--emergency.is-active { background: rgba(255, 77, 79, 0.13); }
+    .ticket-row__badge-emergency { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: #ff4d4f; color: #fff; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; margin-left: 8px; }
+
+    /* Detail column */
+    .detail-col { overflow-y: auto; background: var(--canvas); padding: var(--space-5); min-height: 0; }
+    .detail-col--emergency { border-left: 4px solid #ff4d4f; }
+
+    /* Emergency banner */
+    .emergency-banner-detail { background: rgba(255, 77, 79, 0.12); border: 1px solid rgba(255, 77, 79, 0.45); border-radius: var(--rounded-md); padding: 10px 14px; color: #ff4d4f; font-weight: 700; font-size: 13px; margin-bottom: var(--space-4); display: flex; align-items: center; gap: 8px; }
+
+    .detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-5); }
+    .detail-head__left { display: flex; gap: var(--space-3); align-items: center; }
+    .detail-head__avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--brand-gradient); color: var(--on-brand); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; position: relative; }
+    .detail-head__avatar .flag { position: absolute; bottom: -2px; right: -2px; font-size: 18px; background: var(--canvas); padding: 1px; border-radius: 50%; }
+    .detail-head h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
+    .detail-head__meta { font-size: 12px; color: var(--ink-subtle); margin-top: 2px; }
+    .detail-section { margin-bottom: var(--space-4); }
+    .detail-section__label { font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-tertiary); font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .detail-section__label .lang-tag { background: var(--surface-2); color: var(--ink); padding: 2px 6px; border-radius: 4px; font-size: 9px; letter-spacing: 0.4px; }
+    .lang-card { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: var(--rounded-lg); padding: var(--space-4); position: relative; }
+    .lang-card.original { border-left: 3px solid var(--brand-cyan); }
+    .lang-card.translated { border-left: 3px solid var(--brand-emerald); }
+    .lang-card__text { font-size: 16px; line-height: 1.55; color: var(--ink); }
+    .lang-card.original .lang-card__text { font-style: italic; }
+    .confidence-card { background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, transparent 60%); border: 1px solid rgba(245,158,11,0.3); border-radius: var(--rounded-lg); padding: var(--space-4); display: flex; align-items: center; gap: var(--space-3); }
+    .confidence-card__icon { width: 36px; height: 36px; border-radius: 50%; background: rgba(245,158,11,0.18); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .confidence-card__main { flex: 1; }
+    .confidence-card__title { font-size: 13px; font-weight: 600; color: var(--warning); }
+    .confidence-card__sub { font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+    .confidence-bar { width: 80px; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; position: relative; }
+    .confidence-bar .fill { position: absolute; height: 100%; background: var(--warning); }
+    .confidence-bar .threshold { position: absolute; top: -3px; bottom: -3px; left: 70%; width: 2px; background: var(--ink-subtle); }
+    .confidence-card__pct { font-family: var(--font-mono); font-weight: 700; color: var(--warning); font-size: 18px; }
+    .suggestion-card { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: var(--rounded-lg); padding: var(--space-4); position: relative; }
+    .suggestion-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--brand-gradient); border-radius: 3px 0 0 3px; }
+    .suggestion-card__head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-subtle); margin-bottom: 8px; }
+    .suggestion-card__text { font-size: 14px; color: var(--ink); line-height: 1.55; }
+    .composer { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: var(--rounded-lg); overflow: hidden; }
+    .composer__head { padding: 10px 14px; border-bottom: 1px solid var(--hairline); display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--ink-subtle); }
+    .composer__lang-chip { background: var(--surface-2); padding: 2px 8px; border-radius: 4px; color: var(--brand-cyan-soft); font-family: var(--font-mono); font-size: 10px; }
+    .composer__textarea { width: 100%; min-height: 100px; padding: 12px 14px; background: transparent; border: 0; color: var(--ink); font-size: 14px; font-family: inherit; resize: vertical; outline: none; }
+    .composer__textarea::placeholder { color: var(--ink-tertiary); }
+    .composer__footer { padding: 10px 14px; border-top: 1px solid var(--hairline); display: flex; justify-content: space-between; align-items: center; }
+    .composer__hint { font-size: 11px; color: var(--ink-subtle); display: flex; align-items: center; gap: 6px; }
+    .bottom-actions { display: flex; gap: 8px; padding-top: var(--space-4); border-top: 1px solid var(--hairline); margin-top: var(--space-5); }
+
+    /* Toast */
+    .toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 9999; pointer-events: none; }
+    .toast { padding: 10px 16px; border-radius: var(--rounded-md); font-size: 13px; font-weight: 500; color: #fff; background: #1a1a2e; border: 1px solid var(--hairline); pointer-events: auto; animation: toast-in 0.2s ease; }
+    .toast--error { background: rgba(255, 77, 79, 0.9); border-color: #ff4d4f; }
+    @keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Detail empty */
+    .detail-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 300px; color: var(--ink-subtle); text-align: center; }
+    .detail-empty__icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+    .detail-empty__text { font-size: 14px; color: var(--ink-muted); }
+
+    /* ===== Thread section ===== */
+    .thread-section { margin-bottom: var(--space-4); }
+    .thread-section__label { font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-tertiary); font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .thread-list { display: flex; flex-direction: column; gap: 8px; padding: var(--space-3); background: var(--surface-1); border: 1px solid var(--hairline); border-radius: var(--rounded-lg); min-height: 60px; }
+    .thread-loading { text-align: center; color: var(--ink-subtle); font-size: 12px; padding: 16px 0; }
+    .thread-empty { text-align: center; color: var(--ink-subtle); font-size: 12px; padding: 16px 0; opacity: 0.6; }
+    /* Bubbles */
+    .thread-bubble { display: flex; flex-direction: column; max-width: 80%; }
+    .thread-bubble--user { align-self: flex-start; }
+    .thread-bubble--agent { align-self: flex-start; }
+    .thread-bubble--hr { align-self: flex-end; }
+    .thread-bubble__body { padding: 8px 12px; border-radius: var(--rounded-md); font-size: 13px; line-height: 1.5; }
+    .thread-bubble--user .thread-bubble__body { background: var(--surface-2); color: var(--ink); border-radius: var(--rounded-md) var(--rounded-md) var(--rounded-md) 2px; }
+    .thread-bubble--agent .thread-bubble__body { background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); color: var(--ink); border-radius: var(--rounded-md) var(--rounded-md) var(--rounded-md) 2px; }
+    .thread-bubble--hr .thread-bubble__body { background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); color: var(--ink); border-radius: var(--rounded-md) var(--rounded-md) 2px var(--rounded-md); }
+    .thread-bubble__meta { font-size: 10px; color: var(--ink-tertiary); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .thread-bubble--hr .thread-bubble__meta { justify-content: flex-end; }
+    .thread-bubble__role-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 1px 5px; border-radius: 3px; }
+    .thread-bubble--agent .thread-bubble__role-tag { background: rgba(6, 182, 212, 0.18); color: var(--brand-cyan-soft); }
+    .thread-bubble--hr .thread-bubble__role-tag { background: rgba(16, 185, 129, 0.18); color: var(--brand-emerald); }
+  </style>
+</head>
+<body>
+  <div class="console-frame">
+    <!-- Sidebar -->
+    <aside class="console-sidebar">
+      <div class="sidebar__logo">
+        <span class="mark">S</span>
+        <span class="name">AdaptaAI</span>
+        <span class="sub">HR</span>
+      </div>
+      <div class="sidebar__section">Рабочее пространство</div>
+      <nav class="sidebar__nav">
+        <a class="nav-item" href="15-hr-dashboard.html"><span class="icon">👥</span><span data-i18n="b2b.workers">Сотрудники</span><span class="badge-soft">—</span></a>
+        <a class="nav-item is-active"><span class="icon">🎫</span><span data-i18n="b2b.tickets">Тикеты</span><span class="badge" id="sidebar-badge">3</span></a>
+        <a class="nav-item" href="17-rag-upload.html"><span class="icon">📚</span><span>Документы (RAG)</span></a>
+        <a class="nav-item"><span class="icon">📊</span><span data-i18n="b2b.analytics">Аналитика</span></a>
+        <a class="nav-item"><span class="icon">⚙️</span><span data-i18n="b2b.settings">Настройки</span></a>
+      </nav>
+      <div class="sidebar__employer">
+        <div class="sidebar__employer-header">
+          <div class="sidebar__employer-logo">🏗️</div>
+          <div>
+            <div class="sidebar__employer-name">Застройщик№1 · Москва</div>
+            <div class="sidebar__employer-meta">ID: pik_3422</div>
+          </div>
+        </div>
+        <div class="sidebar__quota-bar"><div class="sidebar__quota-fill"></div></div>
+        <div class="sidebar__quota-text"><span>Квота</span><span class="tnum">— / 150</span></div>
+      </div>
+    </aside>
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar__title">
+        <span style="font-size:20px">🎫</span>
+        <div>
+          <h1>
+            <span class="lang-only-ru">Тикеты — эскалации от AI агента</span>
+            <span class="lang-only-hi">टिकट — AI से एस्केलेशन</span>
+            <span class="lang-only-en">Tickets — AI escalations</span>
+          </h1>
+          <div class="sub" id="topbar-sub">
+            <span class="lang-only-ru">Загрузка…</span>
+          </div>
+        </div>
+      </div>
+      <div class="topbar__right">
+        <div class="avatar-row">
+          <div class="avatar">ДК</div>
+          <div>
+            <div class="name">Дарья К.</div>
+            <div class="role">HR-директор</div>
+          </div>
+        </div>
+        <div class="lang-switch">
+          <button class="lang-switch__btn is-active" data-lang-switch="ru">RU</button>
+          <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+          <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Stats bar — populated from GET /api/v1/chat/stats -->
+    <div class="stats-bar">
+      <div class="stats-bar__item stats-bar__item--main">
+        <div class="stats-bar__value">
+          <span id="stat-auto">—</span> / <span id="stat-total">—</span>
+        </div>
+        <div class="stats-bar__label">AI ответил автоматически</div>
+      </div>
+      <div class="stats-bar__item">
+        <div class="stats-bar__value"><span id="stat-rate">—</span></div>
+        <div class="stats-bar__label">% автоматизации</div>
+      </div>
+      <div class="stats-bar__item">
+        <div class="stats-bar__value"><span id="stat-escalated">—</span></div>
+        <div class="stats-bar__label">Эскалаций (за неделю)</div>
+      </div>
+      <div class="stats-bar__item">
+        <div class="stats-bar__value"><span id="stat-latency">—</span></div>
+        <div class="stats-bar__label">Средняя задержка</div>
+      </div>
+    </div>
+
+    <!-- Main (3-column) -->
+    <div class="main">
+      <!-- Filters -->
+      <aside class="filters-col">
+        <div class="filters-col__title">
+          <span class="lang-only-ru">Фильтры</span>
+          <span class="lang-only-hi">फ़िल्टर</span>
+          <span class="lang-only-en">Filters</span>
+        </div>
+        <div class="filter-item is-active" data-filter="all">
+          <span class="ico">📥</span><span>Все</span><span class="count" id="cnt-all">—</span>
+        </div>
+        <div class="filter-item" data-filter="new">
+          <span class="ico">🆕</span><span>Новые</span><span class="count" id="cnt-new">—</span>
+        </div>
+        <!-- TODO: category filters require backend tag inference -->
+        <div class="filter-item" data-filter="medical" style="display:none">
+          <span class="ico">🏥</span><span>Медицинские</span><span class="count" id="cnt-medical">0</span>
+        </div>
+        <div class="filter-item" data-filter="docs" style="display:none">
+          <span class="ico">📋</span><span>Документы</span><span class="count" id="cnt-docs">0</span>
+        </div>
+        <div class="filter-item" data-filter="living" style="display:none">
+          <span class="ico">🏠</span><span>Бытовые</span><span class="count" id="cnt-living">0</span>
+        </div>
+        <div class="filter-item" data-filter="closed" style="display:none">
+          <span class="ico">✅</span><span>Закрытые</span><span class="count" id="cnt-closed">0</span>
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="filters-col__title">
+          <span class="lang-only-ru">По срочности</span>
+          <span class="lang-only-hi">तत्कालता द्वारा</span>
+          <span class="lang-only-en">By severity</span>
+        </div>
+        <div class="filter-item" data-filter="critical">
+          <span class="ico" style="color:var(--danger)">●</span><span>Критичные</span><span class="count" id="cnt-critical">—</span>
+        </div>
+        <div class="filter-item" data-filter="high">
+          <span class="ico" style="color:var(--warning)">●</span><span>Высокая</span><span class="count" id="cnt-high">—</span>
+        </div>
+        <div class="filter-item" data-filter="medium">
+          <span class="ico" style="color:var(--brand-emerald)">●</span><span>Средняя</span><span class="count" id="cnt-medium">—</span>
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="filter-stat">
+          <span class="ico">⏱️</span>
+          <div>
+            <div class="val" id="stat-avg-time">—</div>
+            <div class="lbl">среднее время ответа</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Tickets list -->
+      <aside class="tickets-col">
+        <div class="tickets-col__head">
+          <div class="tickets-col__title" id="tickets-col-title">Загрузка…</div>
+          <button class="tickets-col__sort">Свежие ▾</button>
+        </div>
+        <div class="ticket-list"></div>
+      </aside>
+
+      <!-- Detail pane — populated dynamically by renderDetailPane() -->
+      <main class="detail-col" id="detail-col">
+        <div class="detail-empty">
+          <div class="detail-empty__icon">🎫</div>
+          <div class="detail-empty__text">Выберите тикет для просмотра</div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="../i18n.js" defer></script>
+  <script>
+    // Set API base before deferred scripts execute
+    window.ADAPTA_API_BASE_URL = window.ADAPTA_API_BASE_URL || window.location.origin;
+  </script>
+  <script defer>
+    const API = window.ADAPTA_API_BASE_URL || window.location.origin;
+    const JWT_KEY = 'adapta_jwt';
+
+    // ── Toast ──────────────────────────────────────────────────────────────────
+    function showToast(msg, isError) {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = 'toast' + (isError ? ' toast--error' : '');
+      t.textContent = msg; // textContent is safe — no XSS risk
+      c.appendChild(t);
+      setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 4000);
+    }
+
+    // ── Text helpers ───────────────────────────────────────────────────────────
+    function initials(name) {
+      return (name || 'NA').split(' ').map(function(p) { return p[0]; }).slice(0, 2).join('').toUpperCase();
+    }
+
+    function relativeTime(isoStr) {
+      if (!isoStr) return '';
+      var diff = Math.round((Date.now() - new Date(isoStr).getTime()) / 1000);
+      if (diff < 60) return diff + ' с';
+      if (diff < 3600) return Math.round(diff / 60) + ' мин';
+      if (diff < 86400) return Math.round(diff / 3600) + ' ч';
+      return Math.round(diff / 86400) + ' д';
+    }
+
+    function severityLabel(s) {
+      return { critical: 'Критично', high: 'Высокая', medium: 'Средняя' }[s] || s || '—';
+    }
+
+    function languageLabel(lang) {
+      return { ru: 'RU', uz: 'UZBEK', hi: 'HINDI', en: 'EN', tg: 'TAJIK', ky: 'KYRGYZ' }[lang] || (lang || '').toUpperCase();
+    }
+
+    function languageName(code) {
+      return { uz: 'узбекский', hi: 'хинди', tg: 'таджикский', ky: 'киргизский', en: 'английский' }[code] || code;
+    }
+
+    function reasonLabel(reason) {
+      return {
+        emergency: 'Экстренная ситуация',
+        low_confidence: 'Низкая уверенность AI',
+        unanswerable: 'AI не нашёл ответа в документах',
+        off_topic: 'Вопрос вне тематики'
+      }[reason] || (reason || 'Эскалировано');
+    }
+
+    function formatAvgTime(ms) {
+      if (ms == null) return '—';
+      if (ms < 1000) return ms + ' мс';
+      return (ms / 60000).toFixed(1) + ' мин';
+    }
+
+    function plural(n, one, few, many) {
+      var m10 = n % 10, m100 = n % 100;
+      if (m10 === 1 && m100 !== 11) return one;
+      if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
+      return many;
+    }
+
+    // ── ФИКС 3: normalize API ticket to internal shape ─────────────────────────
+    // API may return ai_confidence:"low"|"medium"|"high" instead of confidence: float
+    var AI_CONF_MAP = { low: 0.3, medium: 0.55, high: 0.85 };
+    function normalizeTicket(t) {
+      if (t.confidence == null && t.ai_confidence != null) {
+        if (typeof t.ai_confidence === 'string') {
+          t.confidence = AI_CONF_MAP[t.ai_confidence] != null ? AI_CONF_MAP[t.ai_confidence] : 0.5;
+        } else {
+          t.confidence = parseFloat(t.ai_confidence) || 0.5;
+        }
+      }
+      return t;
+    }
+
+    // ── State ──────────────────────────────────────────────────────────────────
+    var _allItems = [];
+    var _selectedId = null;
+
+    // ── Empty state ────────────────────────────────────────────────────────────
+    function renderEmptyTickets() {
+      var list = document.querySelector('.ticket-list');
+      while (list.firstChild) list.removeChild(list.firstChild);
+
+      var empty = document.createElement('div');
+      empty.style.cssText = 'padding:48px 24px;text-align:center;color:var(--ink-subtle);font-size:14px;line-height:1.5';
+
+      var icon = document.createElement('div');
+      icon.style.cssText = 'font-size:42px;margin-bottom:14px;opacity:0.4';
+      icon.textContent = '💬';
+
+      var title = document.createElement('div');
+      title.style.cssText = 'font-weight:600;color:var(--ink-muted);margin-bottom:6px';
+      title.textContent = 'Пока нет эскалаций';
+
+      var sub = document.createElement('div');
+      sub.style.cssText = 'font-size:12px;max-width:320px;margin:0 auto';
+      sub.textContent = 'Сюда попадают вопросы мигрантов, на которые AI ответил с низкой уверенностью или признал что не нашёл ответа в документах.';
+
+      empty.append(icon, title, sub);
+      list.appendChild(empty);
+    }
+
+    // ── DOM builder helpers ────────────────────────────────────────────────────
+    function el(tag, className, text) {
+      var e = document.createElement(tag);
+      if (className) e.className = className;
+      if (text != null) e.textContent = text;
+      return e;
+    }
+
+    // el2 / inp — attrs-object form used by showLoginScreen (verbatim from 15-hr-dashboard)
+    function el2(tag, attrs, children) {
+      var node = document.createElement(tag);
+      if (attrs) Object.keys(attrs).forEach(function(k) {
+        var v = attrs[k];
+        if (k === 'style') node.style.cssText = v;
+        else if (k === 'class') node.className = v;
+        else if (k === 'text') node.textContent = v;
+        else node.setAttribute(k, v);
+      });
+      if (children) children.forEach(function(c) { if (c) node.appendChild(c); });
+      return node;
+    }
+    function inp(id, type, placeholder) {
+      var i = document.createElement('input');
+      i.id = id; i.type = type; i.placeholder = placeholder; i.className = 'input';
+      i.style.cssText = 'width:100%;box-sizing:border-box;';
+      return i;
+    }
+
+    function makeDetailSection(labelEmoji, labelText, langTagText) {
+      var sec = el('div', 'detail-section');
+      var lbl = el('div', 'detail-section__label');
+      var ico = el('span'); ico.textContent = labelEmoji;
+      var txt = el('span'); txt.textContent = labelText;
+      lbl.append(ico, txt);
+      if (langTagText) {
+        var tag = el('span', 'lang-tag', langTagText);
+        lbl.appendChild(tag);
+      }
+      sec.appendChild(lbl);
+      return sec;
+    }
+
+    // ── ФИЧА 4: Thread rendering ───────────────────────────────────────────────
+    function formatThreadTime(isoStr) {
+      if (!isoStr) return '';
+      var d = new Date(isoStr);
+      var h = d.getHours(), m = d.getMinutes();
+      return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+    }
+
+    function renderThreadBubble(msg) {
+      var role = msg.role || 'user'; // user | agent | hr
+      var wrap = el('div', 'thread-bubble thread-bubble--' + role);
+
+      var body = el('div', 'thread-bubble__body', msg.text || '');
+
+      var meta = el('div', 'thread-bubble__meta');
+      if (role === 'agent') {
+        var roleTag = el('span', 'thread-bubble__role-tag', 'AI');
+        meta.appendChild(roleTag);
+      } else if (role === 'hr') {
+        var roleTag2 = el('span', 'thread-bubble__role-tag', 'HR');
+        meta.appendChild(roleTag2);
+      }
+      if (msg.created_at) {
+        var timeSpan = el('span', null, formatThreadTime(msg.created_at));
+        meta.appendChild(timeSpan);
+      }
+      if (msg.confidence != null && role === 'agent') {
+        var confSpan = el('span', null, Math.round(msg.confidence * 100) + '%');
+        confSpan.style.cssText = 'opacity:0.6;font-family:var(--font-mono)';
+        meta.appendChild(confSpan);
+      }
+
+      wrap.append(body, meta);
+      return wrap;
+    }
+
+    function renderThreadLoading(container) {
+      while (container.firstChild) container.removeChild(container.firstChild);
+      container.appendChild(el('div', 'thread-loading', '⏳ Загружаем переписку…'));
+    }
+
+    function renderThreadMessages(container, messages) {
+      while (container.firstChild) container.removeChild(container.firstChild);
+      if (!messages || messages.length === 0) {
+        container.appendChild(el('div', 'thread-empty', 'История переписки пуста'));
+        return;
+      }
+      messages.forEach(function(msg) {
+        container.appendChild(renderThreadBubble(msg));
+      });
+    }
+
+    async function fetchThread(workerId, container) {
+      var jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) {
+        // No JWT: show empty thread state (mock has no thread history)
+        renderThreadMessages(container, []);
+        return;
+      }
+      renderThreadLoading(container);
+      try {
+        var res = await fetch(API + '/api/v1/chat/threads/' + encodeURIComponent(workerId) + '?limit=50', {
+          headers: { 'Authorization': 'Bearer ' + jwt }
+        });
+        if (!res.ok) {
+          renderThreadMessages(container, []);
+          return;
+        }
+        var messages = await res.json();
+        // API returns {worker_id, messages:[...], total} — also handle bare array or {items:[...]}
+        var items = Array.isArray(messages) ? messages : (messages.messages || messages.items || []);
+        renderThreadMessages(container, items);
+      } catch (e) {
+        renderThreadMessages(container, []);
+      }
+    }
+
+    // ── ФИЧА 5: Reply API ──────────────────────────────────────────────────────
+    async function sendReply(escalationId, text, threadContainer) {
+      var jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) {
+        showToast('Требуется авторизация для отправки ответа', true);
+        return false;
+      }
+      try {
+        var res = await fetch(API + '/api/v1/chat/escalations/' + encodeURIComponent(escalationId) + '/reply', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + jwt,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text: text })
+        });
+        if (!res.ok) {
+          var errText = '';
+          try { var errData = await res.json(); errText = errData.detail || res.status; } catch (_) { errText = res.status; }
+          showToast('Ошибка отправки: ' + errText, true);
+          return false;
+        }
+        // Add HR bubble locally
+        var hrMsg = { role: 'hr', text: text, created_at: new Date().toISOString() };
+        var bubble = renderThreadBubble(hrMsg);
+        // Remove empty/loading states if present
+        var emptyEl = threadContainer.querySelector('.thread-empty, .thread-loading');
+        if (emptyEl) emptyEl.parentNode.removeChild(emptyEl);
+        threadContainer.appendChild(bubble);
+        // Scroll thread into view
+        bubble.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        showToast('Доставлено', false);
+        return true;
+      } catch (e) {
+        showToast('Не удалось отправить ответ', true);
+        return false;
+      }
+    }
+
+    // ── Detail pane rendering (pure DOM — no innerHTML) ────────────────────────
+    function renderDetailPane(ticket) {
+      var col = document.getElementById('detail-col');
+      // Clear
+      while (col.firstChild) col.removeChild(col.firstChild);
+
+      var isEmergency = ticket.reason === 'emergency';
+      col.className = 'detail-col' + (isEmergency ? ' detail-col--emergency' : '');
+
+      // Emergency banner
+      if (isEmergency) {
+        var banner = el('div', 'emergency-banner-detail');
+        banner.textContent = '🚨 ЭКСТРЕННО — требуется немедленная реакция';
+        col.appendChild(banner);
+      }
+
+      // Header
+      var ticketId = ticket.ticket_id || ticket.id || '';
+      var headDiv = el('div', 'detail-head');
+      var headLeft = el('div', 'detail-head__left');
+      var avatarDiv = el('div', 'detail-head__avatar', initials(ticket.worker_name));
+      var flagSpan = el('span', 'flag', ticket.worker_country || '');
+      avatarDiv.appendChild(flagSpan);
+
+      var nameDiv = document.createElement('div');
+      var h2 = el('h2');
+      h2.textContent = (ticket.worker_name || 'Без имени') + (isEmergency ? ' — ЭКСТРЕННО' : ' — ' + severityLabel(ticket.severity));
+      var metaDiv = el('div', 'detail-head__meta');
+      var metaParts = [];
+      if (ticketId) metaParts.push(String(ticketId));
+      if (ticket.created_at) metaParts.push(relativeTime(ticket.created_at) + ' назад');
+      if (ticket.worker_phone) metaParts.push('📞 ' + ticket.worker_phone);
+      metaDiv.textContent = metaParts.join(' · ');
+
+      nameDiv.append(h2, metaDiv);
+      headLeft.append(avatarDiv, nameDiv);
+
+      var stageDiv = document.createElement('div');
+      var stageSpan = el('span', 'stage stage-escalated', 'Эскалировано');
+      stageDiv.appendChild(stageSpan);
+      headDiv.append(headLeft, stageDiv);
+      col.appendChild(headDiv);
+
+      // Original message
+      var originalText = ticket.original_text || ticket.question || '';
+      var lang = ticket.language || '';
+      if (originalText) {
+        var sec1 = makeDetailSection('🎙️', 'Оригинал сообщения', languageLabel(lang));
+        var card1 = el('div', 'lang-card original');
+        var cardText1 = el('div', 'lang-card__text', originalText);
+        card1.appendChild(cardText1);
+        sec1.appendChild(card1);
+        col.appendChild(sec1);
+      }
+
+      // Translation (separate Russian translation if different)
+      var question = ticket.question || '';
+      if (question && originalText && question !== originalText && lang !== 'ru') {
+        var sec2 = makeDetailSection('🌐', 'Русский перевод', 'RU');
+        var card2 = el('div', 'lang-card translated');
+        var cardText2 = el('div', 'lang-card__text', question);
+        card2.appendChild(cardText2);
+        sec2.appendChild(card2);
+        col.appendChild(sec2);
+      } else if (question && !originalText) {
+        var sec2b = makeDetailSection('💬', 'Сообщение', languageLabel(lang));
+        var card2b = el('div', 'lang-card original');
+        var cardText2b = el('div', 'lang-card__text', question);
+        card2b.appendChild(cardText2b);
+        sec2b.appendChild(card2b);
+        col.appendChild(sec2b);
+      }
+
+      // Confidence card (show when we have a value and it's not emergency)
+      var conf = ticket.confidence;
+      if (conf != null && !isEmergency) {
+        var confPct = Math.round(conf * 100);
+        var threshold = 70;
+        var belowThreshold = confPct < threshold;
+
+        var sec3 = el('div', 'detail-section');
+        var confCard = el('div', 'confidence-card');
+        var confIcon = el('div', 'confidence-card__icon', belowThreshold ? '⚠️' : '✅');
+        var confMain = el('div', 'confidence-card__main');
+        var confTitle = el('div', 'confidence-card__title', 'AI confidence: ' + conf.toFixed(2) + ' · ' + (belowThreshold ? 'ниже порога 0.70' : 'выше порога'));
+        var confSub = el('div', 'confidence-card__sub', reasonLabel(ticket.reason) + ' — передано вам для подтверждения');
+        confMain.append(confTitle, confSub);
+
+        var confRight = document.createElement('div');
+        confRight.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:6px';
+        var confPctEl = el('div', 'confidence-card__pct', confPct + '%');
+        var confBarWrap = el('div', 'confidence-bar');
+        var confFill = el('div', 'fill');
+        confFill.style.width = confPct + '%';
+        var confThresh = el('div', 'threshold');
+        confBarWrap.append(confFill, confThresh);
+        confRight.append(confPctEl, confBarWrap);
+
+        confCard.append(confIcon, confMain, confRight);
+        sec3.appendChild(confCard);
+        col.appendChild(sec3);
+      }
+
+      // AI answer / suggestion (if present)
+      var answer = ticket.answer || ticket.ai_response || '';
+      if (answer) {
+        var sec4 = el('div', 'detail-section');
+        var sec4lbl = el('div', 'detail-section__label');
+        var starIco = el('span'); starIco.textContent = '✨';
+        starIco.style.cssText = 'background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;color:transparent';
+        var sec4txt = el('span', null, 'AI рекомендация');
+        sec4lbl.append(starIco, sec4txt);
+        sec4.appendChild(sec4lbl);
+
+        var sugCard = el('div', 'suggestion-card');
+        var sugHead = el('div', 'suggestion-card__head');
+        var sugStar = el('span', null, '✨');
+        var sugMeta = el('span', null, 'Sber AI · автоматический ответ');
+        sugHead.append(sugStar, sugMeta);
+        var sugText = el('div', 'suggestion-card__text', answer);
+        sugCard.append(sugHead, sugText);
+        sec4.appendChild(sugCard);
+        col.appendChild(sec4);
+      }
+
+      // Citations (if present)
+      var citations = ticket.citations;
+      if (Array.isArray(citations) && citations.length > 0) {
+        var sec5 = makeDetailSection('📎', 'Источники RAG', null);
+        var ul = document.createElement('ul');
+        ul.style.cssText = 'margin:0;padding:12px 12px 12px 28px;background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--rounded-md)';
+        citations.forEach(function(c) {
+          var li = el('li');
+          li.style.cssText = 'margin-bottom:4px;font-size:12px;color:var(--ink-muted)';
+          li.textContent = typeof c === 'string' ? c : (c.text || c.source || JSON.stringify(c));
+          ul.appendChild(li);
+        });
+        sec5.appendChild(ul);
+        col.appendChild(sec5);
+      }
+
+      // ФИЧА 4: Thread section
+      var threadSec = el('div', 'thread-section');
+      var threadLbl = el('div', 'thread-section__label');
+      var threadLblIco = el('span'); threadLblIco.textContent = '💬';
+      var threadLblTxt = el('span'); threadLblTxt.textContent = 'История переписки';
+      threadLbl.append(threadLblIco, threadLblTxt);
+      var threadList = el('div', 'thread-list');
+      threadList.appendChild(el('div', 'thread-loading', '⏳ Загружаем переписку…'));
+      threadSec.append(threadLbl, threadList);
+      col.appendChild(threadSec);
+
+      // Fetch thread (async — starts immediately after pane is in DOM)
+      var threadWorkerId = ticket.worker_id || ticket.workerId || '';
+      if (threadWorkerId) {
+        fetchThread(threadWorkerId, threadList);
+      } else {
+        renderThreadMessages(threadList, []);
+      }
+
+      // Composer
+      var sec6 = makeDetailSection('✍️', 'Ваш ответ', null);
+      var composerDiv = el('div', 'composer');
+      var composerHead = el('div', 'composer__head');
+      var composerHint = el('div');
+      composerHint.textContent = lang && lang !== 'ru'
+        ? 'Сообщение будет автоматически переведено на ' + languageName(lang)
+        : 'Ответ на русском языке';
+      var composerChip = el('span', 'composer__lang-chip');
+      composerChip.textContent = lang && lang !== 'ru' ? 'RU → ' + lang.toUpperCase() : 'RU';
+      composerHead.append(composerHint, composerChip);
+
+      var ta = el('textarea', 'composer__textarea');
+      ta.placeholder = 'Напишите ответ ' + (ticket.worker_name || '') + '…';
+
+      var composerFooter = el('div', 'composer__footer');
+      var composerHintEl = el('div', 'composer__hint');
+      var hintIcon = el('span', null, '💡');
+      var hintText = el('span', null, 'Cmd+Enter для отправки');
+      composerHintEl.append(hintIcon, hintText);
+
+      var composerBtns = document.createElement('div');
+      composerBtns.style.cssText = 'display:flex;gap:6px';
+      var attachBtn = el('button', 'btn btn-ghost btn-sm', '📎');
+      var sendBtn = el('button', 'btn btn-primary btn-sm');
+      var sendIcon = el('span', null, '📤');
+      var sendTxt = el('span', null, 'Отправить');
+      sendBtn.append(sendIcon, sendTxt);
+      composerBtns.append(attachBtn, sendBtn);
+
+      // ФИЧА 5: compose → reply API
+      var escalationId = ticket.ticket_id || ticket.id || '';
+      function rebuildSendBtn() {
+        while (sendBtn.firstChild) sendBtn.removeChild(sendBtn.firstChild);
+        sendBtn.append(el('span', null, '📤'), el('span', null, 'Отправить'));
+      }
+      function doSend() {
+        var text = ta.value.trim();
+        if (!text) return;
+        sendBtn.disabled = true;
+        while (sendBtn.firstChild) sendBtn.removeChild(sendBtn.firstChild);
+        sendBtn.textContent = '…';
+        sendReply(escalationId, text, threadList).then(function(ok) {
+          sendBtn.disabled = false;
+          rebuildSendBtn();
+          if (ok) ta.value = '';
+        });
+      }
+      sendBtn.addEventListener('click', doSend);
+      ta.addEventListener('keydown', function(e) {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); doSend(); }
+      });
+
+      composerFooter.append(composerHintEl, composerBtns);
+      composerDiv.append(composerHead, ta, composerFooter);
+      sec6.appendChild(composerDiv);
+      col.appendChild(sec6);
+
+      // Bottom actions
+      var bottomDiv = el('div', 'bottom-actions');
+      function makeBtn(cls, icon, label) {
+        var b = el('button', cls);
+        b.append(el('span', null, icon), el('span', null, label));
+        return b;
+      }
+      bottomDiv.append(
+        makeBtn('btn btn-secondary btn-sm', '✅', 'Закрыть тикет'),
+        makeBtn('btn btn-secondary btn-sm', '🏥', 'Эскалировать к мед-службе'),
+        makeBtn('btn btn-secondary btn-sm', '👤', 'Назначить себе')
+      );
+      var rejectBtn = makeBtn('btn btn-danger btn-sm', '⛔', 'Отклонить');
+      rejectBtn.style.marginLeft = 'auto';
+      bottomDiv.appendChild(rejectBtn);
+      col.appendChild(bottomDiv);
+    }
+
+    // ── Filter counters ────────────────────────────────────────────────────────
+    function updateFilterCounts(items) {
+      var total = items.length;
+      // is_read may be absent — fall back to treating all as unread
+      var hasReadField = items.some(function(t) { return 'is_read' in t; });
+      var newCount = hasReadField ? items.filter(function(t) { return !t.is_read; }).length : total;
+      var critical = items.filter(function(t) { return t.severity === 'critical'; }).length;
+      var high = items.filter(function(t) { return t.severity === 'high'; }).length;
+      var medium = items.filter(function(t) { return t.severity === 'medium'; }).length;
+
+      document.getElementById('cnt-all').textContent = total;
+      document.getElementById('cnt-new').textContent = newCount;
+      document.getElementById('cnt-critical').textContent = critical;
+      document.getElementById('cnt-high').textContent = high;
+      document.getElementById('cnt-medium').textContent = medium;
+
+      var badge = document.getElementById('sidebar-badge');
+      if (badge) badge.textContent = total;
+
+      var sub = document.getElementById('topbar-sub');
+      if (sub) sub.textContent = 'AI передал вам ' + total + ' запрос' + plural(total, '', 'а', 'ов');
+
+      var colTitle = document.getElementById('tickets-col-title');
+      if (colTitle) colTitle.textContent = total + ' тикет' + plural(total, '', 'а', 'ов');
+    }
+
+    // ── Ticket list rendering ──────────────────────────────────────────────────
+    function renderTicketList(items) {
+      var list = document.querySelector('.ticket-list');
+      while (list.firstChild) list.removeChild(list.firstChild);
+
+      var sevMap = { critical: 'sev-critical', high: 'sev-high', medium: 'sev-medium' };
+      var sevIcon = { critical: '🔴', high: '🟡', medium: '🟢' };
+
+      items.forEach(function(t, idx) {
+        var isEmergency = t.severity === 'critical' && t.reason === 'emergency';
+        var row = document.createElement('div');
+        row.className = 'ticket-row ' + (sevMap[t.severity] || '');
+        if (isEmergency) row.classList.add('ticket-row--emergency');
+
+        var currentId = t.ticket_id || t.id;
+        // Preserve selection across refreshes; auto-select first on initial load
+        if (currentId === _selectedId || (idx === 0 && _selectedId == null)) {
+          row.classList.add('is-active');
+        }
+
+        var bar = el('div', 'ticket-row__bar');
+
+        var avatar = el('div', 'ticket-row__avatar', initials(t.worker_name));
+        var flagEl = el('span', 'flag', t.worker_country || '');
+        avatar.appendChild(flagEl);
+
+        var main = el('div', 'ticket-row__main');
+        var head = el('div', 'ticket-row__head');
+
+        head.appendChild(el('span', null, sevIcon[t.severity] || '🟡'));
+        head.appendChild(el('span', 'ticket-row__name', t.worker_name || 'Без имени'));
+
+        if (isEmergency) {
+          head.appendChild(el('span', 'ticket-row__badge-emergency', 'ЭКСТРЕННО'));
+        }
+
+        var tm = el('span', 'ticket-row__time');
+        tm.textContent = t.relative_time || (t.created_at ? relativeTime(t.created_at) + ' назад' : '');
+        head.appendChild(tm);
+
+        main.appendChild(head);
+
+        if (t.original_text && t.original_text !== t.question) {
+          var native = el('div', 'ticket-row__native', '"' + t.original_text + '"');
+          main.appendChild(native);
+        }
+
+        var text = el('div', 'ticket-row__text', '→ ' + (t.question || ''));
+        main.appendChild(text);
+
+        row.append(bar, avatar, main);
+        list.appendChild(row);
+
+        row.addEventListener('click', function() {
+          list.querySelectorAll('.ticket-row').forEach(function(r) { r.classList.remove('is-active'); });
+          row.classList.add('is-active');
+          _selectedId = t.ticket_id || t.id;
+          renderDetailPane(t);
+        });
+      });
+    }
+
+    // ── Login screen (verbatim from 15-hr-dashboard, adapted for inbox) ────────
+    function showLoginScreen() {
+      var existing = document.getElementById('login-overlay');
+      if (existing) return;
+
+      var overlay = el2('div', { id: 'login-overlay', style: 'position:fixed;inset:0;background:var(--canvas);z-index:8000;display:flex;align-items:center;justify-content:center;' });
+      var card = el2('div', { style: 'background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--rounded-xl);padding:40px;width:380px;display:flex;flex-direction:column;gap:20px;' });
+
+      var logoArea = el2('div', { style: 'text-align:center;' });
+      var logoMark = el2('div', { style: 'font-size:32px;margin-bottom:8px;', text: 'S' });
+      var logoName = el2('div', { style: 'font-size:20px;font-weight:700;background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;color:transparent;', text: 'AdaptaAI HR' });
+      var logoSub  = el2('div', { style: 'font-size:13px;color:var(--ink-subtle);margin-top:4px;', text: 'Вход в систему' });
+      logoArea.append(logoMark, logoName, logoSub);
+
+      var fields  = el2('div', { style: 'display:flex;flex-direction:column;gap:10px;' });
+      var emailInp = inp('login-email', 'email', 'Email');
+      var passInp  = inp('login-password', 'password', 'Пароль');
+      fields.append(emailInp, passInp);
+
+      var loginBtn = el2('button', { id: 'login-btn', class: 'btn btn-primary btn-block', text: 'Войти' });
+      var demoBtn  = el2('button', { id: 'demo-login-btn', class: 'btn btn-secondary btn-block', style: 'font-size:12px;', text: 'Войти как Дарья (Застройщик№1) — демо' });
+      var errEl    = el2('div', { id: 'login-error', style: 'color:var(--danger);font-size:12px;text-align:center;display:none;' });
+
+      card.append(logoArea, fields, loginBtn, demoBtn, errEl);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      demoBtn.addEventListener('click', function() {
+        emailInp.value = 'daria@pik.demo';
+        passInp.value  = 'demo';
+      });
+
+      async function doLogin() {
+        var email    = emailInp.value.trim();
+        var password = passInp.value;
+        errEl.style.display = 'none';
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Входим…';
+        try {
+          var res = await fetch(API + '/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: password }),
+          });
+          var data = await res.json();
+          if (!res.ok) {
+            errEl.textContent = (data && data.error && data.error.message) || 'Неверный email или пароль';
+            errEl.style.display = 'block';
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Войти';
+            return;
+          }
+          localStorage.setItem(JWT_KEY, data.access_token);
+          if (data.user) {
+            var nameEl = document.querySelector('.avatar-row .name');
+            if (nameEl) nameEl.textContent = data.user.first_name + ' ' + data.user.last_name.charAt(0) + '.';
+            var avatarEl = document.querySelector('.avatar');
+            if (avatarEl) avatarEl.textContent = (data.user.first_name.charAt(0) + data.user.last_name.charAt(0)).toUpperCase();
+          }
+          overlay.remove();
+          initInbox();
+        } catch (e) {
+          errEl.textContent = 'Ошибка сети. Проверьте соединение.';
+          errEl.style.display = 'block';
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Войти';
+        }
+      }
+
+      loginBtn.addEventListener('click', doLogin);
+      [emailInp, passInp].forEach(function(elem) {
+        elem.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+      });
+    }
+
+    // ── Fetch workers count → update sidebar badge + quota ───────────────────
+    async function fetchWorkersCount() {
+      var jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) return;
+      try {
+        var res = await fetch(API + '/api/v1/workers', {
+          headers: { 'Authorization': 'Bearer ' + jwt }
+        });
+        if (res.status === 401) { localStorage.removeItem(JWT_KEY); showLoginScreen(); return; }
+        if (!res.ok) return;
+        var data = await res.json();
+        var total = Array.isArray(data) ? data.length : (data.total != null ? data.total : (data.items || []).length);
+        var QUOTA_MAX = 150;
+        // Badge on "Сотрудники" nav item
+        var badgeSoft = document.querySelector('.nav-item[href="15-hr-dashboard.html"] .badge-soft');
+        if (badgeSoft) badgeSoft.textContent = total;
+        // Quota fill bar
+        var fillEl = document.querySelector('.sidebar__quota-fill');
+        if (fillEl) fillEl.style.width = Math.min(100, Math.round(total / QUOTA_MAX * 100)) + '%';
+        // Quota text "X / 150"
+        var quotaTextRight = document.querySelector('.sidebar__quota-text .tnum');
+        if (quotaTextRight) quotaTextRight.textContent = total + ' / ' + QUOTA_MAX;
+      } catch (e) {
+        // Graceful: sidebar quota stays at previous value
+      }
+    }
+
+    // ── Fetch tickets ──────────────────────────────────────────────────────────
+    async function fetchAndRenderTickets() {
+      var jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) { showLoginScreen(); return; }
+
+      try {
+        var res = await fetch(API + '/api/v1/chat/escalations?limit=50', {
+          headers: { 'Authorization': 'Bearer ' + jwt }
+        });
+        if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem(JWT_KEY);
+            showLoginScreen();
+          } else {
+            showToast('Ошибка загрузки тикетов: ' + res.status, true);
+            renderEmptyTickets();
+            updateFilterCounts([]);
+          }
+          return;
+        }
+        var data = await res.json();
+        // ФИКС 3: normalize each ticket
+        var items = (data.items || []).map(normalizeTicket);
+        _allItems = items;
+
+        if (items.length === 0) { renderEmptyTickets(); updateFilterCounts([]); return; }
+
+        updateFilterCounts(items);
+        renderTicketList(items);
+
+        // Auto-select: on first load pick first; on refresh preserve selected
+        if (_selectedId == null) {
+          _selectedId = items[0].ticket_id || items[0].id;
+          renderDetailPane(items[0]);
+        } else {
+          var still = items.filter(function(t) { return (t.ticket_id || t.id) === _selectedId; });
+          if (still.length === 0) {
+            _selectedId = items[0].ticket_id || items[0].id;
+            renderDetailPane(items[0]);
+          }
+        }
+      } catch (e) {
+        showToast('Не удалось загрузить тикеты', true);
+        renderEmptyTickets();
+        updateFilterCounts([]);
+      }
+    }
+
+    // ── Fetch stats ────────────────────────────────────────────────────────────
+    async function fetchAndRenderStats() {
+      var jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) return;
+      try {
+        var headers = { 'Authorization': 'Bearer ' + jwt };
+        var res = await fetch(API + '/api/v1/chat/stats', { headers: headers });
+        if (res.status === 401) { localStorage.removeItem(JWT_KEY); showLoginScreen(); return; }
+        if (!res.ok) return; // graceful — endpoint may not be deployed yet; "—" stays
+        var s = await res.json();
+        if (s.auto_answered != null) document.getElementById('stat-auto').textContent = s.auto_answered;
+        if (s.total_messages != null) document.getElementById('stat-total').textContent = s.total_messages;
+        if (s.auto_answer_rate != null) document.getElementById('stat-rate').textContent = Math.round(s.auto_answer_rate * 100) + '%';
+        if (s.escalated != null) document.getElementById('stat-escalated').textContent = s.escalated;
+        if (s.avg_response_ms != null) {
+          var fmtTime = formatAvgTime(s.avg_response_ms);
+          document.getElementById('stat-latency').textContent = fmtTime;
+          document.getElementById('stat-avg-time').textContent = fmtTime;
+        }
+      } catch (e) {
+        // Graceful: no toast — endpoint simply not ready
+      }
+    }
+
+    // ── initInbox — called after successful login or on page load with JWT ─────
+    function initInbox() {
+      renderEmptyTickets();
+      fetchAndRenderTickets();
+      fetchAndRenderStats();
+      fetchWorkersCount();
+
+      // Auto-refresh every 5 s so new emergency ticket surfaces without reload
+      setInterval(function() {
+        fetchAndRenderTickets();
+        fetchAndRenderStats();
+      }, 5000);
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', function() {
+      // Filter sidebar — visual toggle only (data filtering needs backend tags)
+      document.querySelectorAll('.filter-item').forEach(function(f) {
+        f.addEventListener('click', function() {
+          document.querySelectorAll('.filter-item').forEach(function(x) { x.classList.remove('is-active'); });
+          f.classList.add('is-active');
+        });
+      });
+
+      // Auth guard: show login screen if no JWT, otherwise start inbox
+      if (!localStorage.getItem(JWT_KEY)) {
+        showLoginScreen();
+      } else {
+        initInbox();
+      }
+    });
+  </script>
+</body>
+</html>

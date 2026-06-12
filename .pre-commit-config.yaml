@@ -1,0 +1,22 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.4
+    hooks:
+      - id: ruff
+        args: ["check", "--fix", "backend/app", "backend/scripts", "backend/migrations"]
+        files: ^backend/.*\.py$
+      - id: ruff-format
+        args: ["backend/app", "backend/scripts", "backend/migrations"]
+        files: ^backend/.*\.py$
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        args: ["--strict", "backend/app"]
+        files: ^backend/app/.*\.py$
+        additional_dependencies:
+          - "pydantic>=2.9"
+          - "pydantic-settings>=2.6"
+          - "sqlalchemy[asyncio]==2.0.*"
+          - "fastapi==0.115.*"

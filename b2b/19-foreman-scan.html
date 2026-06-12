@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — QR-скан допуска (прораб)</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body {
+      background: radial-gradient(circle at 50% 0%, #142e3b 0%, #06141b 60%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-5);
+    }
+
+    /* Device frame override for foreman */
+    .device-frame {
+      background: var(--canvas-soft);
+      min-height: 880px;
+      width: 420px;
+    }
+
+    /* Lang switch in corner */
+    .top-lang {
+      position: absolute;
+      top: 50px;
+      right: 16px;
+      z-index: 20;
+    }
+
+    /* Mobile header */
+    .scan-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px var(--space-5);
+      background: var(--canvas);
+      border-bottom: 1px solid var(--hairline);
+      position: relative;
+      z-index: 5;
+    }
+    .scan-header__title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .scan-header__title .ico { font-size: 20px; }
+    .scan-header__user { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-subtle); }
+    .scan-header__user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-3); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
+    /* Status bar (sync / battery / offline) */
+    .status-strip {
+      display: flex; gap: 8px; padding: 8px var(--space-5);
+      background: var(--surface-1); border-bottom: 1px solid var(--hairline);
+      font-size: 11px; color: var(--ink-subtle); align-items: center;
+    }
+    .status-strip .role { color: var(--ink); font-weight: 600; }
+    .status-strip .divider { color: var(--ink-tertiary); }
+    .status-strip .pill { height: 20px; padding: 0 8px; font-size: 9px; }
+
+    /* Body */
+    .scan-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--canvas-soft);
+      overflow: hidden;
+    }
+
+    /* Camera area */
+    .camera-area {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%),
+        repeating-linear-gradient(45deg, #061018 0px, #061018 4px, #08151c 4px, #08151c 8px);
+      margin: 0;
+      overflow: hidden;
+    }
+    .camera-area::after {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.55) 100%);
+      pointer-events: none;
+    }
+
+    /* Scanner frame with corner marks */
+    .scan-frame {
+      position: absolute; inset: 18%;
+      pointer-events: none;
+    }
+    .scan-frame .corner {
+      position: absolute; width: 36px; height: 36px;
+      border-color: var(--brand-cyan-soft);
+      border-style: solid; border-width: 0;
+    }
+    .scan-frame .corner.tl { top: 0; left: 0; border-top-width: 4px; border-left-width: 4px; border-radius: 6px 0 0 0; }
+    .scan-frame .corner.tr { top: 0; right: 0; border-top-width: 4px; border-right-width: 4px; border-radius: 0 6px 0 0; }
+    .scan-frame .corner.bl { bottom: 0; left: 0; border-bottom-width: 4px; border-left-width: 4px; border-radius: 0 0 0 6px; }
+    .scan-frame .corner.br { bottom: 0; right: 0; border-bottom-width: 4px; border-right-width: 4px; border-radius: 0 0 6px 0; }
+
+    /* Scanning line */
+    .scan-line {
+      position: absolute;
+      left: 18%; right: 18%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, var(--brand-emerald) 40%, var(--brand-cyan-soft) 60%, transparent 100%);
+      box-shadow: 0 0 18px 4px rgba(16,185,129,0.45);
+      animation: scan-loop 2.6s ease-in-out infinite;
+      top: 18%;
+    }
+    @keyframes scan-loop {
+      0%, 100% { top: 18%; opacity: 1; }
+      50%      { top: calc(82% - 2px); opacity: 1; }
+    }
+
+    /* Hint above frame */
+    .scan-hint {
+      position: absolute; top: 8%; left: 0; right: 0; text-align: center;
+      font-size: 13px; font-weight: 600; color: var(--brand-cyan-soft);
+      letter-spacing: 0.3px;
+      z-index: 2;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+    }
+    .scan-hint .sub { display: block; font-size: 11px; color: var(--ink-subtle); font-weight: 400; margin-top: 4px; letter-spacing: 0; }
+
+    /* Mock QR */
+    .qr-target {
+      position: absolute;
+      width: 56%; height: 56%;
+      top: 22%; left: 22%;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(16,185,129,0.05) 0%, transparent 70%);
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 2px;
+      padding: 14%;
+      opacity: 0.18;
+    }
+    .qr-target i {
+      background: var(--ink); border-radius: 1px;
+    }
+
+    /* Bottom of camera: small controls */
+    .camera-controls {
+      position: absolute; bottom: 14px; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      z-index: 3;
+    }
+    .ctrl-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(15,37,48,0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; color: var(--ink); font-size: 16px; border: 1px solid rgba(255,255,255,0.08); }
+    .ctrl-btn.primary { width: 56px; height: 56px; background: var(--brand-gradient); color: var(--on-brand); font-size: 22px; border: 0; box-shadow: 0 8px 24px rgba(6,182,212,0.4); }
+
+    /* Section below camera */
+    .recent-section {
+      padding: var(--space-4) var(--space-5);
+      background: var(--canvas);
+      border-bottom: 1px solid var(--hairline);
+    }
+    .recent-section__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+    .recent-section__title { font-size: 13px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+    .recent-section__title .count { background: var(--surface-2); color: var(--ink-muted); padding: 1px 7px; border-radius: 8px; font-size: 10px; }
+    .recent-section__action { font-size: 11px; color: var(--brand-cyan-soft); }
+
+    .recent-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .recent-row:last-child { border-bottom: 0; }
+    .recent-row__icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .recent-row__icon.ok { background: rgba(16,185,129,0.18); color: var(--brand-emerald); }
+    .recent-row__icon.warn { background: rgba(245,158,11,0.18); color: var(--warning); }
+    .recent-row__main { flex: 1; min-width: 0; }
+    .recent-row__name { font-size: 13px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+    .recent-row__sub { font-size: 11px; color: var(--ink-subtle); margin-top: 2px; }
+    .recent-row__sub.warn { color: var(--warning); font-weight: 500; }
+    .recent-row__time { font-size: 10px; color: var(--ink-tertiary); }
+
+    /* Result card (after scan) */
+    .result-card {
+      margin: var(--space-4) var(--space-5);
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      position: relative;
+      overflow: hidden;
+    }
+    .result-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--brand-emerald), var(--brand-cyan));
+    }
+    .result-card__head { display: flex; align-items: center; gap: 12px; }
+    .result-card__avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--brand-gradient); color: var(--on-brand); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; position: relative; flex-shrink: 0; }
+    .result-card__avatar .flag { position: absolute; bottom: -3px; right: -3px; font-size: 18px; background: var(--canvas); border-radius: 50%; padding: 1px; }
+    .result-card__name { font-size: 16px; font-weight: 700; }
+    .result-card__role { font-size: 12px; color: var(--ink-subtle); margin-top: 2px; }
+    .result-card__details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .result-card__detail { background: var(--canvas-soft); border-radius: 6px; padding: 8px 10px; }
+    .result-card__detail .lbl { font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--ink-tertiary); }
+    .result-card__detail .val { font-size: 12px; color: var(--ink); font-weight: 500; margin-top: 2px; }
+    .result-card__actions { display: flex; gap: 8px; margin-top: var(--space-4); }
+    .result-card__actions .btn { flex: 1; height: 44px; }
+
+    /* Sync footer */
+    .sync-footer {
+      padding: 14px var(--space-5);
+      background: var(--surface-1);
+      border-top: 1px solid var(--hairline);
+      display: flex; align-items: center; gap: 12px;
+      font-size: 11px; color: var(--ink-subtle);
+      line-height: 1.4;
+    }
+    .sync-footer .ico { font-size: 20px; flex-shrink: 0; }
+    .sync-footer strong { color: var(--ink); display: block; font-size: 12px; margin-bottom: 2px; }
+    .sync-footer .pending { display: inline-block; margin-left: 6px; background: var(--surface-2); color: var(--warning); padding: 1px 6px; border-radius: 8px; font-weight: 600; font-size: 10px; }
+  </style>
+</head>
+<body>
+  <div class="device-frame">
+    <div class="device-frame__notch"></div>
+
+    <div class="top-lang">
+      <div class="lang-switch">
+        <button class="lang-switch__btn is-active" data-lang-switch="ru">RU</button>
+        <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+        <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+      </div>
+    </div>
+
+    <!-- Status bar pseudo -->
+    <div class="device-frame__status-bar">
+      <span class="tnum" id="status-bar-clock">14:32</span>
+      <span style="display:flex;gap:6px;align-items:center;font-size:11px">
+        <span>📶</span><span>🔋 78%</span>
+      </span>
+    </div>
+
+    <!-- Header -->
+    <header class="scan-header">
+      <div class="scan-header__title">
+        <span class="ico">📷</span>
+        <span>
+          <span class="lang-only-ru">Скан допуска</span>
+          <span class="lang-only-hi">पास स्कैन</span>
+          <span class="lang-only-en">Access scan</span>
+        </span>
+      </div>
+      <span class="pill pill-offline">
+        <span class="lang-only-ru">офлайн</span>
+        <span class="lang-only-hi">ऑफ़लाइन</span>
+        <span class="lang-only-en">offline</span>
+      </span>
+    </header>
+
+    <div class="status-strip">
+      <span>👷</span>
+      <span class="role">Иван Петров</span>
+      <span class="divider">·</span>
+      <span>прораб · Метрополия-14</span>
+    </div>
+
+    <!-- Body -->
+    <div class="scan-body">
+      <!-- Camera mock -->
+      <div class="camera-area">
+        <div class="scan-hint">
+          <span>
+            <span class="lang-only-ru">Наведите камеру на QR сотрудника</span>
+            <span class="lang-only-hi">कर्मचारी QR पर कैमरा रखें</span>
+            <span class="lang-only-en">Point camera at worker QR</span>
+          </span>
+          <span class="sub">
+            <span class="lang-only-ru">Расстояние 20-30 см</span>
+            <span class="lang-only-hi">दूरी 20-30 सेमी</span>
+            <span class="lang-only-en">Distance 20-30 cm</span>
+          </span>
+        </div>
+
+        <div class="scan-frame">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+        </div>
+
+        <!-- Fake QR pattern in center -->
+        <div class="qr-target">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+
+        <div class="scan-line"></div>
+
+        <div class="camera-controls">
+          <button class="ctrl-btn" title="Flash">⚡</button>
+          <button class="ctrl-btn primary" title="Scan">●</button>
+          <button class="ctrl-btn" title="Manual">⌨️</button>
+        </div>
+      </div>
+
+      <!-- Result card (latest scan) -->
+      <div class="result-card">
+        <div class="result-card__head">
+          <div class="result-card__avatar">РШ<span class="flag">🇮🇳</span></div>
+          <div style="flex:1">
+            <div class="result-card__name">Раджу Шарма</div>
+            <div class="result-card__role">Монолитчик · Метрополия-14</div>
+          </div>
+          <span class="pill pill-verified">
+            <span class="lang-only-ru">Допуск ОК</span>
+            <span class="lang-only-hi">पास ठीक</span>
+            <span class="lang-only-en">Access OK</span>
+          </span>
+        </div>
+        <div class="result-card__details">
+          <div class="result-card__detail">
+            <div class="lbl">Паспорт</div>
+            <div class="val">P1234567 ✓</div>
+          </div>
+          <div class="result-card__detail">
+            <div class="lbl">Патент</div>
+            <div class="val">до 12.03.2027 ✓</div>
+          </div>
+          <div class="result-card__detail">
+            <div class="lbl">ДМС</div>
+            <div class="val">активен ✓</div>
+          </div>
+          <div class="result-card__detail">
+            <div class="lbl">ТБ инструктаж</div>
+            <div class="val">пройден 12.02 ✓</div>
+          </div>
+        </div>
+        <div class="result-card__actions">
+          <button class="btn btn-primary">
+            <span>✓</span>
+            <span>
+              <span class="lang-only-ru">Допустить</span>
+              <span class="lang-only-hi">अनुमति दें</span>
+              <span class="lang-only-en">Allow</span>
+            </span>
+          </button>
+          <button class="btn btn-danger">
+            <span>✕</span>
+            <span>
+              <span class="lang-only-ru">Отказать</span>
+              <span class="lang-only-hi">अस्वीकार</span>
+              <span class="lang-only-en">Deny</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent scans -->
+      <section class="recent-section">
+        <div class="recent-section__head">
+          <div class="recent-section__title">
+            <span>
+              <span class="lang-only-ru">Последние сканы</span>
+              <span class="lang-only-hi">हाल के स्कैन</span>
+              <span class="lang-only-en">Recent scans</span>
+            </span>
+            <span class="count">3</span>
+          </div>
+          <a class="recent-section__action">
+            <span class="lang-only-ru">Все →</span>
+            <span class="lang-only-hi">सभी →</span>
+            <span class="lang-only-en">All →</span>
+          </a>
+        </div>
+
+        <div class="recent-row">
+          <div class="recent-row__icon ok">✓</div>
+          <div class="recent-row__main">
+            <div class="recent-row__name">
+              Раджу Шарма <span style="font-size:12px">🇮🇳</span>
+              <span class="pill pill-verified" style="height:18px;font-size:9px">Допуск ОК</span>
+            </div>
+            <div class="recent-row__sub">Метрополия-14 · смена начата</div>
+          </div>
+          <div class="recent-row__time">5 мин</div>
+        </div>
+
+        <div class="recent-row">
+          <div class="recent-row__icon ok">✓</div>
+          <div class="recent-row__main">
+            <div class="recent-row__name">
+              Ахмед Хан <span style="font-size:12px">🇺🇿</span>
+              <span class="pill pill-verified" style="height:18px;font-size:9px">Допуск ОК</span>
+            </div>
+            <div class="recent-row__sub">Метрополия-14 · смена начата</div>
+          </div>
+          <div class="recent-row__time">10 мин</div>
+        </div>
+
+        <div class="recent-row">
+          <div class="recent-row__icon warn">⚠</div>
+          <div class="recent-row__main">
+            <div class="recent-row__name">
+              Иван Сидоров <span style="font-size:12px">🇷🇺</span>
+              <span class="pill pill-warning" style="height:18px;font-size:9px">Не допускать</span>
+            </div>
+            <div class="recent-row__sub warn">Патент истёк 18.02.2026 · отказано</div>
+          </div>
+          <div class="recent-row__time">22 мин</div>
+        </div>
+      </section>
+
+      <!-- Sync footer -->
+      <footer class="sync-footer">
+        <span class="ico">📡</span>
+        <div>
+          <strong>
+            <span class="lang-only-ru">Офлайн режим</span>
+            <span class="lang-only-hi">ऑफ़लाइन मोड</span>
+            <span class="lang-only-en">Offline mode</span>
+            <span class="pending">3 ожидают</span>
+          </strong>
+          <span class="lang-only-ru">Данные сохраняются локально, синхронизация при появлении Wi-Fi</span>
+          <span class="lang-only-hi">डेटा स्थानीय रूप से सहेजा गया, Wi-Fi मिलते ही सिंक होगा</span>
+          <span class="lang-only-en">Data stored locally, syncs when Wi-Fi is available</span>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script defer>
+    // ===== API CONFIG =====
+    const API = window.ADAPTA_API_BASE_URL || window.location.origin;
+    const JWT_KEY = 'adapta_jwt';
+
+    // ===== TOAST =====
+    function showToast(msg, type) {
+      type = type || 'info';
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+        document.body.appendChild(container);
+      }
+      const t = document.createElement('div');
+      t.className = 'toast';
+      const borderColor = type === 'error' ? 'var(--danger)' : type === 'success' ? 'var(--brand-emerald)' : 'var(--brand-cyan)';
+      t.style.cssText = 'background:var(--surface-2);border:1px solid var(--hairline);border-radius:var(--rounded-md);padding:12px 18px;font-size:13px;color:var(--ink);min-width:260px;max-width:380px;box-shadow:var(--shadow-md);pointer-events:auto;word-break:break-word;border-left:3px solid ' + borderColor + ';';
+      t.textContent = msg;
+      container.appendChild(t);
+      setTimeout(() => t.remove(), 5000);
+    }
+
+    // ===== DOM HELPERS =====
+    function el(tag, attrs) {
+      const node = document.createElement(tag);
+      if (attrs) Object.entries(attrs).forEach(([k, v]) => {
+        if (k === 'style') node.style.cssText = v;
+        else if (k === 'class') node.className = v;
+        else if (k === 'text') node.textContent = v;
+        else node.setAttribute(k, v);
+      });
+      return node;
+    }
+    function inp(id, type, placeholder) {
+      const i = document.createElement('input');
+      i.id = id; i.type = type; i.placeholder = placeholder; i.className = 'input';
+      i.style.cssText = 'width:100%;box-sizing:border-box;';
+      return i;
+    }
+
+    // ===== LOGIN SCREEN =====
+    function showLoginScreen() {
+      const overlay = el('div', { id: 'login-overlay', style: 'position:fixed;inset:0;background:var(--canvas);z-index:8000;display:flex;align-items:center;justify-content:center;' });
+
+      const card = el('div', { style: 'background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--rounded-xl);padding:40px;width:380px;display:flex;flex-direction:column;gap:20px;' });
+
+      const logoArea = el('div', { style: 'text-align:center;' });
+      const logoMark = el('div', { style: 'font-size:32px;margin-bottom:8px;', text: 'S' });
+      const logoName = el('div', { style: 'font-size:20px;font-weight:700;background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;color:transparent;', text: 'AdaptaAI HR' });
+      const logoSub = el('div', { style: 'font-size:13px;color:var(--ink-subtle);margin-top:4px;', text: 'Вход в систему' });
+      logoArea.append(logoMark, logoName, logoSub);
+
+      const fields = el('div', { style: 'display:flex;flex-direction:column;gap:10px;' });
+      const emailInp = inp('login-email', 'email', 'Email');
+      const passInp = inp('login-password', 'password', 'Пароль');
+      fields.append(emailInp, passInp);
+
+      const loginBtn = el('button', { id: 'login-btn', class: 'btn btn-primary btn-block', text: 'Войти' });
+      const demoBtn = el('button', { id: 'demo-login-btn', class: 'btn btn-secondary btn-block', style: 'font-size:12px;', text: 'Войти как Дарья (Застройщик№1) — демо' });
+      const errEl = el('div', { id: 'login-error', style: 'color:var(--danger);font-size:12px;text-align:center;display:none;' });
+
+      card.append(logoArea, fields, loginBtn, demoBtn, errEl);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      demoBtn.addEventListener('click', () => {
+        emailInp.value = 'daria@pik.demo';
+        passInp.value = 'demo';
+      });
+
+      async function doLogin() {
+        const email = emailInp.value.trim();
+        const password = passInp.value;
+        errEl.style.display = 'none';
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Входим…';
+        try {
+          const res = await fetch(API + '/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            errEl.textContent = (data && data.error && data.error.message) || 'Неверный email или пароль';
+            errEl.style.display = 'block';
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Войти';
+            return;
+          }
+          localStorage.setItem(JWT_KEY, data.access_token);
+          if (data.user) {
+            const roleEl = document.querySelector('.status-strip .role');
+            if (roleEl) roleEl.textContent = (data.user.first_name || '') + ' ' + (data.user.last_name || '');
+          }
+          overlay.remove();
+          initPage();
+        } catch (e) {
+          errEl.textContent = 'Ошибка сети. Проверьте соединение.';
+          errEl.style.display = 'block';
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Войти';
+        }
+      }
+
+      loginBtn.addEventListener('click', doLogin);
+      [emailInp, passInp].forEach(function(elem) {
+        elem.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+      });
+    }
+
+    // ===== INIT PAGE =====
+    // NOTE: This screen is a foreman QR-scanner UI. There is no backend /api/v1/scan
+    // endpoint — scanning requires native camera hardware. The camera area remains a
+    // visual mock. We load real workers total from /api/v1/workers and show it in the
+    // recent-scans count badge. The result-card and recent-rows remain as demonstration
+    // placeholders since no scan history API exists.
+    async function initPage() {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) { showLoginScreen(); return; }
+
+      try {
+        const res = await fetch(API + '/api/v1/workers?limit=1', {
+          headers: { 'Authorization': 'Bearer ' + jwt }
+        });
+        if (res.status === 401) {
+          localStorage.removeItem(JWT_KEY);
+          showLoginScreen();
+          return;
+        }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const total = data.total != null ? data.total : (data.items ? data.items.length : 0);
+        // Update count badge in recent-section
+        const countBadge = document.querySelector('.recent-section__title .count');
+        if (countBadge && total > 0) {
+          // Badge shows today's scan count — no API for that, keep existing static value
+          // but replace with "всего N" to show real data connection
+          countBadge.title = 'Всего сотрудников в базе: ' + total;
+        }
+      } catch (e) {
+        showToast('Не удалось загрузить данные сотрудников: ' + e.message, 'error');
+      }
+    }
+
+    // ===== LIVE CLOCK =====
+    (function () {
+      function tick() {
+        var clockEl = document.getElementById('status-bar-clock');
+        if (clockEl) clockEl.textContent = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
+
+    // ===== ALLOW / DENY BUTTONS =====
+    (function () {
+      var actions = document.querySelectorAll('.result-card__actions .btn');
+      actions.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var isAllow = btn.classList.contains('btn-primary');
+          var card = btn.closest('.result-card');
+          if (card) {
+            card.style.opacity = '0.5';
+            card.style.pointerEvents = 'none';
+          }
+          if (isAllow) {
+            showToast('Допуск подтверждён', 'success');
+          } else {
+            showToast('Работник отстранён', 'error');
+          }
+        });
+      });
+    })();
+
+    // ===== BOOT =====
+    initPage();
+  </script>
+</body>
+</html>

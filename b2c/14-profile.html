@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Профиль</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { background: var(--surface-2); }
+
+    /* === Profile head === */
+    .prof-head {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-xl);
+      padding: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+    .prof-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+    .prof-info { flex: 1; min-width: 0; }
+    .prof-info__name { font-size: 19px; font-weight: 600; line-height: 1.25; }
+    .prof-info__phone {
+      font-size: 13px;
+      color: var(--ink-subtle);
+      margin-top: 4px;
+      font-feature-settings: "tnum" 1, "lnum" 1;
+    }
+    .prof-info__verified {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--success);
+      font-weight: 600;
+    }
+    .prof-edit {
+      width: 36px; height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--rounded-md);
+      background: var(--surface-2);
+      color: var(--ink-muted);
+      transition: all var(--dur-fast) var(--ease-out);
+      flex-shrink: 0;
+    }
+    .prof-edit:hover { background: var(--surface-3); color: var(--ink); }
+
+    /* === Section === */
+    .prof-section { margin-top: var(--space-5); }
+    .prof-section__label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--ink-subtle);
+      padding: 0 var(--space-3);
+      margin-bottom: var(--space-2);
+    }
+    .prof-list {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      overflow: hidden;
+    }
+    .prof-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--hairline);
+      width: 100%;
+      text-align: left;
+      transition: background var(--dur-fast) var(--ease-out);
+    }
+    .prof-row:last-child { border-bottom: 0; }
+    .prof-row:hover { background: var(--surface-2); }
+    .prof-row__icon {
+      width: 36px; height: 36px;
+      border-radius: var(--rounded-md);
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .prof-row__body { flex: 1; min-width: 0; }
+    .prof-row__title { font-size: 15px; font-weight: 500; line-height: 1.3; }
+    .prof-row__sub { font-size: 12px; color: var(--ink-subtle); margin-top: 2px; }
+    .prof-row__value {
+      font-size: 13px;
+      color: var(--ink-muted);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .prof-row__chevron {
+      color: var(--ink-tertiary);
+      flex-shrink: 0;
+    }
+
+    /* === Language sub-rows === */
+    .lang-row__current {
+      color: var(--brand-emerald-deep);
+      font-weight: 600;
+    }
+
+    /* === Toggle === */
+    .toggle {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      border-radius: var(--rounded-pill);
+      background: var(--hairline-strong);
+      transition: background var(--dur-fast) var(--ease-out);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: var(--shadow-xs);
+      transition: transform var(--dur-fast) var(--ease-out);
+    }
+    .toggle.is-on { background: var(--brand-emerald); }
+    .toggle.is-on::after { transform: translateX(18px); }
+
+    /* === Footer === */
+    .prof-footer {
+      margin-top: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      align-items: center;
+    }
+    .prof-version {
+      font-size: 12px;
+      color: var(--ink-tertiary);
+      font-family: var(--font-mono);
+      letter-spacing: 0.4px;
+    }
+    .prof-logout {
+      background: transparent;
+      color: var(--danger);
+      font-weight: 600;
+      width: 100%;
+      height: 48px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+    .prof-logout:hover { background: var(--danger-soft); border-color: var(--danger); }
+
+    /* === Chevron === */
+    .chev {
+      width: 18px; height: 18px;
+    }
+
+    /* Sub-row for language items (expanded) */
+    .lang-sub {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-2) var(--space-4) var(--space-2) 64px;
+      font-size: 13px;
+      color: var(--ink-muted);
+      border-bottom: 1px solid var(--hairline);
+      cursor: pointer;
+    }
+    .lang-sub:last-child { border-bottom: 0; }
+    .lang-sub__check { color: var(--brand-emerald); font-weight: 700; }
+    .lang-sub.is-active { color: var(--ink); font-weight: 500; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <div class="device-frame">
+    <header class="app-header">
+      <button class="app-header__back" aria-label="Назад" onclick="if (history.length > 1) history.back(); else window.location='04-hub.html';">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/>
+        </svg>
+      </button>
+      <h1 class="app-header__title" data-i18n="profile.title">Профиль</h1>
+      <div class="lang-switch">
+        <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+        <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+        <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+      </div>
+    </header>
+
+    <main class="app-body">
+      <!-- Profile head -->
+      <section class="prof-head">
+        <div class="prof-avatar" data-user-initials>УЧ</div>
+        <div class="prof-info">
+          <div class="prof-info__name" data-user-fullname></div>
+          <div class="prof-info__phone">+7 916 555 12 34</div>
+          <div class="prof-info__verified">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12l5 5l10 -10"/>
+            </svg>
+            <span class="lang-only-ru">Профиль подтверждён</span>
+            <span class="lang-only-hi">प्रोफ़ाइल सत्यापित</span>
+            <span class="lang-only-en">Profile verified</span>
+          </div>
+        </div>
+        <button class="prof-edit" data-i18n-attr="aria-label:common.edit" aria-label="Редактировать">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h4l10.5 -10.5a1.5 1.5 0 0 0 -4 -4l-10.5 10.5v4"/>
+            <path d="M13.5 6.5l4 4"/>
+          </svg>
+        </button>
+      </section>
+
+      <!-- Account -->
+      <section class="prof-section">
+        <div class="prof-section__label">
+          <span class="lang-only-ru">Аккаунт</span>
+          <span class="lang-only-hi">खाता</span>
+          <span class="lang-only-en">Account</span>
+        </div>
+        <div class="prof-list">
+          <!-- Language -->
+          <button class="prof-row" data-row="lang">
+            <span class="prof-row__icon">🌐</span>
+            <span class="prof-row__body">
+              <span class="prof-row__title" data-i18n="profile.lang">Язык интерфейса</span>
+              <span class="prof-row__sub">
+                <span class="lang-only-ru">Русский · हिन्दी · English</span>
+                <span class="lang-only-hi">रूसी · हिन्दी · अंग्रेज़ी</span>
+                <span class="lang-only-en">Russian · Hindi · English</span>
+              </span>
+            </span>
+            <span class="prof-row__value lang-row__current" data-current-lang>
+              <span class="lang-only-ru">Русский</span>
+              <span class="lang-only-hi">हिन्दी</span>
+              <span class="lang-only-en">English</span>
+            </span>
+            <svg class="chev prof-row__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 6l6 6l-6 6"/>
+            </svg>
+          </button>
+
+          <!-- Notifications header -->
+          <div class="prof-row" style="cursor: default;">
+            <span class="prof-row__icon">🔔</span>
+            <span class="prof-row__body">
+              <span class="prof-row__title" data-i18n="profile.notifs">Уведомления</span>
+              <span class="prof-row__sub">
+                <span class="lang-only-ru">Push, SMS, e-mail</span>
+                <span class="lang-only-hi">Push, SMS, ईमेल</span>
+                <span class="lang-only-en">Push, SMS, e-mail</span>
+              </span>
+            </span>
+          </div>
+
+          <!-- Push toggle -->
+          <div class="prof-row">
+            <span class="prof-row__icon" style="background: transparent;"></span>
+            <span class="prof-row__body">
+              <span class="prof-row__title" style="font-size: 14px;">
+                <span class="lang-only-ru">Push-уведомления</span>
+                <span class="lang-only-hi">Push सूचनाएँ</span>
+                <span class="lang-only-en">Push notifications</span>
+              </span>
+              <span class="prof-row__sub">
+                <span class="lang-only-ru">От HR, AI, статус документов</span>
+                <span class="lang-only-hi">HR, AI, दस्तावेज़ स्थिति से</span>
+                <span class="lang-only-en">From HR, AI, document status</span>
+              </span>
+            </span>
+            <button class="toggle is-on" data-toggle aria-label="Push"></button>
+          </div>
+
+          <!-- SMS toggle -->
+          <div class="prof-row">
+            <span class="prof-row__icon" style="background: transparent;"></span>
+            <span class="prof-row__body">
+              <span class="prof-row__title" style="font-size: 14px;">SMS</span>
+              <span class="prof-row__sub">
+                <span class="lang-only-ru">Только важное</span>
+                <span class="lang-only-hi">केवल महत्वपूर्ण</span>
+                <span class="lang-only-en">Important only</span>
+              </span>
+            </span>
+            <button class="toggle is-on" data-toggle aria-label="SMS"></button>
+          </div>
+
+          <!-- Security -->
+          <button class="prof-row">
+            <span class="prof-row__icon">🔐</span>
+            <span class="prof-row__body">
+              <span class="prof-row__title" data-i18n="profile.security">Безопасность</span>
+              <span class="prof-row__sub">
+                <span class="lang-only-ru">PIN-код, Face ID</span>
+                <span class="lang-only-hi">PIN कोड, Face ID</span>
+                <span class="lang-only-en">PIN code, Face ID</span>
+              </span>
+            </span>
+            <span class="prof-row__value">
+              <span class="lang-only-ru">Включено</span>
+              <span class="lang-only-hi">सक्रिय</span>
+              <span class="lang-only-en">Enabled</span>
+            </span>
+            <svg class="chev prof-row__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 6l6 6l-6 6"/>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Activity -->
+      <section class="prof-section">
+        <div class="prof-section__label">
+          <span class="lang-only-ru">Активность</span>
+          <span class="lang-only-hi">गतिविधि</span>
+          <span class="lang-only-en">Activity</span>
+        </div>
+        <div class="prof-list">
+          <button class="prof-row">
+            <span class="prof-row__icon">📜</span>
+            <span class="prof-row__body">
+              <span class="prof-row__title" data-i18n="profile.history">История диалогов с AI</span>
+              <span class="prof-row__sub">
+                <span class="lang-only-ru">87 разговоров · последний 12 минут назад</span>
+                <span class="lang-only-hi">87 चैट · आख़िरी 12 मिनट पहले</span>
+                <span class="lang-only-en">87 chats · last 12 min ago</span>
+              </span>
+            </span>
+            <svg class="chev prof-row__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 6l6 6l-6 6"/>
+            </svg>
+          </button>
+
+          <button class="prof-row">
+            <span class="prof-row__icon">💼</span>
+            <span class="prof-row__body">
+              <span class="prof-row__title" data-i18n="profile.changeEmp">Сменить работодателя</span>
+              <span class="prof-row__sub">
+                <span class="lang-only-ru">Сейчас: Застройщик№1 · Метрополия-14</span>
+                <span class="lang-only-hi">अभी: Застройщик№1 · Metropoliya-14</span>
+                <span class="lang-only-en">Current: Застройщик№1 · Metropoliya-14</span>
+              </span>
+            </span>
+            <svg class="chev prof-row__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 6l6 6l-6 6"/>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Support -->
+      <section class="prof-section">
+        <div class="prof-section__label">
+          <span class="lang-only-ru">Поддержка</span>
+          <span class="lang-only-hi">सहायता</span>
+          <span class="lang-only-en">Support</span>
+        </div>
+        <div class="prof-list">
+          <button class="prof-row">
+            <span class="prof-row__icon">❓</span>
+            <span class="prof-row__body">
+              <span class="prof-row__title" data-i18n="profile.help">Помощь и поддержка</span>
+              <span class="prof-row__sub">
+                <span class="lang-only-ru">FAQ, чат с оператором, обратная связь</span>
+                <span class="lang-only-hi">FAQ, ऑपरेटर चैट, फीडबैक</span>
+                <span class="lang-only-en">FAQ, operator chat, feedback</span>
+              </span>
+            </span>
+            <svg class="chev prof-row__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 6l6 6l-6 6"/>
+            </svg>
+          </button>
+
+          <button class="prof-row">
+            <span class="prof-row__icon">📄</span>
+            <span class="prof-row__body">
+              <span class="prof-row__title" data-i18n="profile.legal">Юридическая информация</span>
+              <span class="prof-row__sub">
+                <span class="lang-only-ru">Условия, обработка данных, лицензии</span>
+                <span class="lang-only-hi">शर्तें, डेटा प्रसंस्करण, लाइसेंस</span>
+                <span class="lang-only-en">Terms, data processing, licenses</span>
+              </span>
+            </span>
+            <svg class="chev prof-row__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 6l6 6l-6 6"/>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <div class="prof-footer">
+        <button class="prof-logout" onclick="localStorage.clear(); sessionStorage.clear(); window.location='../landing/index.html'">
+          <span class="lang-only-ru">Выйти из аккаунта</span>
+          <span class="lang-only-hi">लॉग आउट</span>
+          <span class="lang-only-en">Log out</span>
+        </button>
+        <span class="prof-version">AdaptaAI v2.0.3 · build 2026.03.142</span>
+      </div>
+
+      <div style="height: var(--space-4);"></div>
+    </main>
+
+    <nav class="app-bottom-nav">
+      <a href="04-hub.html" class="app-bottom-nav__item">
+        <span class="icon">🏠</span>
+        <span data-i18n="nav.home">Главная</span>
+      </a>
+      <a href="05-ai-chat.html" class="app-bottom-nav__item">
+        <span class="icon">💬</span>
+        <span data-i18n="nav.ai">AI</span>
+      </a>
+      <a href="09-documents.html" class="app-bottom-nav__item">
+        <span class="icon">📄</span>
+        <span data-i18n="nav.docs">Документы</span>
+      </a>
+      <a href="10-about-employer.html" class="app-bottom-nav__item">
+        <span class="icon">🏢</span>
+        <span data-i18n="nav.employer">HR</span>
+      </a>
+      <a href="14-profile.html" class="app-bottom-nav__item is-active">
+        <span class="icon">👤</span>
+        <span data-i18n="nav.profile">Профиль</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      const raw = localStorage.getItem('adapta_user');
+      const apiUser = raw ? JSON.parse(raw) : null;
+      const firstName = (apiUser && apiUser.first_name) || 'Друг';
+      const lastName  = (apiUser && apiUser.last_name)  || '';
+      document.querySelectorAll('[data-user-name]').forEach(function (el) { el.textContent = firstName; });
+      document.querySelectorAll('[data-user-fullname]').forEach(function (el) { el.textContent = (firstName + ' ' + lastName).trim(); });
+      document.querySelectorAll('[data-user-initials]').forEach(function (el) { el.textContent = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase() || 'УЧ'; });
+
+      // Toggles
+      document.querySelectorAll('[data-toggle]').forEach((tog) => {
+        tog.addEventListener('click', () => tog.classList.toggle('is-on'));
+      });
+    });
+  </script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+</body>
+</html>

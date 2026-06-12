@@ -1,0 +1,56 @@
+.DS_Store
+node_modules/
+tests/node_modules/
+tests/screenshots-raw/
+screenshots.zip
+screenshots [0-9]/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+backend/data/
+backend/.coverage
+
+# Env (per-environment secrets)
+infra/.env
+
+# Voice eval heavy caches (HF datasets cache, decoded audio, raw metrics dump)
+.cache/huggingface/
+**/huggingface/datasets/
+*.wav
+*.mp3
+*.flac
+backend/data/voice_eval_cache/
+backend/data/voice_eval_raw.json
+
+# E2E Playwright video recordings (heavy; commit key screenshots + REPORT only)
+*.webm
+/data/
+security_infra/
+
+# Heavy E2E / paper-review run outputs (regenerated each run — keep curated
+# golden screenshots in artifacts/0*.png + REPORT_*.md only)
+screenshots/e2e_demo_flow/
+backend/tests/e2e/artifacts/paper_recheck_*/
+backend/tests/e2e/artifacts/paper_review_*/
+backend/tests/e2e/artifacts/prod_run_*.log
+backend/tests/e2e/artifacts/01_unexpected_state.png
+
+# All e2e artifact screenshots are transient run-output. The 6 curated golden
+# screenshots (01_hr_login, 02_upload_indexed, 03_invite_created, 05_chat_answer,
+# 05b_chat_citation, 06_hr_workers_sync) are already tracked and stay committed.
+backend/tests/e2e/artifacts/*.png
+screenshots/landing-*.png
+
+# Demo video raw recording output (transient, large) — keep only curated assets/
+backend/tests/e2e/artifacts/*.webm
+backend/tests/e2e/artifacts/*.mp4
+backend/tests/e2e/artifacts/*_profile/
+backend/tests/e2e/artifacts/*.txt
+# Machine-specific local stack overrides (absolute paths)
+infra/docker-compose.override.yml
+infra/docker-compose.poc.yml

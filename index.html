@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdaptaAI MVP v2 — Gallery</title>
+  <link rel="stylesheet" href="design-tokens.css">
+  <style>
+    body { background: var(--canvas-soft); }
+    .hero {
+      background: linear-gradient(180deg, var(--canvas) 0%, var(--canvas-soft) 100%);
+      padding: var(--space-12) var(--space-6);
+      border-bottom: 1px solid var(--hairline);
+    }
+    .hero__inner { max-width: 1280px; margin: 0 auto; }
+    .hero__brand { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-6); }
+    .hero__logo { width: 36px; height: 36px; border-radius: 8px; background: var(--brand-gradient); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; color: var(--on-brand); }
+    .hero__brand-text { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--ink-subtle); }
+    .hero h1 { font-size: 44px; font-weight: 700; line-height: 1.1; letter-spacing: -1.2px; margin-bottom: var(--space-3); max-width: 800px; }
+    .hero h1 .accent { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero p { font-size: 18px; color: var(--ink-muted); max-width: 700px; margin-bottom: var(--space-6); }
+    .hero__stats { display: flex; gap: var(--space-8); flex-wrap: wrap; padding-top: var(--space-5); border-top: 1px solid var(--hairline); }
+    .hero__stat { display: flex; flex-direction: column; gap: 4px; }
+    .hero__stat-value { font-size: 28px; font-weight: 600; color: var(--ink); font-feature-settings: "tnum"; }
+    .hero__stat-label { font-size: 13px; color: var(--ink-subtle); }
+    .hero__stat-value.brand { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .section-head {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--space-10) var(--space-6) var(--space-5);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+    .section-head h2 { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; }
+    .section-head__meta { font-size: 13px; color: var(--ink-subtle); }
+    .section-head__count { display: inline-flex; padding: 2px 8px; background: var(--surface-2); color: var(--ink-muted); border-radius: var(--rounded-pill); font-size: 12px; font-weight: 600; margin-left: 8px; }
+
+    .gallery {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 var(--space-6) var(--space-12);
+    }
+    .gallery__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: var(--space-4);
+    }
+
+    .screen-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+    .screen-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--hairline-strong); text-decoration: none; }
+
+    .screen-card__thumb {
+      aspect-ratio: 9 / 16;
+      background: var(--canvas-soft);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      position: relative;
+      border-bottom: 1px solid var(--hairline);
+      overflow: hidden;
+    }
+    .screen-card__thumb.dark {
+      background: #0a1d26;
+      border-bottom-color: #1f4050;
+    }
+    .screen-card__thumb.dark .screen-card__caption { color: #94a3b8; }
+    .screen-card__thumb.dark .screen-card__icon { color: #cbd5e1; }
+
+    .screen-card__icon {
+      font-size: 54px;
+      line-height: 1;
+      filter: drop-shadow(0 4px 12px rgba(11, 26, 30, 0.08));
+    }
+    .screen-card__caption {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-subtle);
+      text-align: center;
+      padding: 0 var(--space-3);
+    }
+    .screen-card__num {
+      position: absolute;
+      top: 10px; left: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      background: var(--surface-2);
+      color: var(--ink-subtle);
+      border-radius: var(--rounded-pill);
+      font-feature-settings: "tnum";
+    }
+    .screen-card__thumb.dark .screen-card__num { background: #142e3b; color: #94a3b8; }
+
+    .screen-card__badge {
+      position: absolute;
+      top: 10px; right: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: var(--rounded-pill);
+    }
+    .badge--b2c { background: var(--info-soft); color: var(--info-dark); }
+    .badge--b2b { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
+    .badge--featured { background: var(--brand-gradient); color: var(--on-brand); }
+
+    .screen-card__meta { padding: var(--space-3) var(--space-4); }
+    .screen-card__title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .screen-card__subtitle { font-size: 12px; color: var(--ink-subtle); }
+
+    /* Flow diagram */
+    .flow {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6);
+      background: var(--surface-1);
+      border-radius: var(--rounded-xl);
+      border: 1px solid var(--hairline);
+      margin-bottom: var(--space-10);
+    }
+    .flow h2 { font-size: 22px; font-weight: 600; margin-bottom: var(--space-5); }
+    .flow__chain {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      overflow-x: auto;
+      padding-bottom: var(--space-3);
+    }
+    .flow__step {
+      flex-shrink: 0;
+      padding: var(--space-3) var(--space-4);
+      background: var(--canvas-soft);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      text-decoration: none;
+      transition: all var(--dur-fast) var(--ease-out);
+      white-space: nowrap;
+    }
+    .flow__step:hover { background: var(--surface-2); transform: translateY(-1px); text-decoration: none; }
+    .flow__step--accent { background: var(--brand-gradient); color: var(--on-brand); border-color: transparent; font-weight: 600; }
+    .flow__arrow { color: var(--ink-tertiary); font-size: 18px; flex-shrink: 0; }
+
+    .footer {
+      max-width: 1280px;
+      margin: var(--space-10) auto 0;
+      padding: var(--space-6);
+      text-align: center;
+      color: var(--ink-tertiary);
+      font-size: 13px;
+      border-top: 1px solid var(--hairline);
+    }
+    .footer a { color: var(--ink-muted); }
+
+    .docs-row {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--space-5) var(--space-6) 0;
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+    .doc-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-pill);
+      font-size: 12px;
+      color: var(--ink-muted);
+      text-decoration: none;
+      font-family: var(--font-mono);
+    }
+    .doc-chip:hover { border-color: var(--brand-cyan); color: var(--ink); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- =================== HERO =================== -->
+<section class="hero">
+  <div class="hero__inner">
+    <div class="hero__brand">
+      <span class="hero__logo">A</span>
+      <span class="hero__brand-text">AdaptaAI MVP v2 · Interactive Prototype</span>
+    </div>
+    <h1>AI-платформа для адаптации <span class="accent">трудовых мигрантов</span></h1>
+    <p>
+      19 экранов на трёх языках — русский, хинди, английский.
+      B2C PWA для мигранта (voice-first AI, чат с RAG, эскалация к HR)
+      + B2B Lite для работодателя (HR-консоль, тикеты, загрузка регламентов в RAG).
+    </p>
+    <div class="hero__stats">
+      <div class="hero__stat">
+        <span class="hero__stat-value brand">19</span>
+        <span class="hero__stat-label">Экранов</span>
+      </div>
+      <div class="hero__stat">
+        <span class="hero__stat-value">3</span>
+        <span class="hero__stat-label">Языка (RU · हिं · EN)</span>
+      </div>
+      <div class="hero__stat">
+        <span class="hero__stat-value">14</span>
+        <span class="hero__stat-label">B2C мигрант</span>
+      </div>
+      <div class="hero__stat">
+        <span class="hero__stat-value">5</span>
+        <span class="hero__stat-label">B2B HR + прораб</span>
+      </div>
+      <div class="hero__stat">
+        <span class="hero__stat-value">2</span>
+        <span class="hero__stat-label">Темы (Light · Dark)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== DOCS QUICK LINKS =================== -->
+<div class="docs-row">
+  <a class="doc-chip" href="DESIGN.md" target="_blank">📐 DESIGN.md</a>
+  <a class="doc-chip" href="design-tokens.css" target="_blank">🎨 design-tokens.css</a>
+  <a class="doc-chip" href="i18n.js" target="_blank">🌐 i18n.js</a>
+  <a class="doc-chip" href="mock-data.js" target="_blank">📦 mock-data.js</a>
+  <a class="doc-chip" href="SCREEN_BRIEFS.md" target="_blank">📋 SCREEN_BRIEFS.md</a>
+  <a class="doc-chip" href="CONSTRAINTS.md" target="_blank">⚙️ CONSTRAINTS.md</a>
+</div>
+
+<!-- =================== FLOW =================== -->
+<div class="section-head">
+  <h2>Главные пользовательские потоки</h2>
+</div>
+<div style="max-width: 1280px; margin: 0 auto; padding: 0 var(--space-6) var(--space-6);">
+  <div class="flow">
+    <h2>👤 Мигрант (B2C)</h2>
+    <div class="flow__chain">
+      <a class="flow__step" href="b2c/01-welcome.html">01 Welcome</a>
+      <span class="flow__arrow">→</span>
+      <a class="flow__step" href="b2c/02-onboarding-passport.html">02 Passport scan</a>
+      <span class="flow__arrow">→</span>
+      <a class="flow__step" href="b2c/03-onboarding-ready.html">03 Parachute ready</a>
+      <span class="flow__arrow">→</span>
+      <a class="flow__step flow__step--accent" href="b2c/04-hub.html">04 Hub (main)</a>
+      <span class="flow__arrow">→</span>
+      <a class="flow__step" href="b2c/05-ai-chat.html">05 AI chat</a>
+      <span class="flow__arrow">↺</span>
+      <a class="flow__step" href="b2c/06-ai-listening.html">06 Voice listen</a>
+    </div>
+    <div class="flow__chain" style="margin-top: var(--space-3);">
+      <span style="font-size: 12px; color: var(--ink-subtle); padding: 0 var(--space-3);">From Hub:</span>
+      <a class="flow__step" href="b2c/07-help-me.html">07 Help Me</a>
+      <a class="flow__step" href="b2c/08-status.html">08 Status</a>
+      <a class="flow__step" href="b2c/09-documents.html">09 Documents</a>
+      <a class="flow__step" href="b2c/10-about-employer.html">10 Employer</a>
+      <a class="flow__step" href="b2c/11-life-in-russia.html">11 Life in RU</a>
+      <a class="flow__step" href="b2c/12-finance.html">12 Finance</a>
+      <a class="flow__step" href="b2c/13-lifestyle.html">13 Lifestyle</a>
+      <a class="flow__step" href="b2c/14-profile.html">14 Profile</a>
+    </div>
+  </div>
+
+  <div class="flow">
+    <h2>🏢 Работодатель (B2B Lite)</h2>
+    <div class="flow__chain">
+      <a class="flow__step flow__step--accent" href="b2b/15-hr-dashboard.html">15 HR Dashboard</a>
+      <span class="flow__arrow">→</span>
+      <a class="flow__step" href="b2b/16-worker-detail.html">16 Worker detail</a>
+      <span class="flow__arrow">→</span>
+      <a class="flow__step" href="b2b/17-rag-upload.html">17 RAG upload</a>
+      <span class="flow__arrow">→</span>
+      <a class="flow__step" href="b2b/18-ticket-inbox.html">18 Ticket inbox</a>
+      <span class="flow__arrow">↦</span>
+      <a class="flow__step" href="b2b/19-foreman-scan.html">19 Foreman scan (mobile)</a>
+    </div>
+  </div>
+</div>
+
+<!-- =================== B2C =================== -->
+<div class="section-head">
+  <h2>B2C — Мигрант <span class="section-head__count">14</span></h2>
+  <span class="section-head__meta">Mobile · Light theme · Offline-first PWA</span>
+</div>
+
+<div class="gallery">
+  <div class="gallery__grid">
+
+    <a class="screen-card" href="b2c/01-welcome.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">01</span>
+        <span class="screen-card__badge badge--featured">START</span>
+        <div class="screen-card__icon">🌐</div>
+        <div class="screen-card__caption">Выбор языка · вход по QR / SMS</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Welcome</div>
+        <div class="screen-card__subtitle">Лендинг + языки + аутентификация</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/02-onboarding-passport.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">02</span>
+        <span class="screen-card__badge badge--b2c">B2C</span>
+        <div class="screen-card__icon">📷</div>
+        <div class="screen-card__caption">Скан паспорта · OCR</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Passport scan</div>
+        <div class="screen-card__subtitle">Камера + ручной ввод</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/03-onboarding-ready.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">03</span>
+        <span class="screen-card__badge badge--b2c">B2C</span>
+        <div class="screen-card__icon">✅</div>
+        <div class="screen-card__caption">Офлайн-пакет загружен</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Parachute ready</div>
+        <div class="screen-card__subtitle">Готов к вылету</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/04-hub.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">04</span>
+        <span class="screen-card__badge badge--featured">HOME</span>
+        <div class="screen-card__icon">🏠</div>
+        <div class="screen-card__caption">Главная · 7 разделов · AI</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Hub</div>
+        <div class="screen-card__subtitle">Центральный экран</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/05-ai-chat.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">05</span>
+        <span class="screen-card__badge badge--featured">AI</span>
+        <div class="screen-card__icon">💬</div>
+        <div class="screen-card__caption">Голосовой агент · RAG · перевод</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">AI Chat</div>
+        <div class="screen-card__subtitle">Voice-first диалог</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/06-ai-listening.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">06</span>
+        <span class="screen-card__badge badge--featured">AI</span>
+        <div class="screen-card__icon">🎤</div>
+        <div class="screen-card__caption">Запись · STT · waveform</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Voice listening</div>
+        <div class="screen-card__subtitle">Активная запись голоса</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/07-help-me.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">07</span>
+        <span class="screen-card__badge badge--featured">SOS</span>
+        <div class="screen-card__icon">🆘</div>
+        <div class="screen-card__caption">Эскалация к HR · 6 сценариев</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Help Me</div>
+        <div class="screen-card__subtitle">Срочная связь с работодателем</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/08-status.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">08</span>
+        <span class="screen-card__badge badge--b2c">B2C</span>
+        <div class="screen-card__icon">📊</div>
+        <div class="screen-card__caption">Timeline 8 шагов · квота</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Status</div>
+        <div class="screen-card__subtitle">Прогресс легализации</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/09-documents.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">09</span>
+        <span class="screen-card__badge badge--b2c">B2C</span>
+        <div class="screen-card__icon">📄</div>
+        <div class="screen-card__caption">Паспорт · патент · СНИЛС · ИНН · ДМС</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Documents</div>
+        <div class="screen-card__subtitle">6 документов со статусами</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/10-about-employer.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">10</span>
+        <span class="screen-card__badge badge--b2c">B2C</span>
+        <div class="screen-card__icon">🏢</div>
+        <div class="screen-card__caption">Застройщик№1 · объект · общежитие · QR · 8 документов</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Employer</div>
+        <div class="screen-card__subtitle">Всё о работодателе</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/11-life-in-russia.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">11</span>
+        <span class="screen-card__badge badge--b2c">B2C</span>
+        <div class="screen-card__icon">🇷🇺</div>
+        <div class="screen-card__caption">RAG-консультант · быт · FAQ</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Life in Russia</div>
+        <div class="screen-card__subtitle">RAG-консультант по жизни</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/12-finance.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">12</span>
+        <span class="screen-card__badge badge--b2c">B2C</span>
+        <div class="screen-card__icon">💳</div>
+        <div class="screen-card__caption">Карта партнёра · ЗП · переводы в Индию</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Finance</div>
+        <div class="screen-card__subtitle">Финансовый хаб</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/13-lifestyle.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">13</span>
+        <span class="screen-card__badge badge--b2c">B2C</span>
+        <div class="screen-card__icon">🛍️</div>
+        <div class="screen-card__caption">Экосистема партнёров · промокоды</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Lifestyle</div>
+        <div class="screen-card__subtitle">9 сервисов + промо</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2c/14-profile.html">
+      <div class="screen-card__thumb">
+        <span class="screen-card__num">14</span>
+        <span class="screen-card__badge badge--b2c">B2C</span>
+        <div class="screen-card__icon">👤</div>
+        <div class="screen-card__caption">Настройки · язык · безопасность</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Profile</div>
+        <div class="screen-card__subtitle">Личные настройки</div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<!-- =================== B2B =================== -->
+<div class="section-head">
+  <h2>B2B Lite — Работодатель <span class="section-head__count">5</span></h2>
+  <span class="section-head__meta">Desktop (HR) + Mobile (Foreman) · Dark theme</span>
+</div>
+
+<div class="gallery">
+  <div class="gallery__grid">
+
+    <a class="screen-card" href="b2b/15-hr-dashboard.html">
+      <div class="screen-card__thumb dark">
+        <span class="screen-card__num">15</span>
+        <span class="screen-card__badge badge--b2b">B2B</span>
+        <div class="screen-card__icon">📊</div>
+        <div class="screen-card__caption">KPI · 8 сотрудников · live escalations</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">HR Dashboard</div>
+        <div class="screen-card__subtitle">Главная HR-консоли</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2b/16-worker-detail.html">
+      <div class="screen-card__thumb dark">
+        <span class="screen-card__num">16</span>
+        <span class="screen-card__badge badge--b2b">B2B</span>
+        <div class="screen-card__icon">👷</div>
+        <div class="screen-card__caption">Раджу Шарма · профиль · timeline</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Worker detail</div>
+        <div class="screen-card__subtitle">Карточка сотрудника</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2b/17-rag-upload.html">
+      <div class="screen-card__thumb dark">
+        <span class="screen-card__num">17</span>
+        <span class="screen-card__badge badge--b2b">B2B</span>
+        <div class="screen-card__icon">📚</div>
+        <div class="screen-card__caption">Drag-drop · chunks · embeddings</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">RAG upload</div>
+        <div class="screen-card__subtitle">База знаний работодателя</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2b/18-ticket-inbox.html">
+      <div class="screen-card__thumb dark">
+        <span class="screen-card__num">18</span>
+        <span class="screen-card__badge badge--b2b">B2B</span>
+        <div class="screen-card__icon">📥</div>
+        <div class="screen-card__caption">Эскалации AI · перевод · audio</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Ticket inbox</div>
+        <div class="screen-card__subtitle">Обработка эскалаций</div>
+      </div>
+    </a>
+
+    <a class="screen-card" href="b2b/19-foreman-scan.html">
+      <div class="screen-card__thumb dark">
+        <span class="screen-card__num">19</span>
+        <span class="screen-card__badge badge--b2b">B2B</span>
+        <div class="screen-card__icon">📱</div>
+        <div class="screen-card__caption">QR-сканер · offline · допуск</div>
+      </div>
+      <div class="screen-card__meta">
+        <div class="screen-card__title">Foreman scan</div>
+        <div class="screen-card__subtitle">Мобильный сканер прораба</div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<div class="footer">
+  <p>AdaptaAI MVP v2 · 2026-05-21 · Generated by Opus orchestrator + 5 parallel screen-builder agents</p>
+  <p style="margin-top: 8px;">Design fusion: Linear (surface ladder) + ElevenLabs (voice) + Cursor (AI stages) · Brand: cyan→emerald</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Статус</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { background: var(--surface-2); }
+
+    .app-header { gap: var(--space-3); }
+    .app-header__title { flex: 1; }
+
+    /* Progress hero */
+    .progress-hero {
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+      border-radius: var(--rounded-xl);
+      padding: var(--space-5);
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-hero__label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    .progress-hero__count {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .progress-hero__num {
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .progress-hero__total {
+      font-size: 18px;
+      font-weight: 500;
+      opacity: 0.85;
+    }
+    .progress-hero__sub {
+      margin-top: 4px;
+      font-size: 13px;
+      opacity: 0.85;
+    }
+    .progress-bar {
+      margin-top: var(--space-4);
+      height: 8px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: var(--rounded-pill);
+      overflow: hidden;
+    }
+    .progress-bar__fill {
+      height: 100%;
+      width: 50%;
+      background: #fff;
+      border-radius: var(--rounded-pill);
+    }
+
+    /* Warning card */
+    .alert-card {
+      background: var(--warning-soft);
+      border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      display: flex;
+      gap: var(--space-3);
+      align-items: flex-start;
+    }
+    .alert-card__icon {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--warning);
+      color: #fff;
+      border-radius: var(--rounded-md);
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .alert-card__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--warning-dark);
+    }
+    .alert-card__text {
+      font-size: 13px;
+      color: var(--warning-dark);
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+    .alert-card__action {
+      margin-top: var(--space-3);
+      background: var(--warning);
+      color: #fff;
+      height: 36px;
+      padding: 0 var(--space-4);
+      border-radius: var(--rounded-md);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Section heading */
+    .section-h {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.88px;
+      text-transform: uppercase;
+      color: var(--ink-subtle);
+      margin: 0 4px 8px;
+    }
+
+    /* Timeline */
+    .timeline {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4) var(--space-5);
+    }
+    .timeline__row {
+      display: flex;
+      gap: var(--space-3);
+      padding: var(--space-3) 0;
+      position: relative;
+    }
+    .timeline__row + .timeline__row {
+      border-top: 1px solid var(--hairline);
+    }
+    .timeline__node {
+      width: 32px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 2px;
+    }
+    .timeline__dot {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .timeline__dot--done {
+      background: var(--success);
+      color: #fff;
+    }
+    .timeline__dot--done::after {
+      content: '✓';
+      font-size: 14px;
+    }
+    .timeline__dot--progress {
+      background: var(--info-soft);
+      border: 2px solid var(--info);
+      color: var(--info);
+    }
+    .timeline__dot--progress::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid var(--info);
+      opacity: 0.4;
+      animation: ring-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes ring-pulse {
+      0%, 100% { transform: scale(0.85); opacity: 0.5; }
+      50% { transform: scale(1.15); opacity: 0; }
+    }
+    .timeline__dot--pending {
+      background: transparent;
+      border: 2px solid var(--hairline-strong);
+    }
+    .timeline__body { flex: 1; min-width: 0; }
+    .timeline__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+    .timeline__sub {
+      font-size: 12px;
+      color: var(--ink-subtle);
+      margin-top: 2px;
+      font-feature-settings: "tnum" 1;
+    }
+    .timeline__row--pending .timeline__title { color: var(--ink-subtle); }
+    .timeline__pill { align-self: flex-start; flex-shrink: 0; }
+
+    /* Next step card */
+    .next-card {
+      background: var(--info-soft);
+      border: 1px solid color-mix(in srgb, var(--info) 25%, transparent);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+    }
+    .next-card__label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--info-dark);
+    }
+    .next-card__title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--info-dark);
+      margin-top: 4px;
+    }
+    .next-card__sub {
+      font-size: 13px;
+      color: var(--info-dark);
+      opacity: 0.78;
+      margin-top: 4px;
+    }
+    .next-card__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--space-3);
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+    .next-card__eta {
+      font-size: 12px;
+      color: var(--info-dark);
+      opacity: 0.78;
+      font-feature-settings: "tnum" 1;
+    }
+
+    /* Quota card */
+    .quota-card {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-5);
+    }
+    .quota-card__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .quota-card__sub {
+      font-size: 13px;
+      color: var(--ink-subtle);
+      margin-top: 2px;
+    }
+    .quota-bar {
+      margin-top: var(--space-4);
+      height: 10px;
+      background: var(--surface-2);
+      border-radius: var(--rounded-pill);
+      position: relative;
+      overflow: visible;
+    }
+    .quota-bar__fill {
+      height: 100%;
+      background: var(--brand-gradient);
+      border-radius: var(--rounded-pill);
+      width: 21.3%;
+      position: relative;
+    }
+    .quota-bar__marker {
+      position: absolute;
+      top: -3px;
+      right: -8px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid var(--brand-emerald);
+      box-shadow: var(--shadow-sm);
+    }
+    .quota-bar__legend {
+      display: flex;
+      justify-content: space-between;
+      margin-top: var(--space-2);
+      font-size: 12px;
+      color: var(--ink-subtle);
+      font-feature-settings: "tnum" 1;
+    }
+    .quota-bar__legend strong { color: var(--ink); font-weight: 600; }
+
+    .stack-screen { padding-bottom: var(--space-6); }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <main class="device-frame">
+    <header class="app-header">
+      <button class="app-header__back" aria-label="Back" onclick="if (history.length > 1) history.back(); else window.location='04-hub.html';">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12l14 0"/>
+          <path d="M5 12l6 6"/>
+          <path d="M5 12l6 -6"/>
+        </svg>
+      </button>
+      <h1 class="app-header__title" data-i18n="status.title">Ваш статус</h1>
+      <div class="lang-switch">
+        <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+        <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+        <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <div class="stack stack-5 stack-screen">
+
+        <!-- Progress hero -->
+        <section class="progress-hero">
+          <div class="progress-hero__label">
+            <span class="lang-only-ru">Легализация в России</span>
+            <span class="lang-only-hi">रूस में वैधीकरण</span>
+            <span class="lang-only-en">Legalization in Russia</span>
+          </div>
+          <div class="progress-hero__count">
+            <span class="progress-hero__num tnum">4</span>
+            <span class="progress-hero__total tnum">/ 8</span>
+            <span class="progress-hero__total" data-i18n="status.steps">шагов завершено</span>
+          </div>
+          <div class="progress-hero__sub">
+            <span class="lang-only-ru"><span data-user-name></span>, вы прошли половину пути 🎉</span>
+            <span class="lang-only-hi"><span data-user-name></span>, आपने आधा रास्ता तय कर लिया 🎉</span>
+            <span class="lang-only-en"><span data-user-name></span>, you are halfway through 🎉</span>
+          </div>
+          <div class="progress-bar"><div class="progress-bar__fill"></div></div>
+        </section>
+
+        <!-- Warning -->
+        <section class="alert-card">
+          <div class="alert-card__icon">⚠️</div>
+          <div class="grow">
+            <div class="alert-card__title">
+              <span class="lang-only-ru">Патент истекает через 14 дней</span>
+              <span class="lang-only-hi">पेटेंट 14 दिनों में समाप्त हो रहा है</span>
+              <span class="lang-only-en">Patent expires in 14 days</span>
+            </div>
+            <div class="alert-card__text">
+              <span class="lang-only-ru">До 12.03.2027 — оплатите налог за следующий месяц (5 600 ₽)</span>
+              <span class="lang-only-hi">12.03.2027 तक — अगले माह का कर भुगतान करें (₽5 600)</span>
+              <span class="lang-only-en">Until 12.03.2027 — pay tax for next month (₽5,600)</span>
+            </div>
+            <button class="alert-card__action" onclick="window.location='12-finance.html'">
+              <span class="lang-only-ru">Оплатить сейчас</span>
+              <span class="lang-only-hi">अभी भुगतान करें</span>
+              <span class="lang-only-en">Pay now</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Next step (in progress) -->
+        <section class="next-card">
+          <div class="next-card__label">
+            <span class="lang-only-ru">Сейчас в работе</span>
+            <span class="lang-only-hi">अभी प्रगति में</span>
+            <span class="lang-only-en">In progress now</span>
+          </div>
+          <div class="next-card__title" data-i18n="status.patent">Оформляется патент</div>
+          <div class="next-card__sub">
+            <span class="lang-only-ru">HR подаёт документы в МВД. Готовность 60 %.</span>
+            <span class="lang-only-hi">HR दस्तावेज़ MVD को भेज रहे हैं। तैयारी 60%।</span>
+            <span class="lang-only-en">HR is submitting docs to MVD. 60% complete.</span>
+          </div>
+          <div class="next-card__row">
+            <div class="next-card__eta">
+              <span class="lang-only-ru">в процессе оформления</span>
+              <span class="lang-only-hi">प्रक्रिया में</span>
+              <span class="lang-only-en">in progress</span>
+            </div>
+            <span class="stage stage-thinking">
+              <span class="lang-only-ru">обработка</span>
+              <span class="lang-only-hi">प्रक्रिया</span>
+              <span class="lang-only-en">processing</span>
+            </span>
+          </div>
+        </section>
+
+        <!-- Timeline -->
+        <section>
+          <h2 class="section-h">
+            <span class="lang-only-ru">Все шаги</span>
+            <span class="lang-only-hi">सभी चरण</span>
+            <span class="lang-only-en">All steps</span>
+          </h2>
+          <div class="timeline" id="timeline"></div>
+        </section>
+
+        <!-- Quota card -->
+        <section>
+          <h2 class="section-h" data-i18n="status.quota">Ваше место в квоте</h2>
+          <div class="quota-card">
+            <div class="quota-card__title">
+              <span class="lang-only-ru">Вы 32-й из 150 рабочих Застройщик№1</span>
+              <span class="lang-only-hi">आप Застройщик№1 के 150 श्रमिकों में से 32वें हैं</span>
+              <span class="lang-only-en">You are 32nd of 150 Застройщик№1 workers</span>
+            </div>
+            <div class="quota-card__sub">
+              <span class="lang-only-ru">в 2026 году по квоте Минтруда РФ</span>
+              <span class="lang-only-hi">2026 में Mintrud RF कोटा द्वारा</span>
+              <span class="lang-only-en">in 2026 under the Mintrud RF quota</span>
+            </div>
+            <div class="quota-bar">
+              <div class="quota-bar__fill"><div class="quota-bar__marker"></div></div>
+            </div>
+            <div class="quota-bar__legend">
+              <span><strong class="tnum">32</strong> / 150</span>
+              <span>
+                <span class="lang-only-ru">осталось мест: <strong class="tnum">118</strong></span>
+                <span class="lang-only-hi">शेष: <strong class="tnum">118</strong></span>
+                <span class="lang-only-en">left: <strong class="tnum">118</strong></span>
+              </span>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <nav class="app-bottom-nav">
+      <a href="04-hub.html" class="app-bottom-nav__item">
+        <span class="icon">🏠</span>
+        <span data-i18n="nav.home">Главная</span>
+      </a>
+      <a href="05-ai-chat.html" class="app-bottom-nav__item">
+        <span class="icon">💬</span>
+        <span data-i18n="nav.ai">AI</span>
+      </a>
+      <a href="09-documents.html" class="app-bottom-nav__item">
+        <span class="icon">📄</span>
+        <span data-i18n="nav.docs">Документы</span>
+      </a>
+      <a href="10-about-employer.html" class="app-bottom-nav__item">
+        <span class="icon">🏢</span>
+        <span data-i18n="nav.employer">HR</span>
+      </a>
+      <a href="14-profile.html" class="app-bottom-nav__item">
+        <span class="icon">👤</span>
+        <span data-i18n="nav.profile">Профиль</span>
+      </a>
+    </nav>
+  </main>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script defer>
+    window.ADAPTA_API_BASE_URL = window.ADAPTA_API_BASE_URL || '';
+  </script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      // ── Step label translations (API key → RU/HI/EN) ──────────────────────
+      const STEP_LABELS = {
+        arrived:     { ru: 'Регистрация в России',      hi: 'रूस में पंजीकरण',          en: 'Registration in Russia' },
+        snils:       { ru: 'Оформить СНИЛС',            hi: 'SNILS प्राप्त करें',         en: 'Get SNILS' },
+        inn:         { ru: 'Получить ИНН',              hi: 'INN प्राप्त करें',           en: 'Get INN' },
+        biometrics:  { ru: 'Сдать биометрию',           hi: 'बायोमेट्रिक्स जमा करें',     en: 'Submit biometrics' },
+        patent:      { ru: 'Оформить патент',           hi: 'पेटेंट प्राप्त करें',         en: 'Get work patent' },
+        salary_card: { ru: 'Открыть зарплатную карту',  hi: 'वेतन कार्ड खोलें',           en: 'Open salary card' },
+        sbermobile:  { ru: 'Подключить связь',     hi: 'मोबाइल कनेक्ट करें',     en: 'Connect mobile' },
+        dms:         { ru: 'Получить ДМС',              hi: 'DMS बीमा प्राप्त करें',       en: 'Get DMS insurance' },
+      };
+
+      // ── API status → UI state mapping ─────────────────────────────────────
+      // API returns: todo | in_progress | done
+      // Existing CSS uses: done | progress | pending
+      const STATUS_DOT = { done: 'done', in_progress: 'progress', todo: 'pending' };
+      // Normalise legacy mock state names too (in-progress → in_progress)
+      function normaliseStatus(s) {
+        if (s === 'in-progress') return 'in_progress';
+        if (s === 'pending')     return 'todo';
+        return s; // done | in_progress | todo
+      }
+
+      const PILL_IN_PROGRESS = {
+        cls: 'stage stage-thinking timeline__pill',
+        ru: 'в процессе', hi: 'प्रगति में', en: 'in progress',
+      };
+
+      const SUB_BY_STATUS = {
+        done:        { ru: 'Завершено',   hi: 'पूरा हुआ',        en: 'Completed' },
+        in_progress: { ru: 'Идёт сейчас', hi: 'अभी चल रहा है',  en: 'Happening now' },
+        todo:        { ru: 'Ожидает',     hi: 'प्रतीक्षित',      en: 'Pending' },
+      };
+
+      // ── Fallback mock data (1/8 brand-new user) ───────────────────────────
+      const MOCK_STEPS = window.AdaptaMock ? window.AdaptaMock.timeline.map((s) => ({
+        key: s.key === 'biometry' ? 'biometrics' : s.key === 'card' ? 'salary_card' : s.key === 'sim' ? 'sbermobile' : s.key,
+        status: normaliseStatus(s.state),
+        updated_at: s.date || null,
+      })) : [
+        { key: 'arrived',     status: 'done',        updated_at: '2026-02-12' },
+        { key: 'snils',       status: 'todo',         updated_at: null },
+        { key: 'inn',         status: 'todo',         updated_at: null },
+        { key: 'biometrics',  status: 'todo',         updated_at: null },
+        { key: 'patent',      status: 'todo',         updated_at: null },
+        { key: 'salary_card', status: 'todo',         updated_at: null },
+        { key: 'sbermobile',  status: 'todo',         updated_at: null },
+        { key: 'dms',         status: 'todo',         updated_at: null },
+      ];
+
+      // ── DOM refs ──────────────────────────────────────────────────────────
+      const timeline      = document.getElementById('timeline');
+      const heroNum       = document.querySelector('.progress-hero__num');
+      const heroTotal     = document.querySelector('.progress-hero__total.tnum');
+      const heroSub       = document.querySelector('.progress-hero__sub');
+      const progressFill  = document.querySelector('.progress-bar__fill');
+      const nextCard      = document.querySelector('.next-card');
+      const nextTitle     = nextCard ? nextCard.querySelector('.next-card__title') : null;
+      const nextSub       = nextCard ? nextCard.querySelector('.next-card__sub') : null;
+
+      // ── Utility ───────────────────────────────────────────────────────────
+      const dateLocale = { ru: 'ru-RU', hi: 'hi-IN', en: 'en-GB' };
+      function fmt(iso) {
+        if (!iso) return '';
+        const lang = window.AdaptaI18n ? window.AdaptaI18n.lang : 'ru';
+        try {
+          return new Date(iso).toLocaleDateString(dateLocale[lang] || 'ru-RU', { day: '2-digit', month: 'short', year: 'numeric' });
+        } catch (e) { return iso; }
+      }
+
+      function el(tag, cls, txt) {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (txt != null) e.textContent = txt;
+        return e;
+      }
+
+      function showToast(msg) {
+        const t = document.createElement('div');
+        t.className = 'toast toast--error';
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--danger,#ef4444);color:#fff;padding:10px 18px;border-radius:8px;font-size:14px;z-index:9999;max-width:90vw;text-align:center;';
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 4000);
+      }
+
+      // ── Render hero progress ──────────────────────────────────────────────
+      function renderHero(done, total) {
+        if (heroNum) heroNum.textContent = done;
+        if (heroTotal) heroTotal.textContent = '/ ' + total;
+        if (progressFill) progressFill.style.width = (total > 0 ? Math.round((done / total) * 100) : 0) + '%';
+
+        const lang = window.AdaptaI18n ? window.AdaptaI18n.lang : 'ru';
+        const raw = localStorage.getItem('adapta_user');
+        const apiUser = raw ? (() => { try { return JSON.parse(raw); } catch(e) { return null; } })() : null;
+        const firstName = (apiUser && apiUser.first_name) || 'Друг';
+
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        const subs = {
+          ru: `${firstName}, выполнено ${pct}% пути`,
+          hi: `${firstName}, ${pct}% रास्ता तय हो चुका है`,
+          en: `${firstName}, ${pct}% of the journey done`,
+        };
+        if (heroSub) {
+          heroSub.querySelectorAll('.lang-only-ru,.lang-only-hi,.lang-only-en').forEach((s) => s.remove());
+          ['ru', 'hi', 'en'].forEach((l) => {
+            const sp = document.createElement('span');
+            sp.className = 'lang-only-' + l;
+            sp.textContent = subs[l];
+            heroSub.appendChild(sp);
+          });
+          if (window.AdaptaI18n) window.AdaptaI18n.render(heroSub);
+        }
+      }
+
+      // ── Render "next step" card ───────────────────────────────────────────
+      function renderNextCard(steps) {
+        if (!nextCard) return;
+        const lang = window.AdaptaI18n ? window.AdaptaI18n.lang : 'ru';
+        const active = steps.find((s) => s.status === 'in_progress') || steps.find((s) => s.status === 'todo');
+        if (!active) {
+          // All done
+          nextCard.style.display = 'none';
+          return;
+        }
+        nextCard.style.display = '';
+        const labels = STEP_LABELS[active.key] || { ru: active.key, hi: active.key, en: active.key };
+        if (nextTitle) {
+          nextTitle.querySelectorAll('.lang-only-ru,.lang-only-hi,.lang-only-en').forEach((s) => s.remove());
+          nextTitle.removeAttribute('data-i18n');
+          ['ru', 'hi', 'en'].forEach((l) => {
+            const sp = document.createElement('span');
+            sp.className = 'lang-only-' + l;
+            sp.textContent = labels[l];
+            nextTitle.appendChild(sp);
+          });
+        }
+        if (nextSub) {
+          const subTexts = {
+            ru: active.status === 'in_progress' ? 'HR оформляет документы. Ожидайте.' : 'Следующий шаг после текущего.',
+            hi: active.status === 'in_progress' ? 'HR दस्तावेज़ तैयार कर रहे हैं। प्रतीक्षा करें।' : 'वर्तमान के बाद अगला चरण।',
+            en: active.status === 'in_progress' ? 'HR is processing documents. Please wait.' : 'Next step after the current one.',
+          };
+          nextSub.querySelectorAll('.lang-only-ru,.lang-only-hi,.lang-only-en').forEach((s) => s.remove());
+          ['ru', 'hi', 'en'].forEach((l) => {
+            const sp = document.createElement('span');
+            sp.className = 'lang-only-' + l;
+            sp.textContent = subTexts[l];
+            nextSub.appendChild(sp);
+          });
+        }
+        if (window.AdaptaI18n) window.AdaptaI18n.render(nextCard);
+      }
+
+      // ── Render timeline ───────────────────────────────────────────────────
+      function renderTimeline(steps) {
+        const lang = window.AdaptaI18n ? window.AdaptaI18n.lang : 'ru';
+        timeline.textContent = '';
+        steps.forEach((s) => {
+          const status  = normaliseStatus(s.status);
+          const dotCls  = STATUS_DOT[status] || 'pending';
+          const sub     = SUB_BY_STATUS[status] || SUB_BY_STATUS.todo;
+          const labels  = STEP_LABELS[s.key] || { ru: s.key, hi: s.key, en: s.key };
+          const dateStr = fmt(s.updated_at);
+
+          const row = el('div', 'timeline__row timeline__row--' + (status === 'in_progress' ? 'in-progress' : status === 'todo' ? 'pending' : status));
+
+          const node = el('div', 'timeline__node');
+          node.appendChild(el('span', 'timeline__dot timeline__dot--' + dotCls));
+          row.appendChild(node);
+
+          const body = el('div', 'timeline__body');
+          // Title with lang spans
+          const titleDiv = el('div', 'timeline__title');
+          ['ru', 'hi', 'en'].forEach((l) => {
+            const sp = document.createElement('span');
+            sp.className = 'lang-only-' + l;
+            sp.textContent = labels[l];
+            titleDiv.appendChild(sp);
+          });
+          body.appendChild(titleDiv);
+
+          const subText = sub[lang] + (dateStr ? ' · ' + dateStr : '');
+          body.appendChild(el('div', 'timeline__sub', subText));
+          row.appendChild(body);
+
+          if (status === 'in_progress') {
+            row.appendChild(el('span', PILL_IN_PROGRESS.cls, PILL_IN_PROGRESS[lang]));
+          }
+          timeline.appendChild(row);
+        });
+        if (window.AdaptaI18n) window.AdaptaI18n.render(timeline);
+      }
+
+      // ── Track last rendered state for lang-switch re-render ──────────────
+      const mockDone = MOCK_STEPS.filter((s) => s.status === 'done').length;
+      let _lastSteps = MOCK_STEPS;
+      let _lastDone  = mockDone;
+      let _lastTotal = 8;
+
+      // ── Full render pass ──────────────────────────────────────────────────
+      function renderAll(steps, done, total) {
+        _lastSteps = steps;
+        _lastDone  = done;
+        _lastTotal = total;
+        renderHero(done, total);
+        renderNextCard(steps);
+        renderTimeline(steps);
+      }
+
+      // ── Initial render from mock (instant) ───────────────────────────────
+      renderAll(MOCK_STEPS, mockDone, 8);
+
+      // ── Fetch live data ───────────────────────────────────────────────────
+      (async function loadOnboarding() {
+        const jwt = localStorage.getItem('adapta_jwt');
+        if (!jwt) return; // not logged in — keep mock
+
+        const base = (window.ADAPTA_API_BASE_URL || '').replace(/\/$/, '');
+        try {
+          const resp = await fetch(base + '/api/v1/me/onboarding', {
+            headers: { 'Authorization': 'Bearer ' + jwt },
+          });
+          if (resp.status === 401) return; // silently keep mock on auth error
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          const data = await resp.json();
+          // data = { steps:[{key,status,updated_at}], done, total }
+          if (!Array.isArray(data.steps) || data.steps.length === 0) return;
+          renderAll(data.steps, data.done, data.total);
+        } catch (err) {
+          const lang = window.AdaptaI18n ? window.AdaptaI18n.lang : 'ru';
+          const msgs = {
+            ru: 'Не удалось загрузить статус — показаны сохранённые данные',
+            hi: 'स्टेटस लोड नहीं हो सका — सहेजा गया डेटा दिखाया जा रहा है',
+            en: 'Could not load status — showing cached data',
+          };
+          showToast(msgs[lang] || msgs.ru);
+        }
+      })();
+
+      // ── Re-render on lang switch ──────────────────────────────────────────
+      document.querySelectorAll('[data-lang-switch]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          // Give i18n.js time to switch lang, then re-render with last known state
+          setTimeout(() => renderAll(_lastSteps, _lastDone, _lastTotal), 0);
+        });
+      });
+    });
+  </script>
+  <script defer>
+    (function () {
+      const raw = localStorage.getItem('adapta_user');
+      const apiUser = raw ? JSON.parse(raw) : null;
+      const firstName = (apiUser && apiUser.first_name) || 'Друг';
+      const lastName  = (apiUser && apiUser.last_name)  || '';
+      document.querySelectorAll('[data-user-name]').forEach(function (el) { el.textContent = firstName; });
+      document.querySelectorAll('[data-user-fullname]').forEach(function (el) { el.textContent = (firstName + ' ' + lastName).trim(); });
+      document.querySelectorAll('[data-user-initials]').forEach(function (el) { el.textContent = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase() || 'УЧ'; });
+    })();
+  </script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+</body>
+</html>

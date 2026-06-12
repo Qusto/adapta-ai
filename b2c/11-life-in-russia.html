@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Жизнь и финансы в России</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { background: var(--surface-2); }
+    .app-header { gap: var(--space-3); }
+    .app-header__title { flex: 1; }
+
+    /* Search input wrap */
+    .search-wrap { position: relative; }
+
+    /* Featured cards */
+    .feat-card {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      display: flex;
+      gap: var(--space-4);
+      align-items: center;
+      text-decoration: none;
+      color: inherit;
+      transition: all var(--dur-fast) var(--ease-out);
+      width: 100%;
+      text-align: left;
+    }
+    .feat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      text-decoration: none;
+    }
+    .feat-card__icon {
+      width: 64px; height: 64px;
+      border-radius: var(--rounded-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      flex-shrink: 0;
+    }
+    .feat-card__icon--money    { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); }
+    .feat-card__icon--transport{ background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%); }
+    .feat-card__icon--clinic   { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); }
+    .feat-card__icon--shops    { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); }
+    .feat-card__icon--exchange { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); }
+
+    .feat-card__body { flex: 1; min-width: 0; }
+    .feat-card__title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+    .feat-card__sub {
+      font-size: 13px;
+      color: var(--ink-subtle);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .feat-card__chev { color: var(--ink-tertiary); flex-shrink: 0; }
+
+    /* FAQ entry */
+    .faq {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+      text-align: left;
+      width: 100%;
+    }
+    .faq:hover { box-shadow: var(--shadow-sm); }
+    .faq__q {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .faq__q::before { content: '🙋'; flex-shrink: 0; }
+    .faq__a {
+      margin-top: var(--space-3);
+      padding: var(--space-3);
+      background: var(--surface-2);
+      border-radius: var(--rounded-md);
+      font-size: 13px;
+      color: var(--ink-muted);
+      line-height: 1.5;
+      border-left: 3px solid var(--brand-emerald);
+    }
+    .faq__cites {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: var(--space-3);
+    }
+
+    /* Section heading */
+    .section-h {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.88px;
+      text-transform: uppercase;
+      color: var(--ink-subtle);
+      margin: 0 4px 8px;
+    }
+    .section-h__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin: 0 4px 8px;
+    }
+    .section-h__row a {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--brand-cyan-deep);
+    }
+
+    /* Quick suggestion chips under search */
+    .chip-row {
+      display: flex;
+      gap: var(--space-2);
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .chip-row::-webkit-scrollbar { display: none; }
+    .chip {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      color: var(--ink-muted);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: var(--rounded-pill);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .chip:hover { background: var(--surface-2); }
+
+    /* AI banner */
+    .ai-banner {
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .ai-banner__icon {
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .ai-banner__body { flex: 1; }
+    .ai-banner__title { font-size: 14px; font-weight: 600; }
+    .ai-banner__sub { font-size: 12px; opacity: 0.88; margin-top: 2px; }
+    .ai-banner__cta {
+      height: 32px;
+      padding: 0 var(--space-3);
+      background: rgba(255,255,255,0.9);
+      color: var(--brand-emerald-deep);
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--rounded-pill);
+      flex-shrink: 0;
+    }
+
+    .stack-screen { padding-bottom: var(--space-6); }
+
+    /* === Finance summary card === */
+    .fin-summary {
+      background: linear-gradient(135deg, #06b6d4 0%, #0891b2 45%, #059669 100%);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+    }
+    .fin-summary::after {
+      content: '';
+      position: absolute;
+      top: -20px; right: -30px;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .fin-summary:hover { opacity: 0.93; }
+    .fin-summary__icon {
+      width: 44px; height: 44px;
+      background: rgba(255,255,255,0.2);
+      border-radius: var(--rounded-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .fin-summary__body { flex: 1; min-width: 0; }
+    .fin-summary__label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+    .fin-summary__balance {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+      font-feature-settings: "tnum" 1, "lnum" 1;
+      margin-top: 2px;
+    }
+    .fin-summary__status {
+      font-size: 12px;
+      opacity: 0.88;
+      margin-top: 2px;
+    }
+    .fin-summary__chev { opacity: 0.75; flex-shrink: 0; }
+
+    /* === Compact promo row === */
+    .promo-mini-row {
+      display: flex;
+      gap: var(--space-3);
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .promo-mini-row::-webkit-scrollbar { display: none; }
+    .promo-mini {
+      flex: 0 0 calc(50% - var(--space-2));
+      border-radius: var(--rounded-lg);
+      padding: var(--space-3) var(--space-4);
+      color: #fff;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .promo-mini__badge {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: rgba(255,255,255,0.24);
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: var(--rounded-pill);
+    }
+    .promo-mini__title {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.25;
+      max-width: 80%;
+    }
+    .promo-mini__sub {
+      font-size: 11px;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <main class="device-frame">
+    <header class="app-header">
+      <button class="app-header__back" aria-label="Back" onclick="if (history.length > 1) history.back(); else window.location='04-hub.html';">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12l14 0"/>
+          <path d="M5 12l6 6"/>
+          <path d="M5 12l6 -6"/>
+        </svg>
+      </button>
+      <h1 class="app-header__title">
+        <span class="lang-only-ru">Жизнь и финансы в России</span>
+        <span class="lang-only-hi">रूस में जीवन और वित्त</span>
+        <span class="lang-only-en">Life &amp; Finance in Russia</span>
+      </h1>
+      <div class="lang-switch">
+        <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+        <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+        <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <div class="stack stack-4 stack-screen">
+
+        <!-- ── Finance summary ──────────────────────────────────────── -->
+        <section>
+          <div class="section-h__row">
+            <h2 class="section-h" style="margin:0;">
+              <span class="lang-only-ru">Финансы / Карта</span>
+              <span class="lang-only-hi">वित्त / कार्ड</span>
+              <span class="lang-only-en">Finance / Card</span>
+            </h2>
+            <a href="12-finance.html" id="fin-summary-link">
+              <span class="lang-only-ru">Подробнее</span>
+              <span class="lang-only-hi">विवरण</span>
+              <span class="lang-only-en">Details</span>
+            </a>
+          </div>
+          <a href="12-finance.html" class="fin-summary" id="fin-summary-card">
+            <div class="fin-summary__icon">💳</div>
+            <div class="fin-summary__body">
+              <div class="fin-summary__label">
+                <span class="lang-only-ru">Баланс карты партнёра</span>
+                <span class="lang-only-hi">SberCard बैलेंस</span>
+                <span class="lang-only-en">SberCard balance</span>
+              </div>
+              <div class="fin-summary__balance" id="fin-balance">47 820 ₽</div>
+              <div class="fin-summary__status" id="fin-status">
+                <span class="lang-only-ru">•••• <span id="fin-card-num">1234</span> · Карта активна</span>
+                <span class="lang-only-hi">•••• <span id="fin-card-num-hi">1234</span> · कार्ड सक्रिय</span>
+                <span class="lang-only-en">•••• <span id="fin-card-num-en">1234</span> · Card active</span>
+              </div>
+            </div>
+            <svg class="fin-summary__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6l-6 6"/></svg>
+          </a>
+        </section>
+
+        <!-- ── Промо для иностранных сотрудников ──────────────────── -->
+        <section>
+          <div class="section-h__row">
+            <h2 class="section-h" style="margin:0;">
+              <span class="lang-only-ru">Промо для сотрудников</span>
+              <span class="lang-only-hi">कर्मचारियों के लिए ऑफर</span>
+              <span class="lang-only-en">Promos for workers</span>
+            </h2>
+            <a href="13-lifestyle.html">
+              <span class="lang-only-ru">Все промо</span>
+              <span class="lang-only-hi">सभी ऑफर</span>
+              <span class="lang-only-en">All promos</span>
+            </a>
+          </div>
+          <div class="promo-mini-row" id="promo-mini-row">
+            <!-- filled by JS from AdaptaMock.promos[0..1] -->
+          </div>
+        </section>
+
+        <!-- Search -->
+        <div class="search-wrap">
+          <input class="input input-search"
+                 data-i18n-attr="placeholder:life.search"
+                 placeholder="Спросите что угодно о жизни в России">
+        </div>
+
+        <!-- Quick chips -->
+        <div class="chip-row">
+          <button class="chip">
+            <span class="lang-only-ru">МФЦ рядом</span>
+            <span class="lang-only-hi">पास का MFC</span>
+            <span class="lang-only-en">MFC nearby</span>
+          </button>
+          <button class="chip">
+            <span class="lang-only-ru">Что купить на 500₽</span>
+            <span class="lang-only-hi">₹500 में क्या खरीदें</span>
+            <span class="lang-only-en">What to buy for 500₽</span>
+          </button>
+          <button class="chip">
+            <span class="lang-only-ru">Хинди-говорящий врач</span>
+            <span class="lang-only-hi">हिंदी डॉक्टर</span>
+            <span class="lang-only-en">Hindi-speaking doctor</span>
+          </button>
+          <button class="chip">
+            <span class="lang-only-ru">Сим-карта без СНИЛС</span>
+            <span class="lang-only-hi">SNILS के बिना SIM</span>
+            <span class="lang-only-en">SIM without SNILS</span>
+          </button>
+        </div>
+
+        <!-- Featured (категории) -->
+        <section>
+          <h2 class="section-h">
+            <span class="lang-only-ru">Гид по разделам</span>
+            <span class="lang-only-hi">अनुभाग गाइड</span>
+            <span class="lang-only-en">Topic guide</span>
+          </h2>
+          <div class="stack stack-3">
+            <a href="#" class="feat-card">
+              <div class="feat-card__icon feat-card__icon--money">💰</div>
+              <div class="feat-card__body">
+                <div class="feat-card__title">
+                  <span class="lang-only-ru">Как платить: наличные vs карта vs СБП</span>
+                  <span class="lang-only-hi">भुगतान: नकद बनाम कार्ड बनाम SBP</span>
+                  <span class="lang-only-en">Cash vs card vs SBP</span>
+                </div>
+                <div class="feat-card__sub">
+                  <span class="lang-only-ru">6 статей · последнее обновление 12.02</span>
+                  <span class="lang-only-hi">6 लेख · अपडेट 12.02</span>
+                  <span class="lang-only-en">6 articles · updated 12.02</span>
+                </div>
+              </div>
+              <svg class="feat-card__chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6l-6 6"/></svg>
+            </a>
+
+            <a href="#" class="feat-card">
+              <div class="feat-card__icon feat-card__icon--transport">🚇</div>
+              <div class="feat-card__body">
+                <div class="feat-card__title">
+                  <span class="lang-only-ru">Транспорт: метро, автобус, тройка</span>
+                  <span class="lang-only-hi">परिवहन: मेट्रो, बस, Troika कार्ड</span>
+                  <span class="lang-only-en">Transport: metro, bus, Troika</span>
+                </div>
+                <div class="feat-card__sub">
+                  <span class="lang-only-ru">8 статей · карта линий метро Москвы</span>
+                  <span class="lang-only-hi">8 लेख · मॉस्को मेट्रो मानचित्र</span>
+                  <span class="lang-only-en">8 articles · Moscow metro map</span>
+                </div>
+              </div>
+              <svg class="feat-card__chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6l-6 6"/></svg>
+            </a>
+
+            <a href="#" class="feat-card">
+              <div class="feat-card__icon feat-card__icon--clinic">🏥</div>
+              <div class="feat-card__body">
+                <div class="feat-card__title">
+                  <span class="lang-only-ru">Где лечиться: ОМС vs ДМС vs платно</span>
+                  <span class="lang-only-hi">कहाँ इलाज: OMS बनाम DMS बनाम भुगतान</span>
+                  <span class="lang-only-en">Where to get treatment: OMS vs DMS vs paid</span>
+                </div>
+                <div class="feat-card__sub">
+                  <span class="lang-only-ru">Поликлиника, скорая 103, аптеки</span>
+                  <span class="lang-only-hi">क्लिनिक, एम्बुलेंस 103, फार्मेसी</span>
+                  <span class="lang-only-en">Clinic, ambulance 103, pharmacies</span>
+                </div>
+              </div>
+              <svg class="feat-card__chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6l-6 6"/></svg>
+            </a>
+
+            <a href="#" class="feat-card">
+              <div class="feat-card__icon feat-card__icon--shops">🛒</div>
+              <div class="feat-card__body">
+                <div class="feat-card__title">
+                  <span class="lang-only-ru">Магазины и доставки</span>
+                  <span class="lang-only-hi">दुकानें और डिलीवरी</span>
+                  <span class="lang-only-en">Shops & delivery</span>
+                </div>
+                <div class="feat-card__sub">
+                  <span class="lang-only-ru">Пятёрочка, Магнит, Купер, Самокат</span>
+                  <span class="lang-only-hi">Pyaterochka, Magnit, Kuper, Samokat</span>
+                  <span class="lang-only-en">Pyaterochka, Magnit, Kuper, Samokat</span>
+                </div>
+              </div>
+              <svg class="feat-card__chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6l-6 6"/></svg>
+            </a>
+
+            <a href="#" class="feat-card">
+              <div class="feat-card__icon feat-card__icon--exchange">💱</div>
+              <div class="feat-card__body">
+                <div class="feat-card__title" data-i18n="life.exchange">Обмен валюты</div>
+                <div class="feat-card__sub">
+                  <span class="lang-only-ru">Где менять рубли · курс 1 ₽ ≈ 1.04 ₹</span>
+                  <span class="lang-only-hi">रूबल बदलें · दर 1 ₽ ≈ 1.04 ₹</span>
+                  <span class="lang-only-en">Where to exchange · 1 ₽ ≈ 1.04 ₹</span>
+                </div>
+              </div>
+              <svg class="feat-card__chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6l-6 6"/></svg>
+            </a>
+          </div>
+        </section>
+
+        <!-- AI banner -->
+        <a href="05-ai-chat.html" class="ai-banner" style="text-decoration: none;">
+          <div class="ai-banner__icon">✨</div>
+          <div class="ai-banner__body">
+            <div class="ai-banner__title">
+              <span class="lang-only-ru">Не нашли ответ?</span>
+              <span class="lang-only-hi">जवाब नहीं मिला?</span>
+              <span class="lang-only-en">Didn't find an answer?</span>
+            </div>
+            <div class="ai-banner__sub">
+              <span class="lang-only-ru">Спросите AI на хинди — отвечу со ссылками</span>
+              <span class="lang-only-hi">हिंदी में AI से पूछें — स्रोतों के साथ जवाब</span>
+              <span class="lang-only-en">Ask AI in Hindi — answer with sources</span>
+            </div>
+          </div>
+          <button class="ai-banner__cta">
+            <span class="lang-only-ru">Спросить</span>
+            <span class="lang-only-hi">पूछें</span>
+            <span class="lang-only-en">Ask</span>
+          </button>
+        </a>
+
+        <!-- Popular FAQ -->
+        <section>
+          <div class="section-h__row">
+            <h2 class="section-h" style="margin: 0;">
+              <span class="lang-only-ru">Популярные вопросы</span>
+              <span class="lang-only-hi">लोकप्रिय प्रश्न</span>
+              <span class="lang-only-en">Popular questions</span>
+            </h2>
+            <a href="#" data-i18n="common.viewAll">Все</a>
+          </div>
+
+          <div class="stack stack-3">
+
+            <button class="faq">
+              <div class="faq__q">
+                <span>
+                  <span class="lang-only-ru">Где найти продукты дёшево?</span>
+                  <span class="lang-only-hi">सस्ता खाना कहाँ मिलेगा?</span>
+                  <span class="lang-only-en">Where to find cheap groceries?</span>
+                </span>
+              </div>
+              <div class="faq__a">
+                <span class="lang-only-ru">Самые недорогие — «Пятёрочка» и «Магнит». Рядом с общежитием №4 — «Пятёрочка» на ул. Котельническая, д. 23 (5 минут пешком). Скидки по карте партнёра 5–10%, акции по средам. На 500 ₽ можно купить: 1 кг риса, 1 л масла, 6 яиц…</span>
+                <span class="lang-only-hi">सबसे सस्ता — "Pyaterochka" और "Magnit"। छात्रावास #4 के पास Pyaterochka, कोटेलनिचेस्काया स्ट. 23 (5 मिनट पैदल)। Sber कार्ड से 5–10% छूट, बुधवार को सेल। ₹500 में: 1 किलो चावल, 1 लीटर तेल, 6 अंडे…</span>
+                <span class="lang-only-en">Cheapest — "Pyaterochka" and "Magnit". Near Dorm #4 there's a Pyaterochka at Kotelnicheskaya 23 (5 min walk). 5–10% off with Sber card, sales on Wednesdays. For 500 ₽ you can buy: 1 kg rice, 1 L oil, 6 eggs…</span>
+              </div>
+              <div class="faq__cites">
+                <span class="rag-citation">
+                  <span class="lang-only-ru">Гид по магазинам Москвы (2026)</span>
+                  <span class="lang-only-hi">मॉस्को दुकानें गाइड (2026)</span>
+                  <span class="lang-only-en">Moscow shops guide (2026)</span>
+                </span>
+                <span class="rag-citation">
+                  <span class="lang-only-ru">Welcome-pack Застройщик№1 · стр. 8</span>
+                  <span class="lang-only-hi">Welcome-pack Застройщик№1 · पृ. 8</span>
+                  <span class="lang-only-en">Застройщик№1 Welcome-pack · p. 8</span>
+                </span>
+              </div>
+            </button>
+
+            <button class="faq">
+              <div class="faq__q">
+                <span>
+                  <span class="lang-only-ru">Как добраться до МФЦ?</span>
+                  <span class="lang-only-hi">MFC कैसे पहुँचें?</span>
+                  <span class="lang-only-en">How to get to MFC?</span>
+                </span>
+              </div>
+              <div class="faq__a">
+                <span class="lang-only-ru">Ближайший МФЦ «Мои Документы» — ул. Большие Каменщики, 1 (12 минут пешком от общежития). Часы работы пн–вс 8:00–20:00, без перерыва. Возьмите паспорт и нотариально заверенный перевод. Есть электронная очередь, талон берите при входе.</span>
+                <span class="lang-only-hi">सबसे पास का MFC "Mои Документы" — ब. कमेन्शिकी स्ट. 1 (छात्रावास से 12 मिनट पैदल)। समय सोम–रवि 8:00–20:00। पासपोर्ट और प्रमाणित अनुवाद लें। प्रवेश पर टोकन लें।</span>
+                <span class="lang-only-en">The nearest MFC "My Documents" is at B. Kamenshchiki St., 1 (12 min walk from the dorm). Open Mon–Sun 8:00–20:00. Bring passport + notarized translation. Take an electronic queue ticket at the entrance.</span>
+              </div>
+              <div class="faq__cites">
+                <span class="rag-citation">
+                  <span class="lang-only-ru">Карта МФЦ Москвы</span>
+                  <span class="lang-only-hi">मॉस्को MFC नक्शा</span>
+                  <span class="lang-only-en">Moscow MFC map</span>
+                </span>
+                <span class="rag-citation">
+                  <span class="lang-only-ru">mos.ru/help</span>
+                  <span class="lang-only-hi">mos.ru/help</span>
+                  <span class="lang-only-en">mos.ru/help</span>
+                </span>
+              </div>
+            </button>
+
+            <button class="faq">
+              <div class="faq__q">
+                <span>
+                  <span class="lang-only-ru">Где обменять рубли на рупии?</span>
+                  <span class="lang-only-hi">रूबल को रुपये में कहाँ बदलें?</span>
+                  <span class="lang-only-en">Where to exchange rubles to rupees?</span>
+                </span>
+              </div>
+              <div class="faq__a">
+                <span class="lang-only-ru">Прямого обмена RUB → INR в банкомате нет. Самый выгодный путь — перевод через СБП в индийский банк (UPI). Курс сегодня: 1 ₽ = 1.04 ₹, комиссия 0%. Альтернатива — Western Union в офисах банков на Таганской, но комиссия 1.5%.</span>
+                <span class="lang-only-hi">RUB → INR सीधा एक्सचेंज ATM में नहीं है। सबसे अच्छा तरीका — UPI के साथ SBP द्वारा भारतीय बैंक में स्थानांतरण। दर: 1 ₽ = 1.04 ₹, कमीशन 0%। विकल्प — तगानस्काया पर Sberbank में Western Union, 1.5% कमीशन।</span>
+                <span class="lang-only-en">No direct RUB → INR at ATMs. The best route — SBP transfer to an Indian bank via UPI. Today's rate: 1 ₽ = 1.04 ₹, 0% fee. Alternative — Western Union at the Sberbank office on Taganskaya, 1.5% fee.</span>
+              </div>
+              <div class="faq__cites">
+                <span class="rag-citation">
+                  <span class="lang-only-ru">СБП — переводы за рубеж</span>
+                  <span class="lang-only-hi">SBP — विदेशी स्थानांतरण</span>
+                  <span class="lang-only-en">SBP — cross-border transfers</span>
+                </span>
+                <span class="rag-citation">
+                  <span class="lang-only-ru">ЦБ РФ · курсы валют</span>
+                  <span class="lang-only-hi">CBR · विनिमय दर</span>
+                  <span class="lang-only-en">CBR · exchange rates</span>
+                </span>
+              </div>
+            </button>
+
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <nav class="app-bottom-nav">
+      <a href="04-hub.html" class="app-bottom-nav__item">
+        <span class="icon">🏠</span>
+        <span data-i18n="nav.home">Главная</span>
+      </a>
+      <a href="05-ai-chat.html" class="app-bottom-nav__item">
+        <span class="icon">💬</span>
+        <span data-i18n="nav.ai">AI</span>
+      </a>
+      <a href="09-documents.html" class="app-bottom-nav__item">
+        <span class="icon">📄</span>
+        <span data-i18n="nav.docs">Документы</span>
+      </a>
+      <a href="10-about-employer.html" class="app-bottom-nav__item">
+        <span class="icon">🏢</span>
+        <span data-i18n="nav.employer">HR</span>
+      </a>
+      <a href="14-profile.html" class="app-bottom-nav__item">
+        <span class="icon">👤</span>
+        <span data-i18n="nav.profile">Профиль</span>
+      </a>
+    </nav>
+  </main>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script defer>
+    // ─── Helpers ─────────────────────────────────────────────────────────────────
+    function _lifeShowToast(msg) {
+      var t = document.createElement('div');
+      t.textContent = msg;
+      t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
+        'background:#1e293b;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;' +
+        'z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.2s;white-space:nowrap';
+      document.body.appendChild(t);
+      requestAnimationFrame(function() { t.style.opacity = '1'; });
+      setTimeout(function() {
+        t.style.opacity = '0';
+        setTimeout(function() { t.remove(); }, 200);
+      }, 2000);
+    }
+
+    function _promoShadeHex(hex, pct) {
+      var num = parseInt(hex.replace('#', ''), 16);
+      var r = Math.max(0, Math.min(255, (num >> 16) + Math.round(2.55 * pct)));
+      var g = Math.max(0, Math.min(255, ((num >> 8) & 0xff) + Math.round(2.55 * pct)));
+      var b = Math.max(0, Math.min(255, (num & 0xff) + Math.round(2.55 * pct)));
+      return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // ── 1. FAQ collapse/expand ──────────────────────────────────────────────────
+      document.querySelectorAll('.faq').forEach(function(f) {
+        var answer = f.querySelector('.faq__a');
+        var cites  = f.querySelector('.faq__cites');
+        if (f !== document.querySelector('.faq')) {
+          if (answer) answer.style.display = 'none';
+          if (cites)  cites.style.display  = 'none';
+        }
+        f.addEventListener('click', function() {
+          if (!answer) return;
+          var open = answer.style.display !== 'none';
+          answer.style.display = open ? 'none' : '';
+          if (cites) cites.style.display = open ? 'none' : '';
+        });
+      });
+
+      // ── 2. Finance summary from mock ────────────────────────────────────────────
+      var M = window.AdaptaMock;
+      if (M && M.finance) {
+        var card = M.finance.card;
+        var balanceEl = document.getElementById('fin-balance');
+        if (balanceEl) {
+          balanceEl.textContent = card.balance.toLocaleString('ru-RU') + ' ₽';
+        }
+        var last4 = String(card.number).replace(/\D/g, '').slice(-4) || card.number.slice(-4);
+        ['fin-card-num', 'fin-card-num-hi', 'fin-card-num-en'].forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el) el.textContent = last4;
+        });
+      }
+
+      // ── 3. Promo mini-cards (first 2 from mock) ─────────────────────────────────
+      var promoRow = document.getElementById('promo-mini-row');
+      if (M && M.promos && promoRow) {
+        var langMap = { ru: 'ru', hi: 'hi', en: 'en' };
+        var getLang = function() {
+          return (window.AdaptaI18n && window.AdaptaI18n.lang) || 'ru';
+        };
+
+        var promoItems = M.promos.slice(0, 2);
+        var cards = promoItems.map(function(p) {
+          var article = document.createElement('article');
+          article.className = 'promo-mini';
+          article.style.background =
+            'linear-gradient(135deg, ' + p.accent + ' 0%, ' + _promoShadeHex(p.accent, -18) + ' 100%)';
+
+          var badge = document.createElement('span');
+          badge.className = 'promo-mini__badge';
+          badge.textContent = p.badge;
+
+          var titleEl = document.createElement('div');
+          titleEl.className = 'promo-mini__title';
+          titleEl.setAttribute('data-ru', p.title.ru);
+          titleEl.setAttribute('data-hi', p.title.hi);
+          titleEl.setAttribute('data-en', p.title.en);
+          titleEl.textContent = p.title.ru;
+
+          var subEl = document.createElement('div');
+          subEl.className = 'promo-mini__sub';
+          subEl.setAttribute('data-ru', p.subtitle.ru);
+          subEl.setAttribute('data-hi', p.subtitle.hi);
+          subEl.setAttribute('data-en', p.subtitle.en);
+          subEl.textContent = p.subtitle.ru;
+
+          var body = document.createElement('div');
+          body.appendChild(titleEl);
+          body.appendChild(subEl);
+
+          article.appendChild(badge);
+          article.appendChild(body);
+          promoRow.appendChild(article);
+          return { titleEl: titleEl, subEl: subEl };
+        });
+
+        // Language reactivity for promo mini-cards
+        var applyPromoLang = function() {
+          var l = getLang();
+          cards.forEach(function(c) {
+            c.titleEl.textContent = c.titleEl.getAttribute('data-' + l) || c.titleEl.getAttribute('data-ru');
+            c.subEl.textContent   = c.subEl.getAttribute('data-' + l)   || c.subEl.getAttribute('data-ru');
+          });
+        };
+        applyPromoLang();
+        document.querySelectorAll('[data-lang-switch]').forEach(function(btn) {
+          btn.addEventListener('click', function() { setTimeout(applyPromoLang, 0); });
+        });
+      }
+    });
+  </script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdaptaAI — Worker Profile</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { font-size: 14px; background: var(--canvas); }
+
+    /* ===== Sidebar (shared) ===== */
+    .console-sidebar {
+      grid-row: 1 / span 2;
+      background: var(--canvas-soft);
+      border-right: 1px solid var(--hairline);
+      display: flex; flex-direction: column;
+      padding: var(--space-5);
+    }
+    .sidebar__logo { display:flex; align-items:center; gap:10px; font-size:17px; font-weight:700; margin-bottom: var(--space-6); }
+    .sidebar__logo .mark { width:32px; height:32px; border-radius:8px; background: var(--brand-gradient); display:inline-flex; align-items:center; justify-content:center; color: var(--on-brand); font-size:16px; }
+    .sidebar__logo .name { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .sidebar__logo .sub { font-size:11px; color: var(--ink-subtle); letter-spacing:0.6px; text-transform:uppercase; margin-left:4px; }
+    .sidebar__nav { display:flex; flex-direction:column; gap:2px; }
+    .nav-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius: var(--rounded-md); color: var(--ink-muted); font-size:14px; font-weight:500; cursor:pointer; transition: all var(--dur-fast); text-decoration:none; }
+    .nav-item:hover { background: var(--surface-2); color: var(--ink); text-decoration:none; }
+    .nav-item.is-active { background: var(--surface-2); color: var(--ink); }
+    .nav-item.is-active::before { content:''; width:3px; height:18px; background: var(--brand-gradient); border-radius:2px; margin-left:-6px; margin-right:4px; }
+    .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+    .nav-item .badge { margin-left:auto; background: var(--danger); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; }
+    .nav-item .badge-soft { margin-left:auto; background: var(--surface-3); color: var(--ink-muted); font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; }
+    .sidebar__section { font-size:10px; letter-spacing:1px; text-transform:uppercase; color: var(--ink-tertiary); padding:0 12px; margin: var(--space-5) 0 var(--space-2); }
+    .sidebar__employer { margin-top:auto; padding:14px; border:1px solid var(--hairline); border-radius: var(--rounded-lg); background: var(--surface-1); }
+    .sidebar__employer-header { display:flex; align-items:center; gap:10px; }
+    .sidebar__employer-logo { width:36px; height:36px; border-radius:8px; background: var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:18px; }
+    .sidebar__employer-name { font-weight:600; font-size:13px; }
+    .sidebar__employer-meta { font-size:11px; color: var(--ink-subtle); }
+    .sidebar__quota-bar { margin-top:10px; height:4px; background: var(--surface-3); border-radius:4px; overflow:hidden; }
+    .sidebar__quota-fill { height:100%; background: var(--brand-gradient); width:0%; }
+    .sidebar__quota-text { display:flex; justify-content:space-between; font-size:11px; color: var(--ink-subtle); margin-top:6px; }
+
+    /* ===== Topbar ===== */
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:0 var(--space-6); border-bottom:1px solid var(--hairline); background: var(--canvas); }
+    .back-link { display:flex; align-items:center; gap:8px; font-size:13px; color: var(--ink-muted); padding:8px 12px; border-radius: var(--rounded-md); }
+    .back-link:hover { background: var(--surface-2); color: var(--ink); text-decoration:none; }
+    .topbar__right { display:flex; align-items:center; gap: var(--space-3); }
+    .avatar { width:28px; height:28px; border-radius:50%; background: var(--brand-gradient); color: var(--on-brand); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; }
+    .avatar-row { display:flex; align-items:center; gap:8px; padding:0 12px 0 4px; border-radius:18px; border:1px solid var(--hairline); background: var(--surface-1); height:36px; }
+    .avatar-row .name { font-size:13px; font-weight:600; line-height:1.1; }
+    .avatar-row .role { font-size:10px; color: var(--ink-subtle); line-height:1.1; }
+
+    /* ===== Main grid ===== */
+    .main {
+      padding: var(--space-6);
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: var(--space-5);
+      overflow-y: auto;
+    }
+    .main__col { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+
+    /* Hero */
+    .hero {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-5);
+      display: flex; align-items: center; gap: var(--space-5);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px; background: var(--brand-gradient);
+    }
+    .hero__avatar {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+      font-weight: 700;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .hero__avatar::after {
+      content:''; position:absolute; bottom:4px; right:4px;
+      width:18px; height:18px; border-radius:50%;
+      background: var(--brand-emerald); border:3px solid var(--surface-1);
+    }
+    .hero__info { flex: 1; }
+    .hero__name { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+    .hero__name .flag { font-size: 28px; }
+    .hero__meta { display: flex; gap: var(--space-5); margin-top: 10px; font-size: 13px; color: var(--ink-muted); flex-wrap: wrap; }
+    .hero__meta span strong { color: var(--ink); }
+    .hero__id { font-family: var(--font-mono); font-size: 11px; color: var(--ink-tertiary); margin-top: 6px; }
+
+    .hero__pills { display: flex; gap: 8px; align-items: flex-start; }
+
+    /* Tabs */
+    .tabs {
+      display: flex; gap: 4px;
+      border-bottom: 1px solid var(--hairline);
+      padding: 0 var(--space-2);
+    }
+    .tabs button {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink-muted);
+      position: relative;
+      transition: color var(--dur-fast);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tabs button:hover { color: var(--ink); }
+    .tabs button.is-active { color: var(--ink); font-weight: 600; }
+    .tabs button.is-active::after { content:''; position: absolute; bottom: -1px; left: 12px; right: 12px; height: 2px; background: var(--brand-gradient); border-radius: 2px 2px 0 0; }
+    .tabs button .count {
+      background: var(--surface-2); padding: 1px 7px; border-radius: 10px; font-size: 10px; color: var(--ink-muted); font-weight: 700;
+    }
+
+    /* Content grid */
+    .profile-grid { display: grid; grid-template-columns: 360px 1fr; gap: var(--space-5); }
+    .card { background: var(--surface-1); border:1px solid var(--hairline); border-radius: var(--rounded-lg); padding: var(--space-5); }
+    .card__title { font-size: 14px; font-weight: 600; margin-bottom: var(--space-4); display: flex; align-items: center; gap: 8px; }
+    .card__title .ico { font-size: 16px; }
+
+    /* Info rows */
+    .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--hairline); font-size: 13px; }
+    .info-row:last-child { border-bottom: 0; }
+    .info-row .label { color: var(--ink-subtle); }
+    .info-row .value { color: var(--ink); font-weight: 500; text-align: right; }
+    .info-row .value.mono { font-family: var(--font-mono); font-size: 12px; }
+
+    .quota-meter { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+    .quota-meter .bar { flex: 1; height: 6px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+    .quota-meter .fill { height: 100%; background: var(--brand-gradient); }
+    .quota-meter .nums { font-family: var(--font-mono); font-size: 12px; color: var(--ink); }
+
+    /* Timeline */
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+    }
+    .timeline::before {
+      content: ''; position: absolute; top: 12px; bottom: 12px; left: 11px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--brand-emerald) 0%, var(--brand-emerald) 50%, var(--hairline) 50%, var(--hairline) 100%);
+    }
+    .tl-step {
+      position: relative;
+      padding: 12px 0 12px 0;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3);
+    }
+    .tl-step__dot {
+      position: absolute; left: -28px; top: 14px;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 2px solid var(--hairline);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+    .tl-step.is-done .tl-step__dot { background: var(--brand-emerald); border-color: var(--brand-emerald); color: #fff; }
+    .tl-step.is-progress .tl-step__dot { background: var(--warning); border-color: var(--warning); color: #fff; }
+    .tl-step.is-progress .tl-step__dot::before { content:''; position:absolute; inset:-3px; border:2px solid var(--warning); border-radius:50%; opacity:0.4; animation: pulse-tl 1.8s infinite; }
+    @keyframes pulse-tl { 0%, 100% { transform: scale(1); opacity:0.4; } 50% { transform: scale(1.25); opacity: 0; } }
+
+    .tl-step__main { flex: 1; }
+    .tl-step__title { font-size: 14px; font-weight: 500; color: var(--ink); }
+    .tl-step__sub { font-size: 12px; color: var(--ink-subtle); margin-top: 2px; }
+    .tl-step:not(.is-done):not(.is-progress) .tl-step__title { color: var(--ink-muted); }
+
+    .tl-step__action { font-size: 12px; padding: 4px 10px; border-radius: 6px; background: var(--surface-2); color: var(--ink-muted); border: 1px solid var(--hairline); }
+    .tl-step__action:hover { background: var(--surface-3); color: var(--ink); }
+    .tl-step.is-done .tl-step__action { display: none; }
+
+    /* Right actions panel */
+    .actions-panel { display: flex; flex-direction: column; gap: var(--space-2); position: sticky; top: var(--space-6); align-self: flex-start; }
+    .action-btn {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      text-align: left;
+      transition: all var(--dur-fast);
+    }
+    .action-btn:hover { background: var(--surface-2); border-color: var(--hairline-strong); }
+    .action-btn .ico { font-size: 18px; width: 24px; text-align: center; }
+    .action-btn .arr { margin-left: auto; color: var(--ink-tertiary); }
+    .action-btn.danger { color: var(--danger); }
+    .action-btn.primary { background: var(--brand-gradient); color: var(--on-brand); border-color: transparent; font-weight: 600; }
+    .action-btn.primary .arr { color: var(--on-brand); opacity: 0.7; }
+
+    .actions-section-title { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-tertiary); padding: var(--space-3) 4px var(--space-1); }
+  </style>
+</head>
+<body>
+  <div class="console-frame">
+    <!-- Sidebar -->
+    <aside class="console-sidebar">
+      <div class="sidebar__logo">
+        <span class="mark">S</span>
+        <span class="name">AdaptaAI</span>
+        <span class="sub">HR</span>
+      </div>
+      <div class="sidebar__section">
+        <span class="lang-only-ru">Рабочее пространство</span>
+        <span class="lang-only-hi">कार्यक्षेत्र</span>
+        <span class="lang-only-en">Workspace</span>
+      </div>
+      <nav class="sidebar__nav">
+        <a class="nav-item is-active" href="15-hr-dashboard.html"><span class="icon">👥</span><span data-i18n="b2b.workers">Сотрудники</span><span class="badge-soft" id="sidebar-workers-count">—</span></a>
+        <a class="nav-item" href="18-ticket-inbox.html"><span class="icon">🎫</span><span data-i18n="b2b.tickets">Тикеты</span><span class="badge">—</span></a>
+        <a class="nav-item" href="17-rag-upload.html"><span class="icon">📚</span><span data-i18n="b2b.knowledge">База знаний</span></a>
+        <a class="nav-item"><span class="icon">📊</span><span data-i18n="b2b.analytics">Аналитика</span></a>
+        <a class="nav-item"><span class="icon">⚙️</span><span data-i18n="b2b.settings">Настройки</span></a>
+      </nav>
+      <div class="sidebar__employer">
+        <div class="sidebar__employer-header">
+          <div class="sidebar__employer-logo">🏗️</div>
+          <div>
+            <div class="sidebar__employer-name">Застройщик№1 · Москва</div>
+            <div class="sidebar__employer-meta" id="sidebar-company-meta">Загрузка…</div>
+          </div>
+        </div>
+        <div class="sidebar__quota-bar"><div class="sidebar__quota-fill" id="sidebar-quota-fill"></div></div>
+        <div class="sidebar__quota-text"><span>Квота</span><span class="tnum" id="sidebar-quota-text">— / 150</span></div>
+      </div>
+    </aside>
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <a href="15-hr-dashboard.html" class="back-link">
+        ← <span>
+          <span class="lang-only-ru">К списку сотрудников</span>
+          <span class="lang-only-hi">कर्मचारी सूची पर वापस</span>
+          <span class="lang-only-en">Back to workers</span>
+        </span>
+      </a>
+      <div class="topbar__right">
+        <div class="avatar-row">
+          <div class="avatar" id="topbar-avatar">—</div>
+          <div>
+            <div class="name" id="topbar-name">Загрузка…</div>
+            <div class="role">HR-директор</div>
+          </div>
+        </div>
+        <div class="lang-switch">
+          <button class="lang-switch__btn is-active" data-lang-switch="ru">RU</button>
+          <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+          <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="main__col">
+        <!-- Hero -->
+        <section class="hero">
+          <div class="hero__avatar" id="worker-avatar">—</div>
+          <div class="hero__info">
+            <div class="hero__name">
+              <span id="worker-full-name"><span class="lang-only-ru">Сотрудник</span><span class="lang-only-hi">कर्मचारी</span><span class="lang-only-en">Employee</span></span>
+              <span class="flag" id="worker-flag">🌐</span>
+              <span class="pill pill-verified" id="worker-status-pill">Активен</span>
+            </div>
+            <div class="hero__meta">
+              <span>🏗️ <strong id="worker-object">—</strong></span>
+              <span>📅 <span class="lang-only-ru">Зарегистрирован</span><span class="lang-only-hi">पंजीकृत</span><span class="lang-only-en">Registered</span> <strong id="worker-joined">—</strong></span>
+            </div>
+            <div class="hero__id" id="worker-id-line">—</div>
+          </div>
+          <div class="hero__pills">
+            <span class="pill pill-verified">Активен</span>
+          </div>
+        </section>
+
+        <!-- Tabs -->
+        <nav class="tabs">
+          <button class="is-active">📋 <span>
+            <span class="lang-only-ru">Профиль</span>
+            <span class="lang-only-hi">प्रोफ़ाइल</span>
+            <span class="lang-only-en">Profile</span>
+          </span></button>
+          <button>📄 <span>
+            <span class="lang-only-ru">Документы</span>
+            <span class="lang-only-hi">दस्तावेज़</span>
+            <span class="lang-only-en">Documents</span>
+          </span> <span class="count">—</span></button>
+          <button>🕒 <span>
+            <span class="lang-only-ru">История</span>
+            <span class="lang-only-hi">इतिहास</span>
+            <span class="lang-only-en">History</span>
+          </span></button>
+          <button>💬 <span>
+            <span class="lang-only-ru">Чат</span>
+            <span class="lang-only-hi">चैट</span>
+            <span class="lang-only-en">Chat</span>
+          </span> <span class="count">—</span></button>
+        </nav>
+
+        <!-- Profile tab content -->
+        <div id="tab-profile" class="profile-grid">
+          <!-- Left col -->
+          <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+            <div class="card">
+              <div class="card__title"><span class="ico">📞</span><span>
+                <span class="lang-only-ru">Контакты</span>
+                <span class="lang-only-hi">संपर्क</span>
+                <span class="lang-only-en">Contacts</span>
+              </span></div>
+              <div class="info-row">
+                <span class="label">Email</span>
+                <span class="value mono" id="worker-email">—</span>
+              </div>
+              <div class="info-row">
+                <span class="label"><span class="lang-only-ru">Язык</span><span class="lang-only-hi">भाषा</span><span class="lang-only-en">Language</span></span>
+                <span class="value" id="worker-lang">—</span>
+              </div>
+              <div class="info-row">
+                <span class="label"><span class="lang-only-ru">Объект</span><span class="lang-only-hi">स्थल</span><span class="lang-only-en">Site</span></span>
+                <span class="value" id="worker-site">—</span>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card__title"><span class="ico">📊</span><span>
+                <span class="lang-only-ru">Квота и роль</span>
+                <span class="lang-only-hi">कोटा और भूमिका</span>
+                <span class="lang-only-en">Quota &amp; role</span>
+              </span></div>
+              <div class="info-row">
+                <span class="label"><span class="lang-only-ru">Статус</span><span class="lang-only-hi">स्थिति</span><span class="lang-only-en">Status</span></span>
+                <span class="value" id="worker-role-status">Активен</span>
+              </div>
+              <div class="info-row">
+                <span class="label"><span class="lang-only-ru">Объект</span><span class="lang-only-hi">स्थल</span><span class="lang-only-en">Site</span></span>
+                <span class="value" id="worker-quota-object">—</span>
+              </div>
+              <div class="info-row">
+                <span class="label"><span class="lang-only-ru">Зарегистрирован</span><span class="lang-only-hi">पंजीकरण</span><span class="lang-only-en">Registered</span></span>
+                <span class="value" id="worker-reg-date">—</span>
+              </div>
+              <div class="info-row" style="border-bottom:0;flex-direction:column;align-items:flex-start;gap:6px">
+                <span class="label"><span class="lang-only-ru">Место в квоте</span><span class="lang-only-hi">कोटा में स्थान</span><span class="lang-only-en">Quota position</span></span>
+                <div class="quota-meter" style="width:100%">
+                  <div class="bar"><div class="fill" id="quota-fill-bar" style="width:0%"></div></div>
+                  <div class="nums" id="quota-nums">— / 150</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right col: migration journey timeline -->
+          <div class="card">
+            <div class="card__title" style="justify-content:space-between;display:flex">
+              <div style="display:flex;align-items:center;gap:8px"><span class="ico">🛣️</span><span>
+                <span class="lang-only-ru">Миграционный путь</span>
+                <span class="lang-only-hi">प्रवास यात्रा</span>
+                <span class="lang-only-en">Migration journey</span>
+              </span></div>
+              <span class="pill pill-pending" id="journey-progress">—</span>
+            </div>
+
+            <div class="timeline" id="journey-timeline">
+              <!-- Populated by JS after auth -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Documents tab content (hidden by default) -->
+        <div id="tab-docs" style="display:none;">
+          <div class="card">
+            <div class="card__title">
+              <span class="ico">📄</span>
+              <span>
+                <span class="lang-only-ru">Загруженные документы</span>
+                <span class="lang-only-hi">अपलोड किए गए दस्तावेज़</span>
+                <span class="lang-only-en">Uploaded documents</span>
+              </span>
+            </div>
+            <div id="docs-list">
+              <div class="info-row" style="justify-content:center;color:var(--ink-subtle);font-size:13px;">
+                <span class="lang-only-ru">Загрузка…</span>
+                <span class="lang-only-hi">लोड हो रहा है…</span>
+                <span class="lang-only-en">Loading…</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right actions panel -->
+      <aside class="actions-panel">
+        <div class="actions-section-title">
+          <span class="lang-only-ru">Быстрые действия</span>
+          <span class="lang-only-hi">त्वरित कार्य</span>
+          <span class="lang-only-en">Quick actions</span>
+        </div>
+        <button class="action-btn" data-action="write">
+          <span class="ico">💬</span>
+          <span><span class="lang-only-ru">Написать</span><span class="lang-only-hi">लिखें</span><span class="lang-only-en">Message</span></span>
+          <span class="arr">→</span>
+        </button>
+        <button class="action-btn primary" data-action="assign">
+          <span class="ico">📍</span>
+          <span><span class="lang-only-ru">Приписать</span><span class="lang-only-hi">असाइन</span><span class="lang-only-en">Assign</span></span>
+          <span class="arr">→</span>
+        </button>
+        <button class="action-btn" data-action="documents">
+          <span class="ico">📄</span>
+          <span><span class="lang-only-ru">Документы</span><span class="lang-only-hi">दस्तावेज़</span><span class="lang-only-en">Documents</span></span>
+          <span class="arr">→</span>
+        </button>
+        <button class="action-btn" data-action="history">
+          <span class="ico">🕒</span>
+          <span><span class="lang-only-ru">История</span><span class="lang-only-hi">इतिहास</span><span class="lang-only-en">History</span></span>
+          <span class="arr">→</span>
+        </button>
+
+        <div class="actions-section-title" style="margin-top:var(--space-4)">
+          <span class="lang-only-ru">Опасная зона</span>
+          <span class="lang-only-hi">खतरनाक क्षेत्र</span>
+          <span class="lang-only-en">Danger zone</span>
+        </div>
+        <button class="action-btn danger" data-action="suspend">
+          <span class="ico">⛔</span>
+          <span><span class="lang-only-ru">Отстранить</span><span class="lang-only-hi">निलंबित</span><span class="lang-only-en">Suspend</span></span>
+          <span class="arr">→</span>
+        </button>
+        <button class="action-btn danger" data-action="delete">
+          <span class="ico">🗑️</span>
+          <span><span class="lang-only-ru">Удалить</span><span class="lang-only-hi">हटाएं</span><span class="lang-only-en">Delete</span></span>
+          <span class="arr">→</span>
+        </button>
+      </aside>
+    </main>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script defer>
+    // ===== API CONFIG =====
+    const API = window.ADAPTA_API_BASE_URL || window.location.origin;
+    const JWT_KEY = 'adapta_jwt';
+
+    // Worker id resolved after page init
+    var _activeWorkerId = null;
+
+    // ===== STEP LABELS (RU/HI/EN) =====
+    var STEP_LABELS = {
+      arrived:     { ru: 'Приехал в РФ',           hi: 'रूस में आए',           en: 'Arrived in Russia' },
+      snils:       { ru: 'Получил СНИЛС',           hi: 'СНИЛС प्राप्त किया',   en: 'Got SNILS' },
+      inn:         { ru: 'Получил ИНН',             hi: 'ИНН प्राप्त किया',     en: 'Got INN' },
+      biometrics:  { ru: 'Сдал биометрию',          hi: 'बायोमेट्रिक दिया',     en: 'Biometrics done' },
+      patent:      { ru: 'Оформил патент',          hi: 'पेटेंट बनाया',         en: 'Got patent' },
+      salary_card: { ru: 'Открыл зарплатную карту', hi: 'सैलरी कार्ड खोला',     en: 'Opened salary card' },
+      sbermobile:  { ru: 'Подключил связь',           hi: 'मोबाइल जोड़ा',          en: 'Connected mobile' },
+      dms:         { ru: 'Получил ДМС',             hi: 'ДМС प्राप्त किया',     en: 'Got DMS policy' },
+    };
+
+    // ===== DOC TYPE LABELS =====
+    var DOC_LABELS = {
+      passport:       { ru: 'Паспорт',           hi: 'पासपोर्ट',       en: 'Passport' },
+      migration_card: { ru: 'Миграционная карта', hi: 'माइग्रेशन कार्ड',en: 'Migration card' },
+      registration:   { ru: 'Регистрация',        hi: 'पंजीकरण',        en: 'Registration' },
+      patent:         { ru: 'Патент',             hi: 'पेटेंट',         en: 'Patent' },
+      snils:          { ru: 'СНИЛС',              hi: 'СНИЛС',           en: 'SNILS' },
+      inn:            { ru: 'ИНН',                hi: 'ИНН',             en: 'INN' },
+      dms:            { ru: 'ДМС полис',          hi: 'ДМС पॉलिसी',     en: 'DMS policy' },
+    };
+
+    // ===== DOC STATUS META =====
+    var DOC_STATUS_META = {
+      ok:       { ru: 'Действителен',   hi: 'वैध',        en: 'Valid',        cls: 'pill pill-verified' },
+      pending:  { ru: 'На проверке',    hi: 'समीक्षा में', en: 'Pending',      cls: 'pill pill-pending' },
+      expiring: { ru: 'Истекает',       hi: 'समाप्त होगा', en: 'Expiring',     cls: 'pill pill-warning' },
+      expired:  { ru: 'Просрочен',      hi: 'समाप्त',     en: 'Expired',      cls: 'pill pill-blocked' },
+      missing:  { ru: 'не загружен',    hi: 'अपलोड नहीं', en: 'not uploaded', cls: '' },
+    };
+
+    function pageLang() {
+      return document.documentElement.getAttribute('data-lang') || 'ru';
+    }
+    function stepLabel(key) {
+      var obj = STEP_LABELS[key];
+      if (!obj) return key;
+      return obj[pageLang()] || obj.ru;
+    }
+    function docTypeLabel(type) {
+      var obj = DOC_LABELS[type];
+      if (!obj) return type;
+      return obj[pageLang()] || obj.ru;
+    }
+    function docStatusMeta(status) {
+      return DOC_STATUS_META[status] || DOC_STATUS_META.missing;
+    }
+
+    // ===== TOAST =====
+    function showToast(msg, type) {
+      type = type || 'info';
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+        document.body.appendChild(container);
+      }
+      const t = document.createElement('div');
+      t.className = 'toast';
+      const borderColor = type === 'error' ? 'var(--danger)' : type === 'success' ? 'var(--brand-emerald)' : 'var(--brand-cyan)';
+      t.style.cssText = 'background:var(--surface-2);border:1px solid var(--hairline);border-radius:var(--rounded-md);padding:12px 18px;font-size:13px;color:var(--ink);min-width:260px;max-width:380px;box-shadow:var(--shadow-md);pointer-events:auto;word-break:break-word;border-left:3px solid ' + borderColor + ';';
+      t.textContent = msg;
+      container.appendChild(t);
+      setTimeout(function() { t.remove(); }, 5000);
+    }
+
+    // ===== DOM HELPERS =====
+    function el(tag, attrs, children) {
+      const node = document.createElement(tag);
+      if (attrs) Object.entries(attrs).forEach(function([k, v]) {
+        if (k === 'style') node.style.cssText = v;
+        else if (k === 'class') node.className = v;
+        else if (k === 'text') node.textContent = v;
+        else node.setAttribute(k, v);
+      });
+      if (children) children.forEach(function(c) { if (c) node.appendChild(c); });
+      return node;
+    }
+    function inp(id, type, placeholder) {
+      const i = document.createElement('input');
+      i.id = id; i.type = type; i.placeholder = placeholder; i.className = 'input';
+      i.style.cssText = 'width:100%;box-sizing:border-box;';
+      return i;
+    }
+
+    // ===== LOGIN SCREEN =====
+    function showLoginScreen() {
+      const overlay = el('div', { id: 'login-overlay', style: 'position:fixed;inset:0;background:var(--canvas);z-index:8000;display:flex;align-items:center;justify-content:center;' });
+
+      const card = el('div', { style: 'background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--rounded-xl);padding:40px;width:380px;display:flex;flex-direction:column;gap:20px;' });
+
+      const logoArea = el('div', { style: 'text-align:center;' });
+      const logoMark = el('div', { style: 'font-size:32px;margin-bottom:8px;', text: 'S' });
+      const logoName = el('div', { style: 'font-size:20px;font-weight:700;background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;color:transparent;', text: 'AdaptaAI HR' });
+      const logoSub = el('div', { style: 'font-size:13px;color:var(--ink-subtle);margin-top:4px;', text: 'Вход в систему' });
+      logoArea.append(logoMark, logoName, logoSub);
+
+      const fields = el('div', { style: 'display:flex;flex-direction:column;gap:10px;' });
+      const emailInp = inp('login-email', 'email', 'Email');
+      const passInp = inp('login-password', 'password', 'Пароль');
+      fields.append(emailInp, passInp);
+
+      const loginBtn = el('button', { id: 'login-btn', class: 'btn btn-primary btn-block', text: 'Войти' });
+      const demoBtn = el('button', { id: 'demo-login-btn', class: 'btn btn-secondary btn-block', style: 'font-size:12px;', text: 'Войти как Дарья (Застройщик№1) — демо' });
+      const errEl = el('div', { id: 'login-error', style: 'color:var(--danger);font-size:12px;text-align:center;display:none;' });
+
+      card.append(logoArea, fields, loginBtn, demoBtn, errEl);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      demoBtn.addEventListener('click', function() {
+        emailInp.value = 'daria@pik.demo';
+        passInp.value = 'demo';
+      });
+
+      async function doLogin() {
+        const email = emailInp.value.trim();
+        const password = passInp.value;
+        errEl.style.display = 'none';
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Входим…';
+        try {
+          const res = await fetch(API + '/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            errEl.textContent = (data && data.error && data.error.message) || 'Неверный email или пароль';
+            errEl.style.display = 'block';
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Войти';
+            return;
+          }
+          localStorage.setItem(JWT_KEY, data.access_token);
+          if (data.user) {
+            const nameEl = document.querySelector('.avatar-row .name');
+            if (nameEl) nameEl.textContent = data.user.first_name + ' ' + data.user.last_name.charAt(0) + '.';
+            const avatarEl = document.querySelector('.avatar');
+            if (avatarEl) avatarEl.textContent = (data.user.first_name.charAt(0) + data.user.last_name.charAt(0)).toUpperCase();
+          }
+          overlay.remove();
+          initPage();
+        } catch (e) {
+          errEl.textContent = 'Ошибка сети. Проверьте соединение.';
+          errEl.style.display = 'block';
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Войти';
+        }
+      }
+
+      loginBtn.addEventListener('click', doLogin);
+      [emailInp, passInp].forEach(function(elem) {
+        elem.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+      });
+    }
+
+    // ===== LANGUAGE DISPLAY =====
+    const LANG_LABELS = { ru: 'Русский', hi: 'हिन्दी', en: 'English', uz: "O'zbek", tg: 'Тоҷикӣ', ky: 'Кыргызча' };
+    function langLabel(code) { return LANG_LABELS[code] || code || '—'; }
+
+    // ===== FORMAT DATE =====
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      try { return new Date(iso).toLocaleDateString('ru-RU'); } catch (e) { return iso; }
+    }
+
+    // ===== PATCH ONBOARDING STEP =====
+    async function patchStep(workerId, stepKey, newStatus) {
+      var jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) { showLoginScreen(); return null; }
+      try {
+        var res = await fetch(API + '/api/v1/workers/' + workerId + '/onboarding/' + stepKey, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': 'Bearer ' + jwt,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: newStatus }),
+        });
+        if (res.status === 401) { localStorage.removeItem(JWT_KEY); showLoginScreen(); return null; }
+        if (!res.ok) {
+          var err = await res.json().catch(function() { return {}; });
+          throw new Error((err && err.detail) || ('HTTP ' + res.status));
+        }
+        return await res.json();
+      } catch (e) {
+        showToast('Ошибка обновления шага: ' + e.message, 'error');
+        return null;
+      }
+    }
+
+    // ===== RENDER TIMELINE FROM API DATA =====
+    function renderTimelineFromData(journeyData, workerId) {
+      var timeline = document.getElementById('journey-timeline');
+      if (!timeline) return;
+
+      var steps = journeyData.steps || [];
+      var doneCount = journeyData.done != null ? journeyData.done : steps.filter(function(s) { return s.status === 'done'; }).length;
+      var totalCount = journeyData.total != null ? journeyData.total : steps.length;
+
+      var progressEl = document.getElementById('journey-progress');
+      if (progressEl) {
+        var lang = pageLang();
+        if (lang === 'hi') {
+          progressEl.textContent = doneCount + ' में से ' + totalCount + ' पूर्ण';
+        } else if (lang === 'en') {
+          progressEl.textContent = doneCount + ' of ' + totalCount + ' done';
+        } else {
+          progressEl.textContent = doneCount + ' из ' + totalCount + ' выполнено';
+        }
+        progressEl.className = doneCount === totalCount && totalCount > 0 ? 'pill pill-verified' : 'pill pill-pending';
+      }
+
+      while (timeline.firstChild) { timeline.removeChild(timeline.firstChild); }
+
+      steps.forEach(function(step) {
+        var isDone = step.status === 'done';
+        var isProgress = step.status === 'in_progress';
+
+        var stepDiv = document.createElement('div');
+        stepDiv.className = 'tl-step' + (isDone ? ' is-done' : isProgress ? ' is-progress' : '');
+
+        var dot = document.createElement('div');
+        dot.className = 'tl-step__dot';
+        dot.textContent = isDone ? '✓' : isProgress ? '●' : '○';
+
+        var main = document.createElement('div');
+        main.className = 'tl-step__main';
+
+        var titleEl = document.createElement('div');
+        titleEl.className = 'tl-step__title';
+        titleEl.textContent = stepLabel(step.key);
+
+        var subEl = document.createElement('div');
+        subEl.className = 'tl-step__sub';
+        subEl.textContent = step.updated_at ? fmtDate(step.updated_at) : (isDone ? '' : (isProgress ? '…' : '—'));
+
+        main.appendChild(titleEl);
+        main.appendChild(subEl);
+        stepDiv.appendChild(dot);
+        stepDiv.appendChild(main);
+
+        if (!isDone) {
+          var actionBtn = document.createElement('button');
+          actionBtn.className = 'tl-step__action';
+
+          var ruSpan = document.createElement('span');
+          ruSpan.className = 'lang-only-ru';
+          ruSpan.textContent = isProgress ? 'Отметить выполненным' : 'Запустить';
+
+          var hiSpan = document.createElement('span');
+          hiSpan.className = 'lang-only-hi';
+          hiSpan.textContent = isProgress ? 'पूर्ण चिह्नित करें' : 'शुरू करें';
+
+          var enSpan = document.createElement('span');
+          enSpan.className = 'lang-only-en';
+          enSpan.textContent = isProgress ? 'Mark done' : 'Start';
+
+          actionBtn.appendChild(ruSpan);
+          actionBtn.appendChild(hiSpan);
+          actionBtn.appendChild(enSpan);
+
+          (function(stepKey, isInProgress) {
+            actionBtn.addEventListener('click', async function() {
+              actionBtn.disabled = true;
+              var nextStatus = isInProgress ? 'done' : 'in_progress';
+              var result = await patchStep(workerId, stepKey, nextStatus);
+              if (result) {
+                renderTimelineFromData(result, workerId);
+              } else {
+                actionBtn.disabled = false;
+              }
+            });
+          })(step.key, isProgress);
+
+          stepDiv.appendChild(actionBtn);
+        }
+
+        timeline.appendChild(stepDiv);
+      });
+    }
+
+    // ===== FETCH + RENDER JOURNEY FROM API =====
+    async function loadJourney(workerId) {
+      var jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) return;
+      try {
+        var res = await fetch(API + '/api/v1/workers/' + workerId + '/onboarding', {
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        if (res.status === 401) { localStorage.removeItem(JWT_KEY); showLoginScreen(); return; }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var data = await res.json();
+        renderTimelineFromData(data, workerId);
+      } catch (e) {
+        showToast('Ошибка загрузки маршрута: ' + e.message, 'error');
+        var tl = document.getElementById('journey-timeline');
+        if (tl) {
+          var msg = document.createElement('div');
+          msg.style.cssText = 'padding:16px;color:var(--ink-subtle);font-size:13px;';
+          msg.textContent = 'Данные недоступны';
+          tl.appendChild(msg);
+        }
+      }
+    }
+
+    // ===== RENDER DOCUMENTS TAB =====
+    function renderDocuments(docsData) {
+      var listEl = document.getElementById('docs-list');
+      if (!listEl) return;
+
+      var docs = docsData.docs || [];
+      var uploaded = docsData.uploaded != null ? docsData.uploaded : docs.filter(function(d) { return d.status && d.status !== 'missing'; }).length;
+      var required = docsData.required != null ? docsData.required : 7;
+
+      // Update Documents tab count badge
+      var tabBtns = document.querySelectorAll('.tabs button');
+      if (tabBtns[1]) {
+        var countEl = tabBtns[1].querySelector('.count');
+        if (countEl) countEl.textContent = uploaded + '/' + required;
+      }
+
+      while (listEl.firstChild) { listEl.removeChild(listEl.firstChild); }
+
+      if (docs.length === 0) {
+        var empty = document.createElement('div');
+        empty.style.cssText = 'padding:24px;text-align:center;color:var(--ink-subtle);font-size:13px;';
+        var lang = pageLang();
+        empty.textContent = lang === 'hi' ? 'कोई दस्तावेज़ नहीं' : lang === 'en' ? 'No documents yet' : 'Документы не загружены';
+        listEl.appendChild(empty);
+        return;
+      }
+
+      docs.forEach(function(doc) {
+        var row = document.createElement('div');
+        row.className = 'info-row';
+        row.style.cssText = 'align-items:flex-start;';
+
+        var labelCol = document.createElement('div');
+        labelCol.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+
+        var typeSpan = document.createElement('span');
+        typeSpan.className = 'label';
+        typeSpan.textContent = docTypeLabel(doc.type);
+        labelCol.appendChild(typeSpan);
+
+        if (doc.number) {
+          var numSpan = document.createElement('span');
+          numSpan.style.cssText = 'font-family:var(--font-mono);font-size:11px;color:var(--ink-tertiary);';
+          numSpan.textContent = doc.number;
+          labelCol.appendChild(numSpan);
+        }
+        if (doc.expires_at) {
+          var expSpan = document.createElement('span');
+          expSpan.style.cssText = 'font-size:11px;color:var(--ink-subtle);';
+          var lang2 = pageLang();
+          expSpan.textContent = (lang2 === 'hi' ? 'समाप्ति: ' : lang2 === 'en' ? 'Exp: ' : 'До: ') + fmtDate(doc.expires_at);
+          labelCol.appendChild(expSpan);
+        }
+
+        var valCol = document.createElement('div');
+        valCol.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;';
+
+        var meta = docStatusMeta(doc.status);
+        var pillSpan = document.createElement('span');
+        if (meta.cls) {
+          pillSpan.className = meta.cls;
+        } else {
+          pillSpan.style.cssText = 'color:var(--ink-subtle);font-size:12px;';
+        }
+        pillSpan.textContent = meta[pageLang()] || meta.ru;
+        valCol.appendChild(pillSpan);
+
+        if (doc.uploaded_at) {
+          var upSpan = document.createElement('span');
+          upSpan.style.cssText = 'font-size:11px;color:var(--ink-tertiary);';
+          upSpan.textContent = fmtDate(doc.uploaded_at);
+          valCol.appendChild(upSpan);
+        }
+
+        row.appendChild(labelCol);
+        row.appendChild(valCol);
+        listEl.appendChild(row);
+      });
+    }
+
+    // ===== FETCH + RENDER DOCUMENTS =====
+    async function loadDocuments(workerId) {
+      var listEl = document.getElementById('docs-list');
+      if (listEl) {
+        while (listEl.firstChild) { listEl.removeChild(listEl.firstChild); }
+        var loadingMsg = document.createElement('div');
+        loadingMsg.style.cssText = 'padding:16px;color:var(--ink-subtle);font-size:13px;';
+        loadingMsg.textContent = 'Загрузка…';
+        listEl.appendChild(loadingMsg);
+      }
+      var jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) return;
+      try {
+        var res = await fetch(API + '/api/v1/workers/' + workerId + '/documents', {
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        if (res.status === 401) { localStorage.removeItem(JWT_KEY); showLoginScreen(); return; }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var data = await res.json();
+        renderDocuments(data);
+      } catch (e) {
+        showToast('Ошибка загрузки документов: ' + e.message, 'error');
+        if (listEl) {
+          while (listEl.firstChild) { listEl.removeChild(listEl.firstChild); }
+          var errMsg = document.createElement('div');
+          errMsg.style.cssText = 'padding:16px;color:var(--danger);font-size:13px;';
+          errMsg.textContent = 'Ошибка загрузки';
+          listEl.appendChild(errMsg);
+        }
+      }
+    }
+
+    // ===== RENDER WORKER HERO =====
+    function renderWorker(w, total) {
+      const firstName = w.first_name || '';
+      const lastName  = w.last_name  || '';
+      const fullName  = (firstName + ' ' + lastName).trim() || '—';
+      const initials  = ((firstName[0] || '') + (lastName[0] || '')).toUpperCase() || '—';
+
+      const avatarEl = document.getElementById('worker-avatar');
+      if (avatarEl) avatarEl.textContent = initials;
+
+      const nameEl = document.getElementById('worker-full-name');
+      if (nameEl) nameEl.textContent = fullName;
+
+      const flagEl = document.getElementById('worker-flag');
+      if (flagEl) flagEl.textContent = w.country || '🌐';
+
+      const joinedEl = document.getElementById('worker-joined');
+      if (joinedEl) joinedEl.textContent = fmtDate(w.created_at);
+
+      const objectEl = document.getElementById('worker-object');
+      if (objectEl) objectEl.textContent = w.object || w.site_name || '—';
+
+      const idLineEl = document.getElementById('worker-id-line');
+      if (idLineEl) idLineEl.textContent = w.id || w.worker_id || '—';
+
+      const emailEl = document.getElementById('worker-email');
+      if (emailEl) emailEl.textContent = w.email || '—';
+
+      const langEl = document.getElementById('worker-lang');
+      if (langEl) langEl.textContent = langLabel(w.language || w.preferred_language);
+
+      const siteEl = document.getElementById('worker-site');
+      if (siteEl) siteEl.textContent = w.object || w.site_name || '—';
+
+      const quotaObjectEl = document.getElementById('worker-quota-object');
+      if (quotaObjectEl) quotaObjectEl.textContent = w.object || w.site_name || '—';
+
+      const regDateEl = document.getElementById('worker-reg-date');
+      if (regDateEl) regDateEl.textContent = fmtDate(w.created_at);
+
+      // Quota bar (total workers / 150 assumed cap)
+      const cap = 150;
+      const used = total != null ? total : 1;
+      const pct = Math.min(100, Math.round((used / cap) * 100));
+
+      const fillBar = document.getElementById('quota-fill-bar');
+      if (fillBar) fillBar.style.width = pct + '%';
+      const numsEl = document.getElementById('quota-nums');
+      if (numsEl) numsEl.textContent = used + ' / ' + cap;
+
+      // Sidebar quota
+      const sidebarFill = document.getElementById('sidebar-quota-fill');
+      if (sidebarFill) sidebarFill.style.width = pct + '%';
+      const sidebarQuotaText = document.getElementById('sidebar-quota-text');
+      if (sidebarQuotaText) sidebarQuotaText.textContent = used + ' / ' + cap;
+
+      // Sidebar workers count badge
+      const badge = document.getElementById('sidebar-workers-count');
+      if (badge && total != null) badge.textContent = total;
+
+      // Sidebar company meta
+      const companyMetaEl = document.getElementById('sidebar-company-meta');
+      if (companyMetaEl) companyMetaEl.textContent = w.company_id ? 'ID: ' + w.company_id.slice(0, 8) : (w.id ? 'ID: ' + w.id.slice(0, 8) : '');
+
+      // Store active worker id and kick off journey fetch
+      _activeWorkerId = w.id || w.worker_id || null;
+      if (_activeWorkerId) {
+        loadJourney(_activeWorkerId);
+      }
+    }
+
+    // ===== FETCH WORKERS (for sidebar badge + total) =====
+    async function fetchWorkersList() {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) return null;
+      try {
+        const res = await fetch(API + '/api/v1/workers', {
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        if (res.status === 401) { localStorage.removeItem(JWT_KEY); showLoginScreen(); return null; }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return await res.json();
+      } catch (e) {
+        showToast('Ошибка загрузки списка сотрудников: ' + e.message, 'error');
+        return null;
+      }
+    }
+
+    // ===== INIT PAGE =====
+    async function initPage() {
+      // Load worker detail from localStorage (set by dashboard on row click)
+      const raw = localStorage.getItem('adapta_active_worker');
+      const worker = raw ? JSON.parse(raw) : null;
+
+      // Fetch workers list for sidebar badge and total quota
+      const listData = await fetchWorkersList();
+      if (listData === null) return; // 401 already handled in fetchWorkersList
+      const total = listData.total != null ? listData.total : (listData.items || []).length;
+
+      // Update sidebar badge immediately
+      const badge = document.getElementById('sidebar-workers-count');
+      if (badge) badge.textContent = total;
+
+      // Update sidebar quota
+      const cap = 150;
+      const pct = Math.min(100, Math.round((total / cap) * 100));
+      const sidebarFill = document.getElementById('sidebar-quota-fill');
+      if (sidebarFill) sidebarFill.style.width = pct + '%';
+      const sidebarQuotaText = document.getElementById('sidebar-quota-text');
+      if (sidebarQuotaText) sidebarQuotaText.textContent = total + ' / ' + cap;
+
+      if (worker) {
+        renderWorker(worker, total);
+      } else if (listData.items && listData.items.length > 0) {
+        renderWorker(listData.items[0], total);
+        showToast('Сотрудник не выбран — показан первый из списка', 'info');
+      } else {
+        // Empty state: clear placeholder text
+        const nameEl = document.getElementById('worker-full-name');
+        if (nameEl) nameEl.textContent = 'Сотрудник не выбран';
+        const avatarEl = document.getElementById('worker-avatar');
+        if (avatarEl) avatarEl.textContent = '—';
+        const tl = document.getElementById('journey-timeline');
+        if (tl) {
+          var noDataMsg = document.createElement('div');
+          noDataMsg.style.cssText = 'padding:16px;color:var(--ink-subtle);font-size:13px;';
+          noDataMsg.textContent = 'Нет данных';
+          tl.appendChild(noDataMsg);
+        }
+        showToast('Сотрудник не найден. Вернитесь к списку.', 'warning');
+      }
+    }
+
+    // ===== TAB SWITCHER =====
+    (function setupTabs() {
+      var tabBtns = document.querySelectorAll('.tabs button');
+      var tabProfile = document.getElementById('tab-profile');
+      var tabDocs = document.getElementById('tab-docs');
+
+      tabBtns.forEach(function(btn, idx) {
+        btn.addEventListener('click', function() {
+          tabBtns.forEach(function(b) { b.classList.remove('is-active'); });
+          btn.classList.add('is-active');
+          // idx 0 = Profile, idx 1 = Documents, idx 2+ = not yet implemented
+          if (tabProfile) tabProfile.style.display = idx === 0 ? '' : 'none';
+          if (tabDocs) tabDocs.style.display = idx === 1 ? '' : 'none';
+          if (idx === 1 && _activeWorkerId) {
+            loadDocuments(_activeWorkerId);
+          }
+        });
+      });
+    })();
+
+    // ===== ACTION BUTTONS =====
+    document.querySelectorAll('.action-btn[data-action]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const action = btn.getAttribute('data-action');
+        const raw = localStorage.getItem('adapta_active_worker');
+        const worker = raw ? JSON.parse(raw) : null;
+        const name = worker ? ((worker.first_name || '') + ' ' + (worker.last_name || '')).trim() : 'Сотрудник';
+        const siteName = worker && worker.object ? worker.object : 'Объект';
+        switch (action) {
+          case 'write':
+            showToast('Чат с ' + name + ' будет доступен после интеграции с Telegram bot. Скоро доступно.', 'info');
+            break;
+          case 'assign':
+            showToast(name + ' назначен на объект «' + siteName + '»', 'success');
+            break;
+          case 'documents': {
+            // Switch to Documents tab (index 1)
+            var docTabBtns = document.querySelectorAll('.tabs button');
+            if (docTabBtns[1]) { docTabBtns[1].click(); }
+            break;
+          }
+          case 'history':
+            showToast('История ' + name + ': нет данных из API (раздел в разработке)', 'info');
+            break;
+          case 'suspend':
+            if (confirm('Отстранить ' + name + ' от смены?')) {
+              showToast(name + ' отстранён до выяснения', 'warning');
+            }
+            break;
+          case 'delete':
+            if (confirm('Удалить ' + name + ' из системы?')) {
+              showToast(name + ' удалён', 'error');
+            }
+            break;
+        }
+      });
+    });
+
+    // ===== AUTH GUARD + BOOT =====
+    (function boot() {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) {
+        showLoginScreen();
+      } else {
+        initPage();
+      }
+    })();
+  </script>
+</body>
+</html>

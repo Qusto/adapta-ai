@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Работодатель</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { background: var(--surface-2); }
+    .app-header { gap: var(--space-3); }
+    .app-header__title { flex: 1; }
+
+    /* Employer hero */
+    .emp-hero {
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      display: flex;
+      gap: var(--space-3);
+      align-items: center;
+    }
+    .emp-hero__logo {
+      width: 52px; height: 52px;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: var(--rounded-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+    .emp-hero__name {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .emp-hero__legal {
+      font-size: 11px;
+      opacity: 0.78;
+      margin-top: 1px;
+      line-height: 1.4;
+    }
+    .emp-hero__addr {
+      font-size: 11px;
+      opacity: 0.9;
+      margin-top: 3px;
+    }
+
+    /* Info card — unified for all sections */
+    .info-card {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-3) var(--space-4);
+    }
+    .info-card__head {
+      display: flex;
+      gap: var(--space-3);
+      align-items: flex-start;
+    }
+    .info-card__icon {
+      width: 36px; height: 36px;
+      background: var(--surface-2);
+      border-radius: var(--rounded-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .info-card__label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--ink-subtle);
+    }
+    .info-card__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-top: 2px;
+      line-height: 1.35;
+    }
+    .info-card__sub {
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+    .info-card__row {
+      display: flex;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+      flex-wrap: wrap;
+    }
+    .info-card__chip {
+      background: var(--surface-2);
+      color: var(--ink-muted);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: var(--rounded-pill);
+    }
+
+    /* Person card with call CTA */
+    .person {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      background: var(--surface-2);
+      border-radius: var(--rounded-md);
+      margin-top: var(--space-2);
+    }
+    .person__avatar {
+      width: 38px; height: 38px;
+      background: var(--surface-1);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 19px;
+      flex-shrink: 0;
+    }
+    .person__body { flex: 1; min-width: 0; }
+    .person__name { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .person__role { font-size: 11px; color: var(--ink-subtle); }
+    .person__phone {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--brand-cyan-deep);
+      margin-top: 1px;
+      font-feature-settings: "tnum" 1, "lnum" 1;
+    }
+    .person__cta {
+      height: 34px;
+      padding: 0 var(--space-3);
+      background: var(--success);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--rounded-pill);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .person__cta--chat { background: var(--brand-cyan-deep); }
+
+    /* QR card */
+    .qr-card {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-3) var(--space-4);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .qr-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--rounded-lg);
+      padding: 1px;
+      background: var(--brand-gradient);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .qr-card__label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--ink-subtle);
+    }
+    .qr-card__title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-top: 2px;
+    }
+    .qr-card__sub {
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 3px;
+    }
+    .qr-wrap {
+      margin: var(--space-3) auto 0;
+      width: 160px;
+      height: 160px;
+      background: #fff;
+      border-radius: var(--rounded-lg);
+      padding: 10px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .qr-wrap svg { width: 100%; height: 100%; }
+    .qr-id {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-subtle);
+      margin-top: var(--space-2);
+      letter-spacing: 0.5px;
+    }
+    .qr-card__row {
+      display: flex;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
+    .qr-card__row .btn { flex: 1; }
+
+    /* Company docs */
+    .doc-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .doc-row:last-child { border-bottom: 0; }
+    .doc-row__icon {
+      width: 36px; height: 36px;
+      background: var(--surface-2);
+      border-radius: var(--rounded-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .doc-row__body { flex: 1; min-width: 0; }
+    .doc-row__name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1.3;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .doc-row__meta { font-size: 11px; color: var(--ink-subtle); margin-top: 2px; }
+    .doc-row__chev { color: var(--ink-tertiary); }
+
+    .section-h {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.88px;
+      text-transform: uppercase;
+      color: var(--ink-subtle);
+      margin: 0 4px 8px;
+    }
+    .stack-screen { padding-bottom: var(--space-6); }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <main class="device-frame">
+    <header class="app-header">
+      <button class="app-header__back" aria-label="Back" onclick="if (history.length > 1) history.back(); else window.location='04-hub.html';">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12l14 0"/>
+          <path d="M5 12l6 6"/>
+          <path d="M5 12l6 -6"/>
+        </svg>
+      </button>
+      <h1 class="app-header__title" data-i18n="emp.title">О работодателе</h1>
+      <div class="lang-switch">
+        <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+        <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+        <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <div class="stack stack-3 stack-screen">
+
+        <!-- Hero -->
+        <section class="emp-hero">
+          <div class="emp-hero__logo">🏗️</div>
+          <div>
+            <div class="emp-hero__name">
+              <span class="lang-only-ru">Застройщик№1</span>
+              <span class="lang-only-hi">Застройщик№1</span>
+              <span class="lang-only-en">Застройщик№1</span>
+            </div>
+            <div class="emp-hero__legal">
+              <span class="lang-only-ru">Застройщик№1</span>
+              <span class="lang-only-hi">PJSC "Застройщик№1"</span>
+              <span class="lang-only-en">PJSC "Застройщик№1"</span>
+            </div>
+            <div class="emp-hero__addr">📍
+              <span class="lang-only-ru">Москва, ул. Строителей, 1</span>
+              <span class="lang-only-hi">मॉस्को, स्ट्रोइटेलेई स्ट्रीट, 1</span>
+              <span class="lang-only-en">Moscow, Stroiteley St., 1</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Site card -->
+        <section class="info-card">
+          <div class="info-card__head">
+            <div class="info-card__icon">📍</div>
+            <div class="grow">
+              <div class="info-card__label" data-i18n="emp.object">Объект</div>
+              <div class="info-card__title">
+                <span class="lang-only-ru">ЖК «Метрополия», корп. 14</span>
+                <span class="lang-only-hi">मेट्रोपोलिया परिसर, बिल्डिंग 14</span>
+                <span class="lang-only-en">Metropoliya complex, block 14</span>
+              </div>
+              <div class="info-card__sub">
+                <span class="lang-only-ru">Котельническая наб., д. 12, Москва</span>
+                <span class="lang-only-hi">कोटेलनिचेस्काया तटबंध, 12, मॉस्को</span>
+                <span class="lang-only-en">Kotelnicheskaya emb., 12, Moscow</span>
+              </div>
+              <div class="info-card__row">
+                <span class="info-card__chip" style="cursor:default;opacity:0.6">🗺️
+                  <span class="lang-only-ru">Открыть в 2GIS</span>
+                  <span class="lang-only-hi">2GIS में खोलें</span>
+                  <span class="lang-only-en">Open in 2GIS</span>
+                </span>
+                <span class="info-card__chip">🚇 Таганская</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Dorm card -->
+        <section class="info-card">
+          <div class="info-card__head">
+            <div class="info-card__icon">🏠</div>
+            <div class="grow">
+              <div class="info-card__label">
+                <span class="lang-only-ru">Общежитие №4</span>
+                <span class="lang-only-hi">छात्रावास #4</span>
+                <span class="lang-only-en">Dormitory #4</span>
+              </div>
+              <div class="info-card__title">
+                <span class="lang-only-ru">1-й Котельнический пер., 5</span>
+                <span class="lang-only-hi">1-я Котेलनिचेस्की लेन, 5</span>
+                <span class="lang-only-en">1st Kotelnicheskiy lane, 5</span>
+              </div>
+              <div class="info-card__sub">
+                <span class="lang-only-ru">Метро «Таганская», 10 минут пешком</span>
+                <span class="lang-only-hi">मेट्रो "तगानस्काया", 10 मिनट पैदल</span>
+                <span class="lang-only-en">Taganskaya metro, 10 min walk</span>
+              </div>
+              <div class="info-card__row">
+                <span class="info-card__chip">📶 Wi-Fi</span>
+                <span class="info-card__chip">🍳
+                  <span class="lang-only-ru">Кухня</span>
+                  <span class="lang-only-hi">रसोई</span>
+                  <span class="lang-only-en">Kitchen</span>
+                </span>
+                <span class="info-card__chip">🚿
+                  <span class="lang-only-ru">Душевые</span>
+                  <span class="lang-only-hi">स्नान</span>
+                  <span class="lang-only-en">Showers</span>
+                </span>
+                <span class="info-card__chip">🧺
+                  <span class="lang-only-ru">Прачечная</span>
+                  <span class="lang-only-hi">लॉन्ड्री</span>
+                  <span class="lang-only-en">Laundry</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Schedule -->
+        <section class="info-card">
+          <div class="info-card__head">
+            <div class="info-card__icon">⏰</div>
+            <div class="grow">
+              <div class="info-card__label" data-i18n="emp.schedule">Режим работы</div>
+              <div class="info-card__title">
+                <span class="lang-only-ru">Пн – Сб · 8:00 – 18:00</span>
+                <span class="lang-only-hi">सोम – शनि · 8:00 – 18:00</span>
+                <span class="lang-only-en">Mon – Sat · 8:00 – 18:00</span>
+              </div>
+              <div class="info-card__sub">
+                <span class="lang-only-ru">Обед 12:00 – 13:00 · Воскресенье — выходной</span>
+                <span class="lang-only-hi">लंच 12:00 – 13:00 · रविवार छुट्टी</span>
+                <span class="lang-only-en">Lunch 12:00 – 13:00 · Sunday off</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Foreman / HR -->
+        <section class="info-card">
+          <div class="info-card__head">
+            <div class="info-card__icon">👥</div>
+            <div class="grow">
+              <div class="info-card__label">
+                <span class="lang-only-ru">Контакты команды</span>
+                <span class="lang-only-hi">टीम संपर्क</span>
+                <span class="lang-only-en">Team contacts</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="person">
+            <div class="person__avatar">👷</div>
+            <div class="person__body">
+              <div class="person__name">
+                <span class="lang-only-ru">Иван Петров</span>
+                <span class="lang-only-hi">इवान पेत्रोव</span>
+                <span class="lang-only-en">Ivan Petrov</span>
+              </div>
+              <div class="person__role" data-i18n="emp.foreman">Прораб</div>
+              <div class="person__phone">+7 916 123 45 67</div>
+            </div>
+            <a class="person__cta" href="tel:+79161234567">
+              📞 <span class="lang-only-ru">Позвонить</span>
+              <span class="lang-only-hi">कॉल करें</span>
+              <span class="lang-only-en">Call</span>
+            </a>
+          </div>
+
+          <div class="person">
+            <div class="person__avatar">👩‍💼</div>
+            <div class="person__body">
+              <div class="person__name">
+                <span class="lang-only-ru">Дарья Соколова</span>
+                <span class="lang-only-hi">दारिया क्लिमेंको</span>
+                <span class="lang-only-en">Daria Klimenko</span>
+              </div>
+              <div class="person__role">
+                <span class="lang-only-ru">HR-менеджер Застройщик№1</span>
+                <span class="lang-only-hi">HR मैनेजर Застройщик№1</span>
+                <span class="lang-only-en">Застройщик№1 HR Manager</span>
+              </div>
+              <div class="person__phone">hr@zastroyshchik1.ru</div>
+            </div>
+            <a class="person__cta person__cta--chat" href="07-help-me.html">
+              💬 <span data-i18n="emp.chatHR">Чат с HR</span>
+            </a>
+          </div>
+        </section>
+
+        <!-- QR card -->
+        <section class="qr-card">
+          <div class="qr-card__label">
+            <span class="lang-only-ru">Допуск на объект</span>
+            <span class="lang-only-hi">साइट प्रवेश</span>
+            <span class="lang-only-en">Site access</span>
+          </div>
+          <div class="qr-card__title" data-i18n="emp.myQR">Мой QR-код сотрудника</div>
+          <div class="qr-card__sub">
+            <span class="lang-only-ru">Покажите прорабу при входе на объект</span>
+            <span class="lang-only-hi">साइट प्रवेश पर फोरमैन को दिखाएं</span>
+            <span class="lang-only-en">Show to foreman at the site entrance</span>
+          </div>
+          <div class="qr-wrap" id="qr-wrap"></div>
+          <div class="qr-id" data-user-qrid="true">SBP-USR-4321 · <span data-user-fullname>Раджу Шарма</span></div>
+          <div class="qr-card__row">
+            <button class="btn btn-secondary btn-sm" style="display:none">
+              ⛶ <span class="lang-only-ru">Увеличить</span>
+              <span class="lang-only-hi">बड़ा करें</span>
+              <span class="lang-only-en">Enlarge</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" style="display:none">
+              ↓ <span class="lang-only-ru">Сохранить</span>
+              <span class="lang-only-hi">सहेजें</span>
+              <span class="lang-only-en">Save</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- AI-helper CTA -->
+        <section class="card card-flat" style="display:flex;gap:var(--space-3);align-items:center;">
+          <span style="font-size:24px" aria-hidden="true">💬</span>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;margin-bottom:2px;">
+              <span class="lang-only-ru">Остались вопросы?</span>
+              <span class="lang-only-hi" lang="hi">कोई सवाल बाकी है?</span>
+              <span class="lang-only-en">Have questions?</span>
+            </div>
+            <div class="caption">
+              <span class="lang-only-ru">Спросите у AI-помощника на родном языке</span>
+              <span class="lang-only-hi" lang="hi">अपनी भाषा में AI सहायक से पूछें</span>
+              <span class="lang-only-en">Ask the AI assistant in your language</span>
+            </div>
+          </div>
+          <a href="05-ai-chat.html" class="btn btn-sm btn-primary">
+            <span class="lang-only-ru">Спросить</span>
+            <span class="lang-only-hi" lang="hi">पूछें</span>
+            <span class="lang-only-en">Ask</span>
+          </a>
+        </section>
+
+      </div>
+    </div>
+
+    <nav class="app-bottom-nav">
+      <a href="04-hub.html" class="app-bottom-nav__item">
+        <span class="icon">🏠</span>
+        <span data-i18n="nav.home">Главная</span>
+      </a>
+      <a href="05-ai-chat.html" class="app-bottom-nav__item">
+        <span class="icon">💬</span>
+        <span data-i18n="nav.ai">AI</span>
+      </a>
+      <a href="09-documents.html" class="app-bottom-nav__item">
+        <span class="icon">📄</span>
+        <span data-i18n="nav.docs">Документы</span>
+      </a>
+      <a href="10-about-employer.html" class="app-bottom-nav__item is-active">
+        <span class="icon">🏢</span>
+        <span data-i18n="nav.employer">HR</span>
+      </a>
+      <a href="14-profile.html" class="app-bottom-nav__item">
+        <span class="icon">👤</span>
+        <span data-i18n="nav.profile">Профиль</span>
+      </a>
+    </nav>
+  </main>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      // QR-code visual (deterministic pseudo-random grid)
+      const qrWrap = document.getElementById('qr-wrap');
+      const NS = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('viewBox', '0 0 25 25');
+      svg.setAttribute('shape-rendering', 'crispEdges');
+
+      // Deterministic PRNG seeded by USR-4321
+      function rng(seed) {
+        let s = seed | 0;
+        return () => {
+          s = (s * 1664525 + 1013904223) | 0;
+          return ((s >>> 0) % 1000) / 1000;
+        };
+      }
+      const rand = rng(0x4321);
+
+      // Fill body with random cells
+      for (let y = 0; y < 25; y++) {
+        for (let x = 0; x < 25; x++) {
+          if (rand() > 0.52) {
+            const r = document.createElementNS(NS, 'rect');
+            r.setAttribute('x', x); r.setAttribute('y', y);
+            r.setAttribute('width', 1); r.setAttribute('height', 1);
+            r.setAttribute('fill', '#0b1a1e');
+            svg.appendChild(r);
+          }
+        }
+      }
+      // Clear and draw 3 finder squares
+      function drawFinder(x0, y0) {
+        // Clear 7x7 area
+        Array.from(svg.children).slice().forEach((c) => {
+          const cx = +c.getAttribute('x'), cy = +c.getAttribute('y');
+          if (cx >= x0 && cx < x0 + 7 && cy >= y0 && cy < y0 + 7) c.remove();
+        });
+        const outer = document.createElementNS(NS, 'rect');
+        outer.setAttribute('x', x0); outer.setAttribute('y', y0);
+        outer.setAttribute('width', 7); outer.setAttribute('height', 7);
+        outer.setAttribute('fill', 'none');
+        outer.setAttribute('stroke', '#0b1a1e');
+        outer.setAttribute('stroke-width', '1');
+        svg.appendChild(outer);
+        const inner = document.createElementNS(NS, 'rect');
+        inner.setAttribute('x', x0 + 2); inner.setAttribute('y', y0 + 2);
+        inner.setAttribute('width', 3); inner.setAttribute('height', 3);
+        inner.setAttribute('fill', '#0b1a1e');
+        svg.appendChild(inner);
+      }
+      drawFinder(0, 0);
+      drawFinder(18, 0);
+      drawFinder(0, 18);
+      qrWrap.appendChild(svg);
+
+      // Bind user name from localStorage
+      let apiUser = null;
+      try {
+        const raw = localStorage.getItem('adapta_user');
+        if (raw) apiUser = JSON.parse(raw);
+      } catch (e) { /* malformed JSON — fall back */ }
+
+      const firstName = (apiUser && apiUser.first_name) || 'Друг';
+      const lastName  = (apiUser && apiUser.last_name)  || '';
+      const fullName  = (firstName + ' ' + lastName).trim();
+
+      const fullNameEl = document.querySelector('[data-user-fullname]');
+      if (fullNameEl) fullNameEl.textContent = fullName;
+    });
+  </script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+  <!-- WS-2: employer name from the shared company DB (single source of truth) -->
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function () {
+      var jwt = null;
+      try { jwt = localStorage.getItem('adapta_jwt'); } catch (e) { return; }
+      if (!jwt) return;
+      var base = (window.ADAPTA_API_BASE_URL || '');
+      fetch(base + '/api/v1/company/me', { headers: { 'Authorization': 'Bearer ' + jwt } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (c) {
+          if (!c || !c.name) return;
+          // Company name is language-neutral — collapse the lang spans to the DB value.
+          document.querySelectorAll('.emp-hero__name').forEach(function (el) { el.textContent = c.name; });
+          if (c.site) {
+            try { localStorage.setItem('adapta_company', JSON.stringify(c)); } catch (e) {}
+          }
+        })
+        .catch(function () { /* keep hardcoded fallback */ });
+    });
+  </script>
+</body>
+</html>

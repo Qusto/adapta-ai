@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — AI помощник</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { background: #eef2f3; }
+
+    /* ───── Layout overrides for chat ───── */
+    .device-frame { min-height: 920px; }
+    .app-body--chat {
+      padding: 0;
+      background: var(--canvas-soft);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ───── Header ───── */
+    .chat-header {
+      padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
+      background: var(--canvas);
+      border-bottom: 1px solid var(--hairline);
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      align-items: center;
+      gap: var(--space-3);
+      flex-shrink: 0;
+    }
+    .chat-header__avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--brand-gradient);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+      box-shadow: var(--shadow-sm);
+      grid-column: 1;
+    }
+    .chat-header__meta { grid-column: 2; min-width: 0; }
+    .chat-header__title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .chat-header__sub {
+      font-size: 12px; color: var(--ink-subtle);
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 2px;
+    }
+    .chat-header__sub .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); display: inline-block; }
+    .chat-header__lang-flag {
+      display: inline-flex;
+      align-items: center; gap: 4px;
+      padding: 2px 8px;
+      background: var(--info-soft);
+      color: var(--info-dark);
+      border-radius: var(--rounded-pill);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .chat-header__actions { grid-column: 3; display: flex; align-items: center; gap: var(--space-2); }
+
+    /* ───── Chat scroll ───── */
+    .chat-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-4) var(--space-4) var(--space-5);
+      background: var(--canvas-soft);
+    }
+    .chat-thread { gap: var(--space-3); }
+
+    .chat-day {
+      text-align: center;
+      font-size: 11px;
+      color: var(--ink-tertiary);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin: var(--space-2) 0 var(--space-3);
+    }
+
+    .bubble { max-width: 88%; }
+    .bubble-user { font-family: var(--font-hindi); font-size: 16px; }
+    .bubble-agent { padding: var(--space-4); }
+    .bubble-agent__hi { font-family: var(--font-hindi); font-size: 15px; line-height: 1.6; }
+    .bubble-agent__ru {
+      display: block;
+      margin-top: 6px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--hairline);
+      font-size: 13px;
+      color: var(--ink-muted);
+      line-height: 1.5;
+    }
+    .bubble-user .bubble__translation { color: rgba(255,255,255,0.85); }
+
+    .bubble__sources {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: var(--space-3);
+    }
+    .bubble__meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-2);
+      font-size: 11px;
+      color: var(--ink-tertiary);
+    }
+    .bubble__meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-tertiary); }
+
+    .bubble-row { display: flex; gap: var(--space-2); align-items: flex-end; }
+    .bubble-row--user { justify-content: flex-end; }
+    .bubble-row--agent { justify-content: flex-start; }
+    .bubble-row__avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--brand-gradient);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-xs);
+    }
+
+    /* Voice message bubble — has waveform */
+    .bubble-voice {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: 10px var(--space-3);
+    }
+    .bubble-voice .waveform { height: 24px; }
+    .bubble-voice .waveform__bar { background: rgba(255,255,255,0.9); }
+    .bubble-voice__duration { font-size: 12px; opacity: 0.85; font-variant-numeric: tabular-nums; }
+    .bubble-voice__play {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Suggestion chips strip */
+    .quick-chips {
+      display: flex;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-4) 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+      background: var(--canvas);
+      border-top: 1px solid var(--hairline);
+    }
+    .quick-chips::-webkit-scrollbar { display: none; }
+    .quick-chip {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      background: var(--surface-2);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-pill);
+      white-space: nowrap;
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+    .quick-chip:hover { background: var(--surface-3); }
+    .quick-chip .emoji { font-size: 14px; }
+
+    /* Composer */
+    .composer {
+      padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0));
+      background: var(--canvas);
+      border-top: 1px solid var(--hairline);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-shrink: 0;
+    }
+    .composer__attach {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink-muted);
+      background: var(--surface-2);
+      flex-shrink: 0;
+    }
+    .composer__attach:hover { background: var(--surface-3); color: var(--ink); }
+    .composer__input {
+      flex: 1;
+      height: 44px;
+      padding: 0 16px;
+      font-size: 15px;
+      background: var(--surface-2);
+      border: 1px solid transparent;
+      border-radius: var(--rounded-pill);
+      color: var(--ink);
+    }
+    .composer__input::placeholder { color: var(--ink-tertiary); }
+    .composer__input:focus {
+      outline: none;
+      background: var(--canvas);
+      border-color: var(--brand-cyan);
+      box-shadow: var(--focus-brand);
+    }
+    .composer__mic {
+      width: 52px; height: 52px;
+      font-size: 22px;
+      box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35);
+      flex-shrink: 0;
+    }
+    .composer__mic-link { text-decoration: none; }
+    .composer__mic-link.is-hidden { display: none; }
+    .composer__send {
+      display: none;
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: var(--gradient-brand, linear-gradient(135deg, #06b6d4, #10b981));
+      color: #fff;
+      border: none;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35);
+      flex-shrink: 0;
+    }
+    .composer__send.is-visible { display: inline-flex; }
+    .composer__send:hover { opacity: 0.9; }
+
+    /* AI thinking ghost row */
+    .thinking-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 6px var(--space-3);
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-pill);
+      align-self: flex-start;
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+    .thinking-row .waveform { height: 16px; gap: 2px; }
+    .thinking-row .waveform__bar { width: 2px; }
+
+    /* Compact lang switch in header */
+    .lang-switch--compact { padding: 3px; }
+    .lang-switch--compact .lang-switch__btn { height: 22px; padding: 0 7px; font-size: 10px; }
+
+    /* Hide bottom-nav inset behind composer focus */
+    .app-bottom-nav { box-shadow: 0 -1px 0 var(--hairline); }
+
+    /* ───── AI Product Card ───── */
+    .ai-product-card {
+      margin-top: var(--space-3);
+      padding: var(--space-3) var(--space-3) var(--space-3);
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      max-height: 140px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .ai-product-card__head {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .ai-product-card__badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: var(--rounded-pill);
+      background: var(--brand-gradient);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      flex-shrink: 0;
+    }
+    .ai-product-card__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ai-product-card__subtitle {
+      font-size: 12px;
+      color: var(--ink-muted);
+      line-height: 1.4;
+    }
+    .ai-product-card__cta {
+      align-self: flex-start;
+      font-size: 12px;
+      padding: 4px 12px;
+      height: 28px;
+      text-decoration: none;
+    }
+
+    /* ───── Emergency banner ───── */
+    .emergency-banner {
+      display: flex; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      margin: var(--space-3) 0;
+      background: #fff1f0;
+      border: 1px solid #ff4d4f;
+      border-left: 4px solid #ff4d4f;
+      border-radius: var(--rounded-md);
+      align-items: center;
+      animation: pulse-soft 1.6s ease-out 2;
+    }
+    .emergency-banner__icon { font-size: 24px; }
+    .emergency-banner__title { font-weight: 600; color: #a8071a; font-size: 14px; }
+    .emergency-banner__sub { font-size: 12px; color: #5c0011; margin-top: 2px; }
+    @keyframes pulse-soft {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,77,79,0.0); }
+      50% { box-shadow: 0 0 0 6px rgba(255,77,79,0.15); }
+    }
+
+    /* ───── Inline DMS suggest chip (under last agent message) ───── */
+    .dms-suggest-chip {
+      margin: var(--space-2) 0 0 38px;
+      border-color: var(--brand-cyan);
+      color: var(--brand-cyan);
+    }
+    .dms-suggest-chip:hover {
+      background: rgba(6, 182, 212, 0.08);
+      border-color: var(--brand-cyan);
+    }
+
+    /* ───── Empty state ───── */
+    .chat-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      padding: var(--space-6) var(--space-4);
+      text-align: center;
+      pointer-events: none;
+    }
+    .chat-empty-state__icon {
+      font-size: 40px;
+      opacity: 0.6;
+    }
+    .chat-empty-state__text {
+      font-size: 15px;
+      color: var(--ink-muted);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .chat-empty-state.is-hidden { display: none; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <div class="device-frame">
+    <!-- Header -->
+    <header class="chat-header">
+      <button class="app-header__back" aria-label="Назад" onclick="if (history.length > 1) history.back(); else window.location='04-hub.html';">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/>
+        </svg>
+      </button>
+      <div class="chat-header__avatar" aria-hidden="true">✨</div>
+      <div class="chat-header__meta">
+        <div class="chat-header__title">
+          <span data-i18n="ai.title">AI помощник</span>
+          <span class="stage stage-done" style="margin-left:4px;">
+            <span class="lang-only-ru">онлайн</span>
+            <span class="lang-only-hi">ऑनलाइन</span>
+            <span class="lang-only-en">online</span>
+          </span>
+        </div>
+        <div class="chat-header__sub">
+          <span class="dot"></span>
+          <span data-i18n="ai.indicator">отвечает на вашем языке</span>
+          <span>·</span>
+          <span class="chat-header__lang-flag">🇮🇳 हिं</span>
+        </div>
+      </div>
+      <div class="chat-header__actions">
+        <div class="lang-switch lang-switch--compact">
+          <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+          <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+          <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Chat -->
+    <main class="app-body--chat">
+      <div class="chat-scroll">
+        <div class="chat-thread">
+          <!-- empty-state: shown when no messages, hidden as soon as first message appears -->
+          <div class="chat-empty-state" id="chatEmptyState">
+            <div class="chat-empty-state__icon" aria-hidden="true">✨</div>
+            <p class="chat-empty-state__text">
+              <span class="lang-only-ru">Задайте первый вопрос на любом языке</span>
+              <span class="lang-only-hi">किसी भी भाषा में पहला सवाल पूछें</span>
+              <span class="lang-only-en">Ask your first question in any language</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick suggestion chips -->
+      <nav class="quick-chips" aria-label="Быстрые вопросы">
+        <button class="quick-chip"><span class="emoji">💰</span><span data-i18n="ai.quickQ.salary">Когда зарплата?</span></button>
+        <button class="quick-chip"><span class="emoji">🏧</span><span data-i18n="ai.quickQ.atm">Где банкомат?</span></button>
+        <button class="quick-chip"><span class="emoji">🏥</span><span data-i18n="ai.quickQ.clinic">Поликлиника рядом?</span></button>
+        <button class="quick-chip"><span class="emoji">📋</span><span data-i18n="ai.quickQ.patent">Как продлить патент?</span></button>
+        <button class="quick-chip"><span class="emoji">🏠</span>
+          <span class="lang-only-ru">Адрес общежития</span>
+          <span class="lang-only-hi">छात्रावास का पता</span>
+          <span class="lang-only-en">Dorm address</span>
+        </button>
+        <button class="quick-chip"><span class="emoji">🇮🇳</span>
+          <span class="lang-only-ru">Перевод в Индию</span>
+          <span class="lang-only-hi">भारत में पैसा भेजें</span>
+          <span class="lang-only-en">Send money home</span>
+        </button>
+      </nav>
+
+      <!-- Composer -->
+      <div class="composer">
+        <button class="composer__attach" aria-label="Прикрепить">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 7l-6.5 6.5a3.5 3.5 0 0 0 5 5l6.5 -6.5a5.5 5.5 0 0 0 -8 -8l-6.5 6.5a7.5 7.5 0 0 0 11 11l6 -6"/>
+          </svg>
+        </button>
+        <input class="composer__input" type="text" data-i18n-attr="placeholder:ai.placeholder" placeholder="Спросите AI или нажмите 🎤 для голоса">
+        <a href="06-ai-listening.html" class="composer__mic-link" aria-label="Записать голос">
+          <span class="voice-mic composer__mic">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <path d="M8 21l8 0"/>
+              <path d="M12 17l0 4"/>
+            </svg>
+          </span>
+        </a>
+        <button class="composer__send" id="composerSend" aria-label="Отправить">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 2L11 13"/>
+            <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+          </svg>
+        </button>
+      </div>
+    </main>
+
+    <!-- Bottom nav -->
+    <nav class="app-bottom-nav">
+      <a href="04-hub.html" class="app-bottom-nav__item">
+        <span class="icon">🏠</span>
+        <span data-i18n="nav.home">Главная</span>
+      </a>
+      <a href="05-ai-chat.html" class="app-bottom-nav__item is-active">
+        <span class="icon">💬</span>
+        <span data-i18n="nav.ai">AI</span>
+      </a>
+      <a href="09-documents.html" class="app-bottom-nav__item">
+        <span class="icon">📄</span>
+        <span data-i18n="nav.docs">Документы</span>
+      </a>
+      <a href="10-about-employer.html" class="app-bottom-nav__item">
+        <span class="icon">🏢</span>
+        <span data-i18n="nav.employer">HR</span>
+      </a>
+      <a href="14-profile.html" class="app-bottom-nav__item">
+        <span class="icon">👤</span>
+        <span data-i18n="nav.profile">Профиль</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script src="05-ai-chat.js" defer></script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+</body>
+</html>

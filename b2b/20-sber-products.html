@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdaptaAI — Партнёрские продукты в RAG</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { font-size: 14px; background: var(--canvas); }
+
+    /* ===== Sidebar (shared) ===== */
+    .console-sidebar { grid-row: 1 / span 2; background: var(--canvas-soft); border-right: 1px solid var(--hairline); display: flex; flex-direction: column; padding: var(--space-5); }
+    .sidebar__logo { display:flex; align-items:center; gap:10px; font-size:17px; font-weight:700; margin-bottom: var(--space-6); }
+    .sidebar__logo .mark { width:32px; height:32px; border-radius:8px; background: var(--brand-gradient); display:inline-flex; align-items:center; justify-content:center; color: var(--on-brand); font-size:16px; }
+    .sidebar__logo .name { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .sidebar__logo .sub { font-size:11px; color: var(--ink-subtle); letter-spacing:0.6px; text-transform:uppercase; margin-left:4px; }
+    .sidebar__nav { display:flex; flex-direction:column; gap:2px; }
+    .nav-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius: var(--rounded-md); color: var(--ink-muted); font-size:14px; font-weight:500; cursor:pointer; transition: all var(--dur-fast); text-decoration:none; }
+    .nav-item:hover { background: var(--surface-2); color: var(--ink); text-decoration:none; }
+    .nav-item.is-active { background: var(--surface-2); color: var(--ink); }
+    .nav-item.is-active::before { content:''; width:3px; height:18px; background: linear-gradient(135deg, #10b981, #059669); border-radius:2px; margin-left:-6px; margin-right:4px; }
+    .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+    .nav-item .badge { margin-left:auto; background: var(--danger); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; }
+    .nav-item .badge-soft { margin-left:auto; background: var(--surface-3); color: var(--ink-muted); font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; }
+    .sidebar__section { font-size:10px; letter-spacing:1px; text-transform:uppercase; color: var(--ink-tertiary); padding:0 12px; margin: var(--space-5) 0 var(--space-2); }
+    .sidebar__employer { margin-top:auto; padding:14px; border:1px solid var(--hairline); border-radius: var(--rounded-lg); background: var(--surface-1); }
+    .sidebar__employer-header { display:flex; align-items:center; gap:10px; }
+    .sidebar__employer-logo { width:36px; height:36px; border-radius:8px; background: var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:18px; }
+    .sidebar__employer-name { font-weight:600; font-size:13px; }
+    .sidebar__employer-meta { font-size:11px; color: var(--ink-subtle); }
+
+    /* ===== Topbar ===== */
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:0 var(--space-6); border-bottom:1px solid var(--hairline); background: var(--canvas); }
+    .breadcrumb { display:flex; align-items:center; gap:10px; font-size:13px; color: var(--ink-muted); }
+    .breadcrumb .current { color: var(--ink); font-weight:600; }
+    .breadcrumb .collection-chip { background: var(--surface-2); padding: 4px 10px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; color: #10b981; border: 1px solid var(--hairline); }
+    .topbar__right { display:flex; align-items:center; gap: var(--space-3); }
+    .avatar { width:28px; height:28px; border-radius:50%; background: var(--brand-gradient); color: var(--on-brand); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; }
+    .avatar-row { display:flex; align-items:center; gap:8px; padding:0 12px 0 4px; border-radius:18px; border:1px solid var(--hairline); background: var(--surface-1); height:36px; }
+    .avatar-row .name { font-size:13px; font-weight:600; line-height:1.1; }
+    .avatar-row .role { font-size:10px; color: var(--ink-subtle); line-height:1.1; }
+
+    /* ===== Main — single column ===== */
+    .main { padding: var(--space-6); overflow-y: auto; }
+    .main__inner { max-width: 860px; display: flex; flex-direction: column; gap: var(--space-5); }
+
+    .page-title h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .page-title .sub { font-size: 13px; color: var(--ink-subtle); margin-top: 4px; }
+
+    /* Emerald accent notice */
+    .collection-notice {
+      display: flex; align-items: center; gap: 10px;
+      background: color-mix(in srgb, #10b981 8%, var(--surface-1));
+      border: 1px solid color-mix(in srgb, #10b981 30%, var(--hairline));
+      border-radius: var(--rounded-md);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+    .collection-notice .ico { font-size: 16px; flex-shrink: 0; }
+    .collection-notice strong { color: #10b981; }
+
+    /* Dropzone */
+    .dropzone {
+      background: var(--surface-1);
+      border: 2px dashed var(--hairline-strong);
+      border-radius: var(--rounded-xl);
+      padding: 48px 24px;
+      text-align: center;
+      transition: all var(--dur-base) var(--ease-out);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .dropzone:hover, .dropzone.is-drag {
+      border-color: #10b981;
+      background: color-mix(in srgb, #10b981 6%, var(--surface-1));
+    }
+    .dropzone::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 30%, rgba(16,185,129,0.07) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .dropzone__icon { font-size: 48px; margin-bottom: var(--space-3); }
+    .dropzone__title { font-size: 18px; font-weight: 600; color: var(--ink); }
+    .dropzone__sub { font-size: 13px; color: var(--ink-subtle); margin-top: 6px; }
+    .dropzone__types { display: flex; gap: 6px; justify-content: center; margin-top: var(--space-4); }
+    .dropzone__types span { font-size: 11px; padding: 3px 10px; border-radius: var(--rounded-pill); background: var(--surface-2); color: var(--ink-muted); }
+    .dropzone__cta { margin-top: var(--space-4); display: inline-flex; align-items: center; gap: 6px; }
+
+    /* Docs table card */
+    .docs-card { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: var(--rounded-lg); overflow: hidden; }
+    .docs-card__head {
+      padding: var(--space-4) var(--space-5);
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .docs-card__title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .docs-card__title .count { color: var(--ink-subtle); font-weight: 500; }
+
+    .table { font-size: 13px; width: 100%; }
+    .table th { background: var(--canvas-soft); padding: 12px var(--space-5); color: var(--ink-subtle); font-weight: 600; font-size: 10px; letter-spacing: 0.8px; text-align: left; }
+    .table td { padding: 12px var(--space-5); border-bottom: 1px solid var(--hairline); color: var(--ink-muted); vertical-align: middle; }
+    .table tbody tr:hover { background: var(--surface-2); }
+    .table tbody tr:last-child td { border-bottom: 0; }
+
+    .file-cell { display: flex; align-items: center; gap: 10px; color: var(--ink); }
+    .file-cell .ico { width: 32px; height: 32px; border-radius: 6px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .file-cell .name { font-weight: 500; word-break: break-all; }
+    .file-cell .ext { font-family: var(--font-mono); font-size: 10px; color: var(--ink-tertiary); }
+
+    .chunks-bar { display: flex; align-items: center; gap: 8px; }
+    .chunks-bar .num { font-family: var(--font-mono); font-size: 12px; color: var(--ink); }
+    .chunks-bar .bar { width: 50px; height: 4px; background: var(--surface-3); border-radius: 2px; overflow: hidden; }
+    .chunks-bar .fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); }
+
+    .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+    .row-actions button { width: 28px; height: 28px; border-radius: 6px; background: var(--surface-2); color: var(--ink-muted); font-size: 12px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; }
+    .row-actions button:hover { background: var(--surface-3); color: var(--ink); }
+    .row-actions button.danger:hover { color: var(--danger); }
+
+    /* Upload progress stepper */
+    .upload-stepper { display: flex; align-items: center; gap: 4px; white-space: nowrap; font-size: 11px; flex-wrap: nowrap; }
+    .upload-stepper .step { display: flex; align-items: center; gap: 3px; color: var(--ink-tertiary); }
+    .upload-stepper .step.is-active { color: #10b981; font-weight: 600; }
+    .upload-stepper .step.is-done { color: #10b981; }
+    .upload-stepper .step.is-error { color: var(--danger); font-weight: 600; }
+    .upload-stepper .sep { color: var(--ink-tertiary); font-size: 9px; margin: 0 1px; }
+    .upload-progress-bar { margin-top: 6px; height: 3px; background: var(--surface-3); border-radius: 2px; overflow: hidden; }
+    .upload-progress-bar .fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); border-radius: 2px; transition: width 0.15s ease; }
+
+    /* Empty state */
+    .docs-empty { text-align: center; padding: var(--space-8) var(--space-5); color: var(--ink-subtle); }
+    .docs-empty .ico { font-size: 40px; margin-bottom: var(--space-3); }
+    .docs-empty .lbl { font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="console-frame">
+    <!-- Sidebar -->
+    <aside class="console-sidebar">
+      <div class="sidebar__logo">
+        <span class="mark">S</span>
+        <span class="name">AdaptaAI</span>
+        <span class="sub">Партнёр</span>
+      </div>
+      <div class="sidebar__section">Навигация</div>
+      <nav class="sidebar__nav">
+        <a class="nav-item" href="15-hr-dashboard.html"><span class="icon">👥</span><span>Сотрудники</span></a>
+        <a class="nav-item" href="18-ticket-inbox.html"><span class="icon">🎫</span><span>Тикеты</span></a>
+        <a class="nav-item" href="17-rag-upload.html"><span class="icon">📚</span><span>Документы (RAG)</span></a>
+        <a class="nav-item is-active"><span class="icon">💼</span><span>Продукты партнёров</span></a>
+      </nav>
+      <div class="sidebar__employer" style="margin-top:auto;">
+        <div class="sidebar__employer-header">
+          <div class="sidebar__employer-logo">🏦</div>
+          <div>
+            <div class="sidebar__employer-name">Партнёр — платформа</div>
+            <div class="sidebar__employer-meta">Глобальная коллекция</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="breadcrumb">
+        <span style="font-size:16px">💼</span>
+        <span class="current">Партнёрские продукты в RAG</span>
+        <span style="color:var(--ink-tertiary)">→</span>
+        <span class="collection-chip">sber_products</span>
+      </div>
+      <div class="topbar__right">
+        <div class="avatar-row">
+          <div class="avatar">СА</div>
+          <div>
+            <div class="name">Партнёр-Админ</div>
+            <div class="role">Загрузка продуктов</div>
+          </div>
+        </div>
+        <div class="lang-switch">
+          <button class="lang-switch__btn is-active" data-lang-switch="ru">RU</button>
+          <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+          <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="main__inner">
+
+        <div class="page-title">
+          <h1>Партнёрские продукты в RAG</h1>
+          <div class="sub">Карточки и описания продуктов партнёров — доступны всем мигрантам на платформе через AI-агента</div>
+        </div>
+
+        <!-- Collection notice -->
+        <div class="collection-notice">
+          <span class="ico">🌍</span>
+          <span>
+            <strong>Эта коллекция видна всем мигрантам.</strong>
+            Документы, загруженные сюда, используются AI-агентом для ответов на вопросы о продуктах партнёров — для любого работодателя.
+          </span>
+        </div>
+
+        <!-- Dropzone -->
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone__icon">📂</div>
+          <div class="dropzone__title">Перетащите файлы сюда</div>
+          <div class="dropzone__sub">или нажмите для выбора · до 25 МБ на файл</div>
+          <div class="dropzone__types">
+            <span>PDF</span>
+            <span>DOCX</span>
+            <span>TXT</span>
+            <span>MD</span>
+          </div>
+          <button class="btn btn-primary btn-sm dropzone__cta" style="background:linear-gradient(135deg,#10b981,#059669);border-color:transparent;" type="button">
+            <span>📂</span>
+            <span>Выбрать файлы</span>
+          </button>
+        </div>
+
+        <!-- Docs table -->
+        <section class="docs-card">
+          <div class="docs-card__head">
+            <div class="docs-card__title">
+              <span>Загруженные документы</span>
+              <span class="count" id="docs-count-label"></span>
+            </div>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Файл</th>
+                <th>Chunks</th>
+                <th>Статус</th>
+                <th>Загружен</th>
+                <th style="text-align:right">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="docs-tbody"></tbody>
+          </table>
+          <div id="docs-empty" class="docs-empty" style="display:none;">
+            <div class="ico">📭</div>
+            <div class="lbl">Документов нет. Загрузите первый файл через форму выше.</div>
+          </div>
+          <div id="docs-loading" class="docs-empty">
+            <div class="ico">⏳</div>
+            <div class="lbl">Загрузка списка…</div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script defer>
+    // ===== CONFIG =====
+    const API = (window.ADAPTA_API_BASE_URL || window.location.origin).replace(/\/$/, '');
+    const JWT_KEY = 'adapta_jwt';
+    const COLLECTION = 'sber_products';
+
+    // ===== TOAST =====
+    function showToast(msg, type) {
+      type = type || 'info';
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+        document.body.appendChild(container);
+      }
+      const t = document.createElement('div');
+      const borderColor = type === 'error' ? 'var(--danger)' : '#10b981';
+      t.style.cssText = 'background:var(--surface-2);border:1px solid var(--hairline);border-left:3px solid ' + borderColor + ';border-radius:var(--rounded-md);padding:12px 18px;font-size:13px;color:var(--ink);min-width:260px;max-width:380px;box-shadow:var(--shadow-md);pointer-events:auto;word-break:break-word;';
+      t.textContent = msg;
+      container.appendChild(t);
+      setTimeout(function() { t.remove(); }, 5000);
+    }
+
+    // ===== DOM HELPER =====
+    function el(tag, opts, children) {
+      const node = document.createElement(tag);
+      if (opts) Object.entries(opts).forEach(function([k, v]) {
+        if (k === 'text') node.textContent = v;
+        else if (k === 'class') node.className = v;
+        else node.setAttribute(k, v);
+      });
+      if (children) children.forEach(function(c) { if (c) node.appendChild(c); });
+      return node;
+    }
+    function inp(id, type, placeholder) {
+      const i = document.createElement('input');
+      i.id = id; i.type = type; i.placeholder = placeholder; i.className = 'input';
+      i.style.cssText = 'width:100%;box-sizing:border-box;';
+      return i;
+    }
+
+    // ===== LOGIN SCREEN =====
+    function showLoginScreen() {
+      const existing = document.getElementById('login-overlay');
+      if (existing) existing.remove();
+
+      const overlay = el('div', { id: 'login-overlay', style: 'position:fixed;inset:0;background:var(--canvas);z-index:8000;display:flex;align-items:center;justify-content:center;' });
+
+      const card = el('div', { style: 'background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--rounded-xl);padding:40px;width:380px;display:flex;flex-direction:column;gap:20px;' });
+
+      const logoArea = el('div', { style: 'text-align:center;' });
+      const logoMark = el('div', { style: 'font-size:32px;margin-bottom:8px;', text: 'S' });
+      const logoName = el('div', { style: 'font-size:20px;font-weight:700;background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;color:transparent;', text: 'AdaptaAI HR' });
+      const logoSub = el('div', { style: 'font-size:13px;color:var(--ink-subtle);margin-top:4px;', text: 'Вход в систему' });
+      logoArea.append(logoMark, logoName, logoSub);
+
+      const fields = el('div', { style: 'display:flex;flex-direction:column;gap:10px;' });
+      const emailInp = inp('login-email', 'email', 'Email');
+      const passInp = inp('login-password', 'password', 'Пароль');
+      fields.append(emailInp, passInp);
+
+      const loginBtn = el('button', { id: 'login-btn', class: 'btn btn-primary btn-block', text: 'Войти' });
+      const demoBtn = el('button', { id: 'demo-login-btn', class: 'btn btn-secondary btn-block', style: 'font-size:12px;', text: 'Войти как Дарья (Застройщик№1) — демо' });
+      const errEl = el('div', { id: 'login-error', style: 'color:var(--danger);font-size:12px;text-align:center;display:none;' });
+
+      card.append(logoArea, fields, loginBtn, demoBtn, errEl);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      demoBtn.addEventListener('click', function() {
+        emailInp.value = 'daria@pik.demo';
+        passInp.value = 'demo';
+      });
+
+      async function doLogin() {
+        const email = emailInp.value.trim();
+        const password = passInp.value;
+        errEl.style.display = 'none';
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Входим…';
+        try {
+          const res = await fetch(API + '/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            errEl.textContent = (data && data.error && data.error.message) || 'Неверный email или пароль';
+            errEl.style.display = 'block';
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Войти';
+            return;
+          }
+          localStorage.setItem(JWT_KEY, data.access_token);
+          if (data.user) {
+            const nameEl = document.querySelector('.avatar-row .name');
+            if (nameEl) nameEl.textContent = data.user.first_name + ' ' + data.user.last_name.charAt(0) + '.';
+            const avatarEl = document.querySelector('.avatar');
+            if (avatarEl) avatarEl.textContent = (data.user.first_name.charAt(0) + data.user.last_name.charAt(0)).toUpperCase();
+          }
+          overlay.remove();
+          fetchDocuments();
+        } catch (e) {
+          errEl.textContent = 'Ошибка сети. Проверьте соединение.';
+          errEl.style.display = 'block';
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Войти';
+        }
+      }
+
+      loginBtn.addEventListener('click', doLogin);
+      [emailInp, passInp].forEach(function(elem) {
+        elem.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+      });
+    }
+
+    // ===== HELPERS =====
+    function fileIcon(name) {
+      if (!name) return '📄';
+      const n = name.toLowerCase();
+      if (n.endsWith('.pdf'))  return '📕';
+      if (n.endsWith('.docx')) return '📘';
+      return '📄';
+    }
+    function fileExt(name) { return name ? name.split('.').pop().toUpperCase() : ''; }
+    function chunkPct(c) { return Math.min(100, (c || 0) * 7); }
+    function formatDate(raw) {
+      if (!raw) return '—';
+      try { return new Date(raw).toLocaleDateString('ru-RU'); } catch(e) { return raw; }
+    }
+
+    // ===== RENDER STATE =====
+    function setListState(state) {
+      document.getElementById('docs-loading').style.display = state === 'loading' ? '' : 'none';
+      document.getElementById('docs-empty').style.display   = state === 'empty'   ? '' : 'none';
+    }
+
+    // ===== RENDER ONE ROW =====
+    function renderDocsRow(d, tbody) {
+      const tr = document.createElement('tr');
+
+      // file cell
+      const tdFile = document.createElement('td');
+      const cell = document.createElement('div'); cell.className = 'file-cell';
+      const ico = document.createElement('div'); ico.className = 'ico'; ico.textContent = fileIcon(d.name || '');
+      const meta = document.createElement('div');
+      const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = d.name || d.id || '—';
+      const ex = document.createElement('div'); ex.className = 'ext'; ex.textContent = fileExt(d.name || '');
+      meta.append(nm, ex);
+      cell.append(ico, meta);
+      tdFile.appendChild(cell);
+
+      // chunks
+      const tdChunks = document.createElement('td');
+      const cb = document.createElement('div'); cb.className = 'chunks-bar';
+      const chunkCount = d.chunks_count !== undefined ? d.chunks_count : (d.chunks || 0);
+      const numEl = document.createElement('span'); numEl.className = 'num'; numEl.textContent = chunkCount;
+      const bar = document.createElement('div'); bar.className = 'bar';
+      const fillEl = document.createElement('div'); fillEl.className = 'fill'; fillEl.style.width = chunkPct(chunkCount) + '%';
+      bar.appendChild(fillEl); cb.append(numEl, bar); tdChunks.appendChild(cb);
+
+      // status
+      const tdSt = document.createElement('td');
+      const stage = document.createElement('span');
+      const status = d.status || 'indexed';
+      if (status === 'indexed') {
+        stage.className = 'stage stage-done'; stage.textContent = 'Indexed';
+      } else if (status === 'failed') {
+        stage.className = 'stage stage-escalated'; stage.textContent = 'Failed';
+      } else {
+        stage.className = 'stage stage-thinking'; stage.textContent = 'Processing';
+      }
+      tdSt.appendChild(stage);
+
+      // date
+      const tdUp = document.createElement('td');
+      tdUp.textContent = formatDate(d.uploaded || d.created_at);
+
+      // actions
+      const tdAct = document.createElement('td');
+      const acts = document.createElement('div'); acts.className = 'row-actions';
+      const docId = d.id || null;
+      const docName = d.name || d.id || '—';
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'danger';
+      deleteBtn.textContent = '🗑️';
+      deleteBtn.title = 'Удалить';
+      deleteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!docId) { showToast('Документ без id — удалить нельзя.', 'error'); return; }
+        if (!confirm('Удалить «' + docName + '»? Это удалит и его чанки из базы знаний.')) return;
+        deleteDocument(docId, docName, tr);
+      });
+      acts.appendChild(deleteBtn);
+      tdAct.appendChild(acts);
+
+      tr.append(tdFile, tdChunks, tdSt, tdUp, tdAct);
+      tbody.appendChild(tr);
+    }
+
+    // ===== RENDER FULL LIST =====
+    function renderDocsList(docs) {
+      const tbody = document.getElementById('docs-tbody');
+      // Remove data rows (not upload-placeholders)
+      Array.from(tbody.querySelectorAll('tr:not(.upload-placeholder)')).forEach(function(r) { r.remove(); });
+
+      if (docs.length === 0) {
+        setListState('empty');
+      } else {
+        setListState('');
+        docs.forEach(function(d) { renderDocsRow(d, tbody); });
+      }
+
+      const totalChunks = docs.reduce(function(s, d) {
+        return s + (d.chunks_count !== undefined ? d.chunks_count : (d.chunks || 0));
+      }, 0);
+      const countEl = document.getElementById('docs-count-label');
+      if (countEl) countEl.textContent = docs.length ? '· ' + docs.length + ' ' + plural(docs.length, 'файл', 'файла', 'файлов') + ' · ' + totalChunks + ' chunks' : '';
+    }
+
+    function plural(n, one, few, many) {
+      const mod10 = n % 10, mod100 = n % 100;
+      if (mod10 === 1 && mod100 !== 11) return one;
+      if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+      return many;
+    }
+
+    // ===== FETCH DOCUMENTS =====
+    async function fetchDocuments() {
+      const jwt = localStorage.getItem(JWT_KEY);
+      setListState('loading');
+      if (!jwt) {
+        setListState('empty');
+        showLoginScreen();
+        return;
+      }
+      try {
+        const res = await fetch(API + '/api/v1/documents?collection=' + COLLECTION + '&limit=100&offset=0', {
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        if (res.status === 401) {
+          setListState('empty');
+          localStorage.removeItem(JWT_KEY);
+          showLoginScreen();
+          return;
+        }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const docs = Array.isArray(data) ? data : (data.items || []);
+        renderDocsList(docs);
+      } catch (e) {
+        setListState('empty');
+        showToast('Ошибка загрузки списка: ' + e.message, 'error');
+      }
+    }
+
+    // ===== STEPPER ROW =====
+    var STEPS = ['Загрузка', 'Парсинг', 'Чанкинг', 'Эмбеддинги', 'Готово'];
+
+    function buildStepperRow(fileName) {
+      const tr = document.createElement('tr');
+      tr.className = 'upload-placeholder';
+
+      const tdFile = document.createElement('td');
+      const cell = document.createElement('div'); cell.className = 'file-cell';
+      const ico = document.createElement('div'); ico.className = 'ico'; ico.textContent = fileIcon(fileName);
+      const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = fileName;
+      cell.append(ico, nm);
+      tdFile.appendChild(cell);
+
+      const tdStepper = document.createElement('td');
+      tdStepper.setAttribute('colspan', '4');
+      tdStepper.style.minWidth = '320px';
+
+      const wrap = document.createElement('div');
+      const stepper = document.createElement('div'); stepper.className = 'upload-stepper';
+      STEPS.forEach(function(label, i) {
+        if (i > 0) { const sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '→'; stepper.appendChild(sep); }
+        const step = document.createElement('span');
+        step.className = 'step' + (i === 0 ? ' is-active' : '');
+        step.dataset.stepIdx = i;
+        step.textContent = (i === 0 ? '●' : '○') + ' ' + label;
+        stepper.appendChild(step);
+      });
+      const pb = document.createElement('div'); pb.className = 'upload-progress-bar';
+      const pf = document.createElement('div'); pf.className = 'fill'; pf.style.width = '0%';
+      pb.appendChild(pf);
+      wrap.append(stepper, pb);
+      tdStepper.appendChild(wrap);
+
+      tr.append(tdFile, tdStepper);
+      return tr;
+    }
+
+    function updateStepper(tr, stepIdx, pct, isError) {
+      const steps = tr.querySelectorAll('.upload-stepper .step');
+      steps.forEach(function(s, i) {
+        if (i < stepIdx) { s.className = 'step is-done'; s.textContent = '● ' + STEPS[i]; }
+        else if (i === stepIdx) { s.className = 'step ' + (isError ? 'is-error' : 'is-active'); s.textContent = (isError ? '✕' : '●') + ' ' + STEPS[i]; }
+        else { s.className = 'step'; s.textContent = '○ ' + STEPS[i]; }
+      });
+      const fill = tr.querySelector('.upload-progress-bar .fill');
+      if (fill) fill.style.width = (pct || 0) + '%';
+    }
+
+    // ===== UPLOAD =====
+    function uploadFile(file) {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) { showLoginScreen(); return; }
+
+      const tbody = document.getElementById('docs-tbody');
+      setListState('');
+      const placeholderRow = buildStepperRow(file.name);
+      tbody.insertBefore(placeholderRow, tbody.firstChild);
+
+      var currentStep = 0;
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('name', file.name);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', API + '/api/v1/documents/upload?collection=' + COLLECTION, true);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + jwt);
+
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+          updateStepper(placeholderRow, 0, Math.round(e.loaded / e.total * 100), false);
+        }
+      };
+      xhr.upload.onload = function() {
+        updateStepper(placeholderRow, 0, 100, false);
+        setTimeout(function() {
+          updateStepper(placeholderRow, 1, 40, false);
+          setTimeout(function() {
+            updateStepper(placeholderRow, 2, 70, false);
+            setTimeout(function() { updateStepper(placeholderRow, 3, 90, false); currentStep = 3; }, 600);
+          }, 600);
+        }, 300);
+      };
+
+      xhr.onload = function() {
+        var data;
+        try { data = JSON.parse(xhr.responseText); } catch(ex) { data = {}; }
+        if (xhr.status === 401) {
+          updateStepper(placeholderRow, currentStep, 0, true);
+          placeholderRow.remove();
+          localStorage.removeItem(JWT_KEY);
+          showLoginScreen();
+          return;
+        }
+        if (xhr.status >= 200 && xhr.status < 300) {
+          updateStepper(placeholderRow, 4, 100, false);
+          const chunks = (data && data.chunks_count) ? data.chunks_count : 0;
+          showToast('Загружено: ' + (data.name || file.name) + ' · ' + chunks + ' chunks', 'success');
+          setTimeout(function() { placeholderRow.remove(); fetchDocuments(); }, 800);
+        } else {
+          const msg = (data && data.detail) || (data && data.error && data.error.message) || 'Ошибка загрузки';
+          updateStepper(placeholderRow, currentStep, 0, true);
+          showToast(typeof msg === 'string' ? msg : JSON.stringify(msg), 'error');
+        }
+      };
+      xhr.onerror = function() {
+        updateStepper(placeholderRow, currentStep, 0, true);
+        showToast('Ошибка сети при загрузке: ' + file.name, 'error');
+      };
+
+      xhr.send(formData);
+    }
+
+    // ===== DELETE =====
+    async function deleteDocument(docId, docName, rowEl) {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) { showLoginScreen(); return; }
+      try {
+        const res = await fetch(API + '/api/v1/documents/' + encodeURIComponent(docId), {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        if (res.status === 401) {
+          localStorage.removeItem(JWT_KEY);
+          showLoginScreen();
+          return;
+        }
+        if (res.status === 404) {
+          showToast('Документ уже удалён.', 'info');
+          if (rowEl) rowEl.remove();
+        } else if (!res.ok) {
+          throw new Error('HTTP ' + res.status);
+        } else {
+          showToast('Удалён: ' + docName, 'success');
+          if (rowEl) rowEl.remove();
+        }
+        // Refresh to update counts
+        await fetchDocuments();
+      } catch (e) {
+        showToast('Ошибка удаления: ' + e.message, 'error');
+      }
+    }
+
+    // ===== DROPZONE WIRING =====
+    function wireDropzone() {
+      const dz = document.getElementById('dropzone');
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.pdf,.docx,.txt,.md';
+      fileInput.multiple = true;
+      fileInput.style.cssText = 'display:none;';
+      document.body.appendChild(fileInput);
+
+      ['dragenter', 'dragover'].forEach(function(ev) {
+        dz.addEventListener(ev, function(e) { e.preventDefault(); dz.classList.add('is-drag'); });
+      });
+      ['dragleave', 'drop'].forEach(function(ev) {
+        dz.addEventListener(ev, function(e) { e.preventDefault(); dz.classList.remove('is-drag'); });
+      });
+      dz.addEventListener('drop', function(e) {
+        e.preventDefault(); dz.classList.remove('is-drag');
+        const files = e.dataTransfer && e.dataTransfer.files;
+        if (files && files.length > 0) Array.from(files).forEach(uploadFile);
+      });
+      fileInput.addEventListener('change', function() {
+        Array.from(fileInput.files).forEach(uploadFile);
+        fileInput.value = '';
+      });
+
+      const ctaBtn = dz.querySelector('.dropzone__cta');
+      if (ctaBtn) ctaBtn.addEventListener('click', function(e) { e.stopPropagation(); fileInput.click(); });
+      dz.addEventListener('click', function(e) {
+        if (ctaBtn && (e.target === ctaBtn || ctaBtn.contains(e.target))) return;
+        fileInput.click();
+      });
+    }
+
+    // ===== BOOT =====
+    document.addEventListener('DOMContentLoaded', function() {
+      wireDropzone();
+      fetchDocuments();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Финансы</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { background: var(--surface-2); }
+
+    /* === Hero card — Карта партнёра === */
+    .fin-card {
+      position: relative;
+      border-radius: var(--rounded-xl);
+      padding: var(--space-5);
+      color: #fff;
+      background: linear-gradient(135deg, #06b6d4 0%, #0891b2 45%, #059669 100%);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .fin-card::after {
+      content: '';
+      position: absolute;
+      top: -30px; right: -40px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .fin-card__top { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1; }
+    .fin-card__bank { font-size: 13px; font-weight: 600; letter-spacing: 0.4px; opacity: 0.92; }
+    .fin-card__brand { font-size: 14px; font-weight: 700; letter-spacing: 0.5px; }
+    .fin-card__balance-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      opacity: 0.85;
+      margin-bottom: 4px;
+    }
+    .fin-card__balance {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      line-height: 1.1;
+      font-feature-settings: "tnum" 1, "lnum" 1;
+      position: relative;
+      z-index: 1;
+    }
+    .fin-card__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: var(--space-3);
+      position: relative;
+      z-index: 1;
+    }
+    .fin-card__name {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .fin-card__meta {
+      display: flex;
+      gap: var(--space-4);
+      font-size: 11px;
+      opacity: 0.85;
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+    .fin-card__number {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      letter-spacing: 2px;
+    }
+
+    /* === Quick actions === */
+    .qa-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+    }
+    .qa-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: var(--space-3) 4px;
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+    .qa-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); border-color: var(--hairline-strong); }
+    .qa-btn__icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .qa-btn__icon--brand {
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+    }
+    .qa-btn__icon--sbp {
+      background: linear-gradient(135deg,#f7c97f 0%,#e8a649 100%);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+    .qa-btn__label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--ink-muted);
+      text-align: center;
+      line-height: 1.2;
+    }
+
+    /* === Section === */
+    .fin-section { margin-top: var(--space-6); }
+    .fin-section__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: var(--space-3);
+    }
+    .fin-section__title { font-size: 17px; font-weight: 600; }
+    .fin-section__action { font-size: 13px; color: var(--brand-cyan-deep); font-weight: 500; }
+
+    /* === Transactions list === */
+    .tx-list {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      overflow: hidden;
+    }
+    .tx-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--hairline);
+    }
+    .tx-row:last-child { border-bottom: 0; }
+    .tx-row__icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+    .tx-row__body { flex: 1; min-width: 0; }
+    .tx-row__merchant {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tx-row__time { font-size: 12px; color: var(--ink-subtle); margin-top: 2px; }
+    .tx-row__amount {
+      font-size: 15px;
+      font-weight: 600;
+      font-feature-settings: "tnum" 1, "lnum" 1;
+      white-space: nowrap;
+    }
+    .tx-row__amount--in { color: var(--success); }
+
+    /* === Transfer home card === */
+    .transfer-card {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-5);
+      position: relative;
+      overflow: hidden;
+    }
+    .transfer-card__flags {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: 26px;
+    }
+    .transfer-card__arrow { color: var(--ink-tertiary); font-size: 18px; }
+    .transfer-card__rate {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--space-3);
+      padding: var(--space-3);
+      background: var(--surface-2);
+      border-radius: var(--rounded-md);
+    }
+    .transfer-card__rate-label { font-size: 12px; color: var(--ink-subtle); letter-spacing: 0.3px; }
+    .transfer-card__rate-value {
+      font-size: 16px;
+      font-weight: 600;
+      font-feature-settings: "tnum" 1, "lnum" 1;
+    }
+    .transfer-card__commission {
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: var(--space-2);
+    }
+
+    /* === Salary card === */
+    .salary-card {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .salary-card__icon {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--success-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .salary-card__body { flex: 1; min-width: 0; }
+    .salary-card__label { font-size: 12px; color: var(--ink-subtle); letter-spacing: 0.3px; }
+    .salary-card__date { font-size: 15px; font-weight: 600; margin-top: 2px; }
+    .salary-card__sum {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--success);
+      font-feature-settings: "tnum" 1, "lnum" 1;
+    }
+
+    /* === Services grid === */
+    .svc-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-3);
+    }
+    .svc-tile {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all var(--dur-fast) var(--ease-out);
+      text-align: left;
+    }
+    .svc-tile:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); border-color: var(--hairline-strong); }
+    .svc-tile__icon { font-size: 24px; line-height: 1; }
+    .svc-tile__title { font-size: 14px; font-weight: 600; }
+    .svc-tile__sub { font-size: 12px; color: var(--ink-subtle); line-height: 1.3; }
+
+    /* === Coming soon === */
+    .soon-card {
+      background: var(--surface-2);
+      border: 1px dashed var(--hairline-strong);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .soon-card__icon { font-size: 24px; }
+    .soon-card__title { font-size: 14px; font-weight: 600; }
+    .soon-card__sub { font-size: 12px; color: var(--ink-subtle); margin-top: 2px; }
+
+    .soon-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      border-radius: var(--rounded-pill);
+      margin-left: auto;
+    }
+
+    .transfer-pill {
+      background: var(--success-soft);
+      color: var(--success-dark);
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <div class="device-frame">
+    <header class="app-header">
+      <button class="app-header__back" aria-label="Назад" onclick="if (history.length > 1) history.back(); else window.location='04-hub.html';">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/>
+        </svg>
+      </button>
+      <h1 class="app-header__title" data-i18n="fin.title">Финансы</h1>
+      <div class="lang-switch">
+        <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+        <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+        <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+      </div>
+    </header>
+
+    <main class="app-body">
+      <!-- Hero — Карта партнёра -->
+      <section class="fin-card">
+        <div class="fin-card__top">
+          <div>
+            <div class="fin-card__bank">Банк-партнёр</div>
+            <div class="fin-card__balance-label" data-i18n="fin.balance">Баланс</div>
+          </div>
+          <div class="fin-card__brand">VISA</div>
+        </div>
+
+        <div>
+          <div class="fin-card__balance"><span data-balance>47 820</span> ₽</div>
+        </div>
+
+        <div class="fin-card__row">
+          <div>
+            <div class="fin-card__name" data-card-name>RAJU SHARMA</div>
+            <div class="fin-card__meta">
+              <span>VALID THRU 02/30</span>
+            </div>
+          </div>
+          <div class="fin-card__number" data-card-number>•••• 1234</div>
+        </div>
+      </section>
+
+      <!-- Quick actions -->
+      <div class="qa-row">
+        <button class="qa-btn" onclick="window._finShowToast && window._finShowToast('Скоро')">
+          <span class="qa-btn__icon qa-btn__icon--brand">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 17 17 7"/><path d="M7 7h10v10"/>
+            </svg>
+          </span>
+          <span class="qa-btn__label" data-i18n="fin.transfer">Перевести</span>
+        </button>
+        <button class="qa-btn" onclick="window._finShowToast && window._finShowToast('Скоро')">
+          <span class="qa-btn__icon">💳</span>
+          <span class="qa-btn__label" data-i18n="fin.pay">Оплатить</span>
+        </button>
+        <button class="qa-btn" onclick="window._finShowToast && window._finShowToast('Скоро')">
+          <span class="qa-btn__icon">⬇️</span>
+          <span class="qa-btn__label" data-i18n="fin.topup">Пополнить</span>
+        </button>
+        <button class="qa-btn" onclick="window._finShowToast && window._finShowToast('Скоро')">
+          <span class="qa-btn__icon qa-btn__icon--sbp">СБП</span>
+          <span class="qa-btn__label" data-i18n="fin.sbp">СБП</span>
+        </button>
+      </div>
+
+      <!-- Последние операции -->
+      <section class="fin-section">
+        <div class="fin-section__header">
+          <h2 class="fin-section__title">
+            <span class="lang-only-ru">Последние операции</span>
+            <span class="lang-only-hi">हाल के लेन-देन</span>
+            <span class="lang-only-en">Recent transactions</span>
+          </h2>
+          <a class="fin-section__action" data-i18n="common.viewAll">Все</a>
+        </div>
+        <div class="tx-list" data-tx-list></div>
+      </section>
+
+      <!-- Перевод домой -->
+      <section class="fin-section">
+        <div class="fin-section__header">
+          <h2 class="fin-section__title">
+            <span class="lang-only-ru">Перевод домой</span>
+            <span class="lang-only-hi">घर पैसा भेजें</span>
+            <span class="lang-only-en">Send money home</span>
+          </h2>
+        </div>
+        <div class="transfer-card">
+          <div class="row between">
+            <div class="transfer-card__flags">
+              <span>🇷🇺</span>
+              <span class="transfer-card__arrow">→</span>
+              <span>🇮🇳</span>
+            </div>
+            <span class="pill pill-flat transfer-pill">
+              <span class="lang-only-ru">Курс выгоднее банка</span>
+              <span class="lang-only-hi">बैंक से बेहतर दर</span>
+              <span class="lang-only-en">Better than bank</span>
+            </span>
+          </div>
+          <div class="transfer-card__rate">
+            <div>
+              <div class="transfer-card__rate-label">
+                <span class="lang-only-ru">Курс сегодня</span>
+                <span class="lang-only-hi">आज की दर</span>
+                <span class="lang-only-en">Today's rate</span>
+              </div>
+              <div class="transfer-card__rate-value" data-rate>1 ₽ = 1.04 ₹</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="transfer-card__rate-label">
+                <span class="lang-only-ru">Комиссия</span>
+                <span class="lang-only-hi">शुल्क</span>
+                <span class="lang-only-en">Fee</span>
+              </div>
+              <div class="transfer-card__rate-value">0 ₽</div>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" style="margin-top: var(--space-4);" onclick="window.location='05-ai-chat.html'">
+            <span class="lang-only-ru">Отправить рупии в Индию</span>
+            <span class="lang-only-hi">भारत में रुपये भेजें</span>
+            <span class="lang-only-en">Send rupees to India</span>
+          </button>
+          <div class="transfer-card__commission">
+            <span class="lang-only-ru">До 50 000 ₽ в день · Доставка за 5–10 минут</span>
+            <span class="lang-only-hi">प्रतिदिन 50 000 ₽ तक · 5–10 मिनट में डिलीवरी</span>
+            <span class="lang-only-en">Up to 50 000 ₽/day · Arrives in 5–10 min</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Зарплата -->
+      <section class="fin-section">
+        <div class="fin-section__header">
+          <h2 class="fin-section__title">
+            <span class="lang-only-ru">Зарплата</span>
+            <span class="lang-only-hi">वेतन</span>
+            <span class="lang-only-en">Salary</span>
+          </h2>
+          <a class="fin-section__action" data-i18n="fin.salaryHistory" style="display:none">История</a>
+        </div>
+        <div class="salary-card">
+          <div class="salary-card__icon">💰</div>
+          <div class="salary-card__body">
+            <div class="salary-card__label" data-i18n="fin.nextPayday">Следующая зарплата</div>
+            <div class="salary-card__date">
+              <span class="lang-only-ru">15 марта 2026</span>
+              <span class="lang-only-hi">15 मार्च 2026</span>
+              <span class="lang-only-en">March 15, 2026</span>
+            </div>
+          </div>
+          <div class="salary-card__sum">+47 000 ₽</div>
+        </div>
+      </section>
+
+      <!-- Сервисы -->
+      <section class="fin-section">
+        <div class="fin-section__header">
+          <h2 class="fin-section__title">
+            <span class="lang-only-ru">Сервисы</span>
+            <span class="lang-only-hi">सेवाएँ</span>
+            <span class="lang-only-en">Services</span>
+          </h2>
+        </div>
+        <div class="svc-grid">
+          <button class="svc-tile">
+            <span class="svc-tile__icon">📱</span>
+            <span class="svc-tile__title">СБОЛ</span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">Полная версия Интернет-банка партнёра</span>
+              <span class="lang-only-hi">पूर्ण Sberbank Online</span>
+              <span class="lang-only-en">Full Sberbank Online</span>
+            </span>
+          </button>
+          <button class="svc-tile">
+            <span class="svc-tile__icon">💎</span>
+            <span class="svc-tile__title">
+              <span class="lang-only-ru">Кредит «Прайм»</span>
+              <span class="lang-only-hi">क्रेडिट "प्राइम"</span>
+              <span class="lang-only-en">Prime Loan</span>
+            </span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">от 9.9% · до 500 000 ₽</span>
+              <span class="lang-only-hi">9.9% से · 500 000 ₽ तक</span>
+              <span class="lang-only-en">from 9.9% · up to 500K ₽</span>
+            </span>
+          </button>
+          <button class="svc-tile">
+            <span class="svc-tile__icon">🏧</span>
+            <span class="svc-tile__title">
+              <span class="lang-only-ru">Банкоматы рядом</span>
+              <span class="lang-only-hi">पास के ATM</span>
+              <span class="lang-only-en">ATMs nearby</span>
+            </span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">3 в пешей доступности</span>
+              <span class="lang-only-hi">3 पैदल दूरी पर</span>
+              <span class="lang-only-en">3 within walking distance</span>
+            </span>
+          </button>
+          <button class="svc-tile">
+            <span class="svc-tile__icon">📊</span>
+            <span class="svc-tile__title">
+              <span class="lang-only-ru">Инвестиции партнёра</span>
+              <span class="lang-only-hi">Sber निवेश</span>
+              <span class="lang-only-en">Sber Invest</span>
+            </span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">Доллары, рупии, акции</span>
+              <span class="lang-only-hi">डॉलर, रुपये, शेयर</span>
+              <span class="lang-only-en">USD, INR, stocks</span>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Скоро -->
+      <section class="fin-section">
+        <div class="fin-section__header">
+          <h2 class="fin-section__title">
+            <span class="lang-only-ru">Скоро</span>
+            <span class="lang-only-hi">जल्द आ रहा है</span>
+            <span class="lang-only-en">Coming soon</span>
+          </h2>
+        </div>
+        <div class="stack stack-3">
+          <div class="soon-card">
+            <span class="soon-card__icon">🪙</span>
+            <div style="flex:1;">
+              <div class="soon-card__title">
+                <span class="lang-only-ru">Цифровой рубль</span>
+                <span class="lang-only-hi">डिजिटल रूबल</span>
+                <span class="lang-only-en">Digital Ruble</span>
+              </div>
+              <div class="soon-card__sub">
+                <span class="lang-only-ru">Беспроцентные переводы внутри РФ</span>
+                <span class="lang-only-hi">रूस के अंदर शून्य शुल्क ट्रांसफर</span>
+                <span class="lang-only-en">Zero-fee transfers inside Russia</span>
+              </div>
+            </div>
+            <span class="soon-pill">
+              <span class="lang-only-ru">Скоро</span>
+              <span class="lang-only-hi">जल्द</span>
+              <span class="lang-only-en">Soon</span>
+            </span>
+          </div>
+          <div class="soon-card">
+            <span class="soon-card__icon">🌍</span>
+            <div style="flex:1;">
+              <div class="soon-card__title">
+                <span class="lang-only-ru">Кэшбэк в Узбекистан, Таджикистан</span>
+                <span class="lang-only-hi">उज़्बेकिस्तान, ताजिकिस्तान कैशबैक</span>
+                <span class="lang-only-en">Cashback to Uzbekistan, Tajikistan</span>
+              </div>
+              <div class="soon-card__sub">
+                <span class="lang-only-ru">До 3% при переводах домой</span>
+                <span class="lang-only-hi">घर ट्रांसफर पर 3% तक</span>
+                <span class="lang-only-en">Up to 3% when sending home</span>
+              </div>
+            </div>
+            <span class="soon-pill">
+              <span class="lang-only-ru">Апрель</span>
+              <span class="lang-only-hi">अप्रैल</span>
+              <span class="lang-only-en">April</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <div style="height: var(--space-6);"></div>
+    </main>
+
+    <nav class="app-bottom-nav">
+      <a href="04-hub.html" class="app-bottom-nav__item">
+        <span class="icon">🏠</span>
+        <span data-i18n="nav.home">Главная</span>
+      </a>
+      <a href="05-ai-chat.html" class="app-bottom-nav__item">
+        <span class="icon">💬</span>
+        <span data-i18n="nav.ai">AI</span>
+      </a>
+      <a href="09-documents.html" class="app-bottom-nav__item">
+        <span class="icon">📄</span>
+        <span data-i18n="nav.docs">Документы</span>
+      </a>
+      <a href="10-about-employer.html" class="app-bottom-nav__item">
+        <span class="icon">🏢</span>
+        <span data-i18n="nav.employer">HR</span>
+      </a>
+      <a href="14-profile.html" class="app-bottom-nav__item">
+        <span class="icon">👤</span>
+        <span data-i18n="nav.profile">Профиль</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script defer>
+    // ─── Minimal toast helper ─────────────────────────────────────────────────────
+    window._finShowToast = function(msg) {
+      var t = document.createElement('div');
+      t.textContent = msg;
+      t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
+        'background:#1e293b;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;' +
+        'z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.2s;white-space:nowrap';
+      document.body.appendChild(t);
+      requestAnimationFrame(function() { t.style.opacity = '1'; });
+      setTimeout(function() {
+        t.style.opacity = '0';
+        setTimeout(function() { t.remove(); }, 200);
+      }, 2000);
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const M = window.AdaptaMock;
+      if (!M) return;
+
+      // Card details from mock
+      const card = M.finance.card;
+      const balanceEl = document.querySelector('[data-balance]');
+      if (balanceEl) {
+        balanceEl.textContent = card.balance.toLocaleString('ru-RU');
+      }
+      const cardNumEl = document.querySelector('[data-card-number]');
+      if (cardNumEl) cardNumEl.textContent = '•••• ' + card.number.replace(/\D/g, '').slice(-4);
+
+      // Build transactions list safely (no innerHTML)
+      const txList = document.querySelector('[data-tx-list]');
+      M.finance.transactions.forEach((tx) => {
+        const row = document.createElement('div');
+        row.className = 'tx-row';
+
+        const iconEl = document.createElement('div');
+        iconEl.className = 'tx-row__icon';
+        iconEl.textContent = tx.icon;
+
+        const bodyEl = document.createElement('div');
+        bodyEl.className = 'tx-row__body';
+
+        const mEl = document.createElement('div');
+        mEl.className = 'tx-row__merchant';
+        mEl.setAttribute('data-tx-merchant', '');
+        mEl.setAttribute('data-merchant-ru', tx.merchant.ru);
+        mEl.setAttribute('data-merchant-hi', tx.merchant.hi);
+        mEl.setAttribute('data-merchant-en', tx.merchant.en);
+        mEl.textContent = tx.merchant.ru;
+
+        const tEl = document.createElement('div');
+        tEl.className = 'tx-row__time';
+        tEl.textContent = tx.time;
+
+        bodyEl.appendChild(mEl);
+        bodyEl.appendChild(tEl);
+
+        const amountEl = document.createElement('div');
+        amountEl.className = 'tx-row__amount' + (tx.amount > 0 ? ' tx-row__amount--in' : '');
+        const sign = tx.amount > 0 ? '+' : '−';
+        const abs = Math.abs(tx.amount).toLocaleString('ru-RU');
+        amountEl.textContent = sign + ' ' + abs + ' ₽';
+
+        row.appendChild(iconEl);
+        row.appendChild(bodyEl);
+        row.appendChild(amountEl);
+        txList.appendChild(row);
+      });
+
+      // Update transaction merchant names on language change
+      const applyLang = () => {
+        const l = (window.AdaptaI18n && window.AdaptaI18n.lang) || 'ru';
+        document.querySelectorAll('[data-tx-merchant]').forEach((el) => {
+          el.textContent = el.getAttribute('data-merchant-' + l) || el.getAttribute('data-merchant-ru');
+        });
+      };
+      applyLang();
+      document.querySelectorAll('[data-lang-switch]').forEach((btn) => {
+        btn.addEventListener('click', () => setTimeout(applyLang, 0));
+      });
+    });
+  </script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+</body>
+</html>

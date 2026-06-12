@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Добро пожаловать</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { background: var(--canvas-soft); padding: 0; }
+
+    .welcome__body {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-6) var(--space-5) var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+      background:
+        radial-gradient(120% 60% at 50% 0%, rgba(6,182,212,0.10) 0%, transparent 60%),
+        var(--canvas);
+    }
+
+    .welcome__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: var(--space-1);
+    }
+
+    .welcome__brand-tag {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.88px;
+      text-transform: uppercase;
+      color: var(--ink-tertiary);
+    }
+
+    .welcome__hero {
+      text-align: center;
+      padding-top: var(--space-4);
+    }
+
+    .welcome__wordmark {
+      font-size: 56px;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      line-height: 1;
+      margin-bottom: var(--space-3);
+    }
+
+    .welcome__tagline {
+      color: var(--ink-muted);
+      font-size: 17px;
+      line-height: 1.45;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+
+    .welcome__pick-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.88px;
+      text-transform: uppercase;
+      color: var(--ink-subtle);
+      margin-bottom: var(--space-3);
+    }
+
+    .lang-card {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-5);
+      width: 100%;
+      text-align: left;
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+
+    .lang-card:hover {
+      transform: translateY(-1px);
+      border-color: var(--brand-cyan);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .lang-card.is-selected {
+      border-color: transparent;
+      background: var(--surface-1);
+      box-shadow: 0 0 0 2px var(--brand-cyan), var(--shadow-sm);
+    }
+
+    .lang-card__flag {
+      font-size: 32px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .lang-card__text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .lang-card__primary {
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.2px;
+    }
+
+    .lang-card__secondary {
+      font-size: 13px;
+      color: var(--ink-subtle);
+    }
+
+    .lang-card__check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .lang-card.is-selected .lang-card__check { display: inline-flex; }
+
+    .welcome__divider {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin: var(--space-2) 0;
+      color: var(--ink-tertiary);
+      font-size: 12px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .welcome__divider::before,
+    .welcome__divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--hairline);
+    }
+
+    .welcome__entry {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-xl);
+      padding: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .welcome__entry-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      background: var(--surface-2);
+      border-radius: var(--rounded-md);
+    }
+
+    .welcome__tab {
+      height: 38px;
+      border-radius: var(--rounded-sm);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+
+    .welcome__tab.is-active {
+      background: var(--canvas);
+      color: var(--ink);
+      box-shadow: var(--shadow-xs);
+    }
+
+    .welcome__pane { display: none; flex-direction: column; gap: var(--space-3); }
+    .welcome__pane.is-active { display: flex; }
+
+    .welcome__phone-row { display: flex; gap: var(--space-2); }
+    .welcome__phone-code {
+      width: 88px;
+      flex-shrink: 0;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .welcome__qr-box {
+      aspect-ratio: 1 / 1;
+      background:
+        repeating-linear-gradient(90deg, var(--ink) 0 4px, transparent 4px 8px),
+        repeating-linear-gradient(0deg, var(--ink) 0 4px, transparent 4px 8px);
+      background-blend-mode: multiply;
+      background-color: var(--surface-2);
+      border-radius: var(--rounded-md);
+      max-width: 180px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .welcome__qr-box::before,
+    .welcome__qr-box::after {
+      content: '';
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border: 4px solid var(--ink);
+    }
+    .welcome__qr-box::before { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+    .welcome__qr-box::after { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+
+    .welcome__hint {
+      background: var(--info-soft);
+      color: var(--info-dark);
+      border-radius: var(--rounded-md);
+      padding: var(--space-3) var(--space-4);
+      font-size: 13px;
+      line-height: 1.45;
+      display: flex;
+      gap: var(--space-2);
+      align-items: flex-start;
+    }
+
+    .welcome__hint-icon { font-size: 16px; flex-shrink: 0; line-height: 1.3; }
+
+    .welcome__footer-note {
+      text-align: center;
+      color: var(--ink-tertiary);
+      font-size: 12px;
+      padding: var(--space-2) 0 var(--space-4);
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <div class="device-frame">
+    <main class="welcome__body">
+      <div class="welcome__top">
+        <span class="welcome__brand-tag">PWA · v1.0</span>
+        <div class="lang-switch">
+          <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+          <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+          <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+        </div>
+      </div>
+
+      <section class="welcome__hero">
+        <h1 class="welcome__wordmark"><span class="brand-wordmark">AdaptaAI</span></h1>
+        <p class="welcome__tagline" data-i18n="app.tagline">Адаптация в России — на вашем языке</p>
+      </section>
+
+      <section>
+        <div class="welcome__pick-label" data-i18n="onboard.langPick">Выберите язык</div>
+        <div class="card-hero" style="padding: var(--space-4);">
+          <div class="stack stack-2">
+            <button class="lang-card is-selected" data-lang-pick="ru">
+              <span class="lang-card__flag" aria-hidden="true">🇷🇺</span>
+              <span class="lang-card__text">
+                <span class="lang-card__primary">Русский</span>
+                <span class="lang-card__secondary">Russian</span>
+              </span>
+              <span class="lang-card__check" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+              </span>
+            </button>
+            <button class="lang-card" data-lang-pick="hi">
+              <span class="lang-card__flag" aria-hidden="true">🇮🇳</span>
+              <span class="lang-card__text">
+                <span class="lang-card__primary" lang="hi">हिन्दी</span>
+                <span class="lang-card__secondary">Hindi · हिंदी भाषा</span>
+              </span>
+              <span class="lang-card__check" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+              </span>
+            </button>
+            <button class="lang-card" data-lang-pick="uz">
+              <span class="lang-card__flag" aria-hidden="true">🇺🇿</span>
+              <span class="lang-card__text">
+                <span class="lang-card__primary">O'zbek</span>
+                <span class="lang-card__secondary">Uzbek</span>
+              </span>
+              <span class="lang-card__check" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+              </span>
+            </button>
+            <button class="lang-card" data-lang-pick="en">
+              <span class="lang-card__flag" aria-hidden="true">🇬🇧</span>
+              <span class="lang-card__text">
+                <span class="lang-card__primary">English</span>
+                <span class="lang-card__secondary">English</span>
+              </span>
+              <span class="lang-card__check" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div class="welcome__divider">
+        <span class="lang-only-ru">или</span>
+        <span class="lang-only-hi" lang="hi">या</span>
+        <span class="lang-only-en">or</span>
+      </div>
+
+      <section class="welcome__entry">
+        <div class="welcome__entry-tabs">
+          <button class="welcome__tab is-active" data-entry-tab="phone">
+            <span aria-hidden="true">📱</span>
+            <span class="lang-only-ru">По телефону</span>
+            <span class="lang-only-hi" lang="hi">फ़ोन से</span>
+            <span class="lang-only-en">By phone</span>
+          </button>
+          <button class="welcome__tab" data-entry-tab="qr">
+            <span aria-hidden="true">⌗</span>
+            <span data-i18n="onboard.scanQR">Сканировать QR-код</span>
+          </button>
+        </div>
+
+        <div class="welcome__pane is-active" data-entry-pane="phone">
+          <label class="caption-upper" data-i18n="onboard.phone">Введите номер телефона</label>
+          <div class="welcome__phone-row">
+            <input class="input welcome__phone-code" value="+7" aria-label="Country code">
+            <input class="input" placeholder="916 555 12 34" data-i18n-attr="placeholder:onboard.phone" aria-label="Phone">
+          </div>
+          <button class="btn btn-primary btn-lg btn-block">
+            <span class="lang-only-ru">Получить SMS-код</span>
+            <span class="lang-only-hi" lang="hi">SMS कोड पाएँ</span>
+            <span class="lang-only-en">Get SMS code</span>
+          </button>
+        </div>
+
+        <div class="welcome__pane" data-entry-pane="qr">
+          <div class="welcome__qr-box" aria-label="QR scanner viewport"></div>
+          <p class="caption" style="text-align:center;">
+            <span class="lang-only-ru">Наведите камеру на QR-код от HR</span>
+            <span class="lang-only-hi" lang="hi">HR के QR कोड पर कैमरा फ़ोकस करें</span>
+            <span class="lang-only-en">Point camera at HR's QR code</span>
+          </p>
+          <button class="btn btn-secondary btn-block">
+            <span aria-hidden="true">📷</span>
+            <span class="lang-only-ru">Открыть камеру</span>
+            <span class="lang-only-hi" lang="hi">कैमरा खोलें</span>
+            <span class="lang-only-en">Open camera</span>
+          </button>
+        </div>
+
+        <div class="welcome__hint">
+          <span class="welcome__hint-icon" aria-hidden="true">💡</span>
+          <span>
+            <span class="lang-only-ru">Ссылку прислал ваш HR. Если её нет — обратитесь к работодателю.</span>
+            <span class="lang-only-hi" lang="hi">लिंक आपके HR ने भेजा है। अगर नहीं है — नियोक्ता से संपर्क करें।</span>
+            <span class="lang-only-en">Your HR sent you the link. If you don't have it — contact your employer.</span>
+          </span>
+        </div>
+      </section>
+
+      <button class="btn btn-ghost btn-block" style="height:auto; padding: var(--space-3); flex-direction: column; gap: 2px;">
+        <span style="font-weight:600;" data-i18n="onboard.invitation">Войти по приглашению HR</span>
+        <span class="caption">Застройщик№1 · ГК · zastroyshchik1.ru</span>
+      </button>
+
+      <p class="welcome__footer-note">
+        <span class="lang-only-ru">Продолжая, вы соглашаетесь с условиями и политикой</span>
+        <span class="lang-only-hi" lang="hi">जारी रखकर आप शर्तें और नीति स्वीकार करते हैं</span>
+        <span class="lang-only-en">By continuing, you accept terms and policy</span>
+      </p>
+    </main>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script defer>
+    // ── API base URL ──────────────────────────────────────────────────────────
+    const API = (window.ADAPTA_API_BASE_URL || window.location.origin).replace(/\/$/, '');
+
+    // ── Toast helper ─────────────────────────────────────────────────────────
+    function showToast(msg, type) {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText =
+          'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;' +
+          'display:flex;flex-direction:column;gap:8px;max-width:360px;width:90%;pointer-events:none;';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.style.cssText =
+        'padding:12px 16px;border-radius:10px;font-size:14px;line-height:1.4;pointer-events:auto;' +
+        'box-shadow:0 4px 16px rgba(0,0,0,0.14);color:#fff;' +
+        (type === 'error'
+          ? 'background:var(--danger,#ef4444);'
+          : 'background:var(--success,#10b981);');
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => { toast.remove(); }, 4000);
+    }
+
+    // ── URL token detection ───────────────────────────────────────────────────
+    function getInviteToken() {
+      const params = new URLSearchParams(location.search);
+      return params.get('invite') || params.get('t') || null;
+    }
+
+    // ── Selected language state ───────────────────────────────────────────────
+    let selectedLang = 'ru';
+
+    // ── Invite banner (shown when token is present) ───────────────────────────
+    function buildInviteBanner(data) {
+      const banner = document.createElement('section');
+      banner.id = 'invite-banner';
+      banner.style.cssText =
+        'background:var(--surface-1);border:1.5px solid var(--brand-cyan);' +
+        'border-radius:var(--rounded-xl);padding:var(--space-5);display:flex;' +
+        'flex-direction:column;gap:var(--space-3);';
+
+      const label = document.createElement('div');
+      label.style.cssText =
+        'font-size:12px;font-weight:600;letter-spacing:0.7px;text-transform:uppercase;' +
+        'color:var(--brand-cyan-deep);';
+      label.textContent = 'Приглашение от HR';
+
+      const name = document.createElement('div');
+      name.style.cssText = 'font-size:22px;font-weight:600;letter-spacing:-0.3px;';
+      name.textContent = [data.first_name, data.last_name].filter(Boolean).join(' ');
+
+      const meta = document.createElement('div');
+      meta.style.cssText = 'font-size:14px;color:var(--ink-muted);';
+      const companyStrong = document.createElement('strong');
+      companyStrong.textContent = data.company_name || '';
+      meta.appendChild(companyStrong);
+      if (data.hr_name) {
+        meta.appendChild(document.createTextNode(' · ' + data.hr_name));
+      }
+
+      banner.appendChild(label);
+      banner.appendChild(name);
+      banner.appendChild(meta);
+      return banner;
+    }
+
+    // ── Accept button (shown when token is present) ───────────────────────────
+    function buildAcceptButton(token) {
+      const btn = document.createElement('button');
+      btn.id = 'invite-accept-btn';
+      btn.className = 'btn btn-primary btn-lg btn-block';
+
+      const spanRu = document.createElement('span');
+      spanRu.className = 'lang-only-ru';
+      spanRu.textContent = 'Принять приглашение';
+
+      const spanHi = document.createElement('span');
+      spanHi.className = 'lang-only-hi';
+      spanHi.setAttribute('lang', 'hi');
+      spanHi.textContent = 'आमंत्रण स्वीकार करें';
+
+      const spanEn = document.createElement('span');
+      spanEn.className = 'lang-only-en';
+      spanEn.textContent = 'Accept invitation';
+
+      btn.appendChild(spanRu);
+      btn.appendChild(spanHi);
+      btn.appendChild(spanEn);
+      btn.addEventListener('click', () => acceptInvite(token, btn));
+      return btn;
+    }
+
+    // ── POST /api/v1/invites/{token}/accept ───────────────────────────────────
+    async function acceptInvite(token, btn) {
+      btn.disabled = true;
+      const savedChildren = Array.from(btn.childNodes);
+      btn.textContent = 'Принимаем…';
+      try {
+        const res = await fetch(API + '/api/v1/invites/' + encodeURIComponent(token) + '/accept', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ preferred_language: selectedLang }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          const code = (json.error && json.error.code) || '';
+          const msgs = {
+            INVITE_EXPIRED:      'Приглашение истекло. Попросите HR выслать новое.',
+            INVITE_ALREADY_USED: 'Это приглашение уже было использовано.',
+            INVITE_NOT_FOUND:    'Приглашение не найдено.',
+          };
+          throw new Error(msgs[code] || (json.error && json.error.message) || 'Ошибка сервера');
+        }
+        // Save JWT, user profile, and selected language
+        localStorage.setItem('adapta_jwt', json.access_token);
+        localStorage.setItem('adapta_user', JSON.stringify(json.user));
+        localStorage.setItem('adapta_new_user', json.user.id);
+        localStorage.setItem('adapta_lang', selectedLang);
+        // Redirect to hub
+        window.location.href = '04-hub.html';
+      } catch (err) {
+        showToast(err.message || 'Не удалось принять приглашение', 'error');
+        btn.disabled = false;
+        btn.textContent = '';
+        savedChildren.forEach((node) => btn.appendChild(node));
+        if (window.AdaptaI18n) window.AdaptaI18n.render();
+      }
+    }
+
+    // ── GET /api/v1/invites/{token} ───────────────────────────────────────────
+    async function loadInvite(token) {
+      try {
+        const res = await fetch(API + '/api/v1/invites/' + encodeURIComponent(token));
+        const json = await res.json();
+        if (!res.ok) {
+          const code = (json.error && json.error.code) || '';
+          const msgs = {
+            INVITE_EXPIRED:      'Срок действия приглашения истёк. Свяжитесь с HR.',
+            INVITE_ALREADY_USED: 'Это приглашение уже было принято.',
+            INVITE_NOT_FOUND:    'Приглашение не найдено. Проверьте ссылку.',
+          };
+          showToast(msgs[code] || 'Ошибка загрузки приглашения', 'error');
+          return;
+        }
+        // Pre-select invite language if supported
+        const inviteLang = json.preferred_language;
+        if (['ru', 'hi', 'en'].includes(inviteLang)) {
+          selectedLang = inviteLang;
+          if (window.AdaptaI18n) window.AdaptaI18n.set(inviteLang);
+          document.querySelectorAll('[data-lang-pick]').forEach((b) => {
+            b.classList.toggle('is-selected', b.getAttribute('data-lang-pick') === inviteLang);
+          });
+        }
+        // Insert invite banner above hero section
+        const hero = document.querySelector('.welcome__hero');
+        const banner = buildInviteBanner(json);
+        hero.parentNode.insertBefore(banner, hero);
+        // Replace entry section with accept button
+        const entrySection = document.querySelector('.welcome__entry');
+        const entryParent = entrySection.parentNode;
+        const divider = document.querySelector('.welcome__divider');
+        if (divider) divider.style.display = 'none';
+        entrySection.style.display = 'none';
+        const acceptBtn = buildAcceptButton(token);
+        entryParent.insertBefore(acceptBtn, entrySection);
+        if (window.AdaptaI18n) window.AdaptaI18n.render();
+        // Hide the ghost "Войти по приглашению HR" button (redundant now)
+        const ghostBtn = document.querySelector('.btn.btn-ghost.btn-block');
+        if (ghostBtn) ghostBtn.style.display = 'none';
+      } catch (err) {
+        showToast('Не удалось загрузить приглашение. Проверьте подключение.', 'error');
+      }
+    }
+
+    // ── Demo password helpers ────────────────────────────────────────────────
+    // Masked password modal (replaces window.prompt, which shows the typed
+    // password as plain text). Returns a Promise<string|null>.
+    function promptDemoPassword() {
+      return new Promise(function(resolve) {
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(8,12,20,.6);backdrop-filter:blur(4px);z-index:9000;display:flex;align-items:center;justify-content:center;';
+        var card = document.createElement('div');
+        card.style.cssText = 'background:#fff;border-radius:16px;padding:32px;width:340px;max-width:88vw;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:Inter,system-ui,sans-serif;';
+        var title = document.createElement('div');
+        title.style.cssText = 'font-size:16px;font-weight:600;color:#0f172a;';
+        title.textContent = 'Демо-доступ AdaptaAI';
+        var sub = document.createElement('div');
+        sub.style.cssText = 'font-size:13px;color:#64748b;';
+        sub.textContent = 'Введите демо-пароль (получите у команды Digital Teams).';
+        var input = document.createElement('input');
+        input.type = 'password';
+        input.placeholder = 'Демо-пароль';
+        input.style.cssText = 'width:100%;box-sizing:border-box;padding:11px 14px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;outline:none;';
+        var err = document.createElement('div');
+        err.style.cssText = 'color:#e53e3e;font-size:12px;display:none;';
+        var btn = document.createElement('button');
+        btn.textContent = 'Войти';
+        btn.style.cssText = 'width:100%;padding:11px 14px;border:none;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#10b981);color:#fff;font-size:14px;font-weight:600;cursor:pointer;';
+        card.append(title, sub, input, err, btn);
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+        setTimeout(function() { input.focus(); }, 0);
+
+        function submit() {
+          var v = input.value.trim();
+          if (!v) { err.textContent = 'Введите пароль'; err.style.display = 'block'; return; }
+          overlay.remove();
+          resolve(v);
+        }
+        function cancel() { overlay.remove(); resolve(null); }
+        btn.addEventListener('click', submit);
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') submit();
+          else if (e.key === 'Escape') cancel();
+        });
+      });
+    }
+
+    async function ensureDemoPassword() {
+      var pw = sessionStorage.getItem('adapta_demo_password');
+      if (pw) return pw;
+      pw = await promptDemoPassword();
+      if (!pw) return null;
+      sessionStorage.setItem('adapta_demo_password', pw);
+      return pw;
+    }
+
+    async function demoFetch(url) {
+      var pw = await ensureDemoPassword();
+      if (!pw) throw new Error('Демо-пароль не введён');
+      var res = await fetch(url, {
+        method: 'POST',
+        headers: { 'X-Demo-Password': pw, 'Content-Type': 'application/json' },
+      });
+      if (res.status === 401) {
+        sessionStorage.removeItem('adapta_demo_password');
+        throw new Error('Неверный пароль — попробуйте ещё раз');
+      }
+      if (res.status === 403) {
+        throw new Error('Демо-режим выключен на сервере');
+      }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }
+
+    // ── Demo auto-login (no invite, no JWT) ──────────────────────────────────
+    async function demoLoginMigrant() {
+      try {
+        const data = await demoFetch(API + '/api/v1/demo/login-migrant');
+        localStorage.setItem('adapta_jwt', data.access_token);
+        if (data.user) localStorage.setItem('adapta_user', JSON.stringify(data.user));
+        localStorage.setItem('adapta_lang', selectedLang);
+        window.location.href = '04-hub.html';
+      } catch (e) {
+        if (e.message === 'Демо-пароль не введён') {
+          // User cancelled the prompt — stay on welcome screen
+          return;
+        }
+        showToast('Не получилось войти: ' + (e.message || 'нет связи'), 'error');
+      }
+    }
+
+    // Re-establish the HttpOnly session cookie from a localStorage JWT so the
+    // navigation to the gated hub (04-hub.html) carries it. Heals returning
+    // migrants whose JWT predates the cookie.
+    async function ensureSessionCookie() {
+      var jwt = null;
+      try { jwt = localStorage.getItem('adapta_jwt'); } catch (e) { return; }
+      if (!jwt) return;
+      try {
+        await fetch(API + '/api/v1/auth/cookie', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+      } catch (e) { /* hub will fall back to its own auth guard */ }
+    }
+
+    // ── DOMContentLoaded ──────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Lang card selection (visual; main switch is up-right pill)
+      document.querySelectorAll('[data-lang-pick]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-lang-pick]').forEach((b) => b.classList.remove('is-selected'));
+          btn.classList.add('is-selected');
+          const lang = btn.getAttribute('data-lang-pick');
+          selectedLang = ['ru', 'hi', 'en'].includes(lang) ? lang : 'ru';
+          if (['ru', 'hi', 'en'].includes(lang) && window.AdaptaI18n) {
+            window.AdaptaI18n.set(lang);
+          }
+        });
+      });
+      // Entry tabs
+      document.querySelectorAll('[data-entry-tab]').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          const target = tab.getAttribute('data-entry-tab');
+          document.querySelectorAll('[data-entry-tab]').forEach((t) => t.classList.toggle('is-active', t === tab));
+          document.querySelectorAll('[data-entry-pane]').forEach((p) => {
+            p.classList.toggle('is-active', p.getAttribute('data-entry-pane') === target);
+          });
+        });
+      });
+
+      const token = getInviteToken();
+      if (token) {
+        // Invite flow — existing behaviour
+        loadInvite(token);
+        return;
+      }
+
+      // No invite token: check for existing JWT or auto-login as demo migrant
+      let existingJwt = null;
+      try { existingJwt = localStorage.getItem('adapta_jwt'); } catch (e) { /* ignore */ }
+      if (existingJwt) {
+        await ensureSessionCookie();
+        window.location.href = '04-hub.html';
+        return;
+      }
+
+      // No JWT and no invite — silently demo-login and redirect to hub
+      demoLoginMigrant();
+    });
+  </script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+</body>
+</html>

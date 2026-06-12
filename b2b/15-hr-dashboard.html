@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdaptaAI — HR Dashboard</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { font-size: 14px; background: var(--canvas); }
+
+    /* ===== Sidebar ===== */
+    .console-sidebar {
+      grid-row: 1 / span 2;
+      background: var(--canvas-soft);
+      border-right: 1px solid var(--hairline);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-5);
+    }
+    .sidebar__logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 17px; font-weight: 700;
+      margin-bottom: var(--space-6);
+    }
+    .sidebar__logo .mark {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: var(--brand-gradient);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--on-brand); font-size: 16px;
+    }
+    .sidebar__logo .name { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: -0.4px; }
+    .sidebar__logo .sub { font-size: 11px; font-weight: 500; color: var(--ink-subtle); letter-spacing: 0.6px; text-transform: uppercase; margin-left: 4px; }
+
+    .sidebar__nav { display: flex; flex-direction: column; gap: 2px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--rounded-md);
+      color: var(--ink-muted);
+      font-size: 14px; font-weight: 500;
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+      text-decoration: none;
+    }
+    .nav-item:hover { background: var(--surface-2); color: var(--ink); text-decoration: none; }
+    .nav-item.is-active { background: var(--surface-2); color: var(--ink); }
+    .nav-item.is-active::before { content: ''; width: 3px; height: 18px; background: var(--brand-gradient); border-radius: 2px; margin-left: -6px; margin-right: 4px; }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-item .badge { margin-left: auto; background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+    .nav-item .badge-soft { margin-left: auto; background: var(--surface-3); color: var(--ink-muted); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+
+    .sidebar__section { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-tertiary); padding: 0 12px; margin: var(--space-5) 0 var(--space-2); }
+
+    .sidebar__employer {
+      margin-top: auto;
+      padding: 14px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      background: var(--surface-1);
+    }
+    .sidebar__employer-header { display: flex; align-items: center; gap: 10px; }
+    .sidebar__employer-logo { width: 36px; height: 36px; border-radius: 8px; background: var(--surface-3); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .sidebar__employer-name { font-weight: 600; font-size: 13px; }
+    .sidebar__employer-meta { font-size: 11px; color: var(--ink-subtle); }
+    .sidebar__quota-bar { margin-top: 10px; height: 4px; background: var(--surface-3); border-radius: 4px; overflow: hidden; }
+    .sidebar__quota-fill { height: 100%; background: var(--brand-gradient); width: 0%; transition: width 0.4s var(--ease-out); }
+    .sidebar__quota-text { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-subtle); margin-top: 6px; }
+
+    /* ===== Topbar ===== */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 var(--space-6);
+      border-bottom: 1px solid var(--hairline);
+      background: var(--canvas);
+    }
+    .breadcrumb { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-muted); }
+    .breadcrumb .sep { color: var(--ink-tertiary); }
+    .breadcrumb .current { color: var(--ink); font-weight: 600; }
+    .breadcrumb .quota-chip {
+      background: var(--surface-2); padding: 4px 10px; border-radius: var(--rounded-pill); font-size: 12px;
+      color: var(--ink); border: 1px solid var(--hairline);
+    }
+    .breadcrumb .quota-chip strong { color: var(--brand-emerald-soft); }
+
+    .topbar__right { display: flex; align-items: center; gap: var(--space-3); }
+    .topbar__search { position: relative; width: 280px; }
+    .topbar__search .input { height: 36px; font-size: 13px; background: var(--surface-1); }
+    .icon-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--surface-1); border: 1px solid var(--hairline); color: var(--ink-muted); position: relative; }
+    .icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+    .icon-btn .dot { position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; background: var(--danger); border-radius: 50%; border: 1.5px solid var(--canvas); }
+    .avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--brand-gradient); color: var(--on-brand);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 11px;
+    }
+    .avatar-row { display: flex; align-items: center; gap: 8px; padding: 0 12px 0 4px; border-radius: 18px; border: 1px solid var(--hairline); background: var(--surface-1); height: 36px; }
+    .avatar-row .name { font-size: 13px; font-weight: 600; line-height: 1.1; }
+    .avatar-row .role { font-size: 10px; color: var(--ink-subtle); line-height: 1.1; }
+
+    /* ===== Main ===== */
+    .main {
+      padding: var(--space-6);
+      background: var(--canvas);
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: var(--space-6);
+      overflow-y: auto;
+    }
+    .main__col { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+
+    .page-title { display: flex; align-items: center; justify-content: space-between; }
+    .page-title h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .page-title .sub { font-size: 13px; color: var(--ink-subtle); margin-top: 4px; }
+
+    /* KPI cards */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+    .kpi-card {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      display: flex; flex-direction: column; gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card__label { font-size: 11px; letter-spacing: 0.6px; text-transform: uppercase; color: var(--ink-subtle); font-weight: 600; }
+    .kpi-card__value { font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 1.1; }
+    .kpi-card__delta { font-size: 12px; color: var(--ink-subtle); display: flex; align-items: center; gap: 4px; }
+    .kpi-card__delta.up { color: var(--brand-emerald-soft); }
+    .kpi-card__delta.down { color: var(--warning); }
+    .kpi-card.is-warning .kpi-card__value { color: var(--warning); }
+    .kpi-card.is-danger .kpi-card__value { color: var(--danger); }
+    .kpi-card .spark { position: absolute; right: 14px; top: 14px; opacity: 0.55; }
+
+    /* Workers table */
+    .workers-card {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      overflow: hidden;
+    }
+    .workers-card__head {
+      padding: var(--space-4) var(--space-5);
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .workers-card__title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .workers-card__title .count { color: var(--ink-subtle); font-weight: 500; }
+    .workers-filters { display: flex; gap: 4px; padding: 2px; background: var(--surface-2); border-radius: var(--rounded-pill); }
+    .workers-filters button { font-size: 12px; padding: 4px 12px; border-radius: var(--rounded-pill); color: var(--ink-muted); font-weight: 500; }
+    .workers-filters button.is-active { background: var(--canvas); color: var(--ink); box-shadow: var(--shadow-xs); }
+
+    .table { font-size: 13px; }
+    .table th { background: var(--canvas-soft); padding: 12px var(--space-5); color: var(--ink-subtle); font-weight: 600; font-size: 10px; letter-spacing: 0.8px; }
+    .table td { padding: 14px var(--space-5); border-bottom: 1px solid var(--hairline); color: var(--ink-muted); }
+    .table tbody tr { cursor: pointer; }
+    .table tbody tr:hover { background: var(--surface-2); }
+    .table tbody tr:last-child td { border-bottom: 0; }
+    .table .name-cell { color: var(--ink); font-weight: 500; }
+    .table .country-flag { font-size: 16px; margin-right: 6px; }
+
+    .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+    .row-actions button {
+      width: 30px; height: 30px;
+      border-radius: 6px;
+      background: var(--surface-2);
+      color: var(--ink-muted);
+      font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .row-actions button:hover { background: var(--surface-3); color: var(--ink); }
+    .row-actions button.is-sos { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+    /* Side panel */
+    .side-panel {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      overflow: hidden;
+      align-self: flex-start;
+      position: sticky; top: var(--space-6);
+    }
+    .side-panel__head { padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--hairline); display: flex; align-items: center; justify-content: space-between; }
+    .side-panel__title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .live-dot { width: 8px; height: 8px; background: var(--danger); border-radius: 50%; animation: pulse-live 1.5s infinite; }
+    @keyframes pulse-live { 50% { transform: scale(1.25); opacity: 0.7; } }
+    .side-panel__body { padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); max-height: 480px; overflow-y: auto; }
+
+    .ticket-item {
+      padding: var(--space-3);
+      border-radius: var(--rounded-md);
+      background: var(--canvas-soft);
+      border: 1px solid var(--hairline);
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .ticket-item:hover { border-color: var(--hairline-strong); transform: translateY(-1px); }
+    .ticket-item__head { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .ticket-item__name { font-weight: 600; color: var(--ink); }
+    .ticket-item__time { margin-left: auto; color: var(--ink-tertiary); font-size: 11px; }
+    .ticket-item__text { font-size: 13px; color: var(--ink-muted); line-height: 1.4; }
+    .ticket-item__native { font-size: 11px; color: var(--ink-tertiary); font-style: italic; }
+    .ticket-item.is-critical { border-left: 3px solid var(--danger); }
+    .ticket-item.is-high { border-left: 3px solid var(--warning); }
+    .ticket-item.is-medium { border-left: 3px solid var(--brand-emerald); }
+
+    .ticket-item--critical {
+      background: #fff1f0;
+      border-left: 4px solid #ff4d4f;
+      position: relative;
+      padding-top: 28px;
+    }
+    .ticket-item--critical .ticket-item__name { color: #5c0011; }
+    .ticket-item--critical .ticket-item__text { color: #3f0008; }
+    .ticket-item--critical .ticket-item__time { color: #a8071a; white-space: nowrap; flex-shrink: 0; }
+    .ticket-item--critical .ticket-item__title { color: #a8071a; font-weight: 600; }
+    .ticket-item__badge-emergency {
+      position: absolute;
+      top: 6px;
+      left: 12px;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px;
+      background: #ff4d4f; color: #fff;
+      border-radius: var(--rounded-pill);
+      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+      z-index: 1;
+    }
+    .ticket-item--critical .ticket-item__head { min-width: 0; }
+    .ticket-item--critical .ticket-item__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ticket-item__pulse-dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; background: #ff4d4f;
+      animation: pulse-dot 1.2s infinite;
+      margin-right: 6px;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(1.4); }
+    }
+
+    .side-panel__footer { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--hairline); text-align: center; }
+    .side-panel__footer a { font-size: 13px; color: var(--brand-cyan-soft); }
+
+    /* Sparkline */
+    .spark-bars { display: flex; align-items: flex-end; gap: 2px; height: 22px; }
+    .spark-bars span { width: 3px; background: var(--brand-cyan); border-radius: 1px; opacity: 0.5; }
+    .spark-bars span:last-child { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="console-frame">
+    <!-- Sidebar -->
+    <aside class="console-sidebar">
+      <div class="sidebar__logo">
+        <span class="mark">S</span>
+        <span class="name">AdaptaAI</span>
+        <span class="sub">HR</span>
+      </div>
+
+      <div class="sidebar__section">
+        <span class="lang-only-ru">Рабочее пространство</span>
+        <span class="lang-only-hi">कार्यक्षेत्र</span>
+        <span class="lang-only-en">Workspace</span>
+      </div>
+      <nav class="sidebar__nav">
+        <a class="nav-item is-active">
+          <span class="icon">👥</span>
+          <span data-i18n="b2b.workers">Сотрудники</span>
+          <span class="badge-soft" id="sidebar-workers-badge">—</span>
+        </a>
+        <a class="nav-item" href="18-ticket-inbox.html">
+          <span class="icon">🎫</span>
+          <span data-i18n="b2b.tickets">Тикеты</span>
+          <span class="badge">—</span>
+        </a>
+        <a class="nav-item" href="17-rag-upload.html">
+          <span class="icon">📚</span>
+          <span>
+            <span class="lang-only-ru">Документы (RAG)</span>
+            <span class="lang-only-hi">दस्तावेज़ (RAG)</span>
+            <span class="lang-only-en">Documents (RAG)</span>
+          </span>
+        </a>
+        <a class="nav-item">
+          <span class="icon">📊</span>
+          <span data-i18n="b2b.analytics">Аналитика</span>
+        </a>
+        <a class="nav-item">
+          <span class="icon">⚙️</span>
+          <span data-i18n="b2b.settings">Настройки</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__employer">
+        <div class="sidebar__employer-header">
+          <div class="sidebar__employer-logo">🏗️</div>
+          <div>
+            <div class="sidebar__employer-name">Застройщик№1 · Москва</div>
+            <div class="sidebar__employer-meta">ID: pik_3422</div>
+          </div>
+        </div>
+        <div class="sidebar__quota-bar"><div class="sidebar__quota-fill" id="sidebar-quota-fill"></div></div>
+        <div class="sidebar__quota-text">
+          <span>
+            <span class="lang-only-ru">Квота</span>
+            <span class="lang-only-hi">कोटा</span>
+            <span class="lang-only-en">Quota</span>
+          </span>
+          <span class="tnum" id="sidebar-quota-text">— / 150</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="breadcrumb">
+        <span style="font-size:16px">🏗️</span>
+        <span class="current">Застройщик№1</span>
+        <span class="sep">·</span>
+        <span>Москва</span>
+        <span class="sep">·</span>
+        <span class="quota-chip">150 квот · <strong id="topbar-quota-used">—</strong> заняты</span>
+      </div>
+      <div class="topbar__right">
+        <div class="topbar__search">
+          <input class="input input-search" placeholder="Поиск сотрудника, документа, тикета…">
+        </div>
+        <button class="icon-btn" title="Уведомления">
+          🔔 <span class="dot"></span>
+        </button>
+        <button class="icon-btn" title="Помощь">❓</button>
+        <div class="avatar-row">
+          <div class="avatar">ДК</div>
+          <div>
+            <div class="name">Дарья К.</div>
+            <div class="role">HR-директор</div>
+          </div>
+        </div>
+        <div class="lang-switch">
+          <button class="lang-switch__btn is-active" data-lang-switch="ru">RU</button>
+          <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+          <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="main__col">
+        <div class="page-title">
+          <div>
+            <h1>
+              <span class="lang-only-ru">Сотрудники</span>
+              <span class="lang-only-hi">कर्मचारी</span>
+              <span class="lang-only-en">Workers</span>
+            </h1>
+            <div class="sub">
+              <span class="lang-only-ru">Все иностранные сотрудники вашей компании в режиме реального времени</span>
+              <span class="lang-only-hi">वास्तविक समय में आपकी कंपनी के सभी विदेशी कर्मचारी</span>
+              <span class="lang-only-en">All foreign workers in real time</span>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm">
+            <span style="font-size:14px">＋</span>
+            <span class="lang-only-ru">Добавить сотрудника</span>
+            <span class="lang-only-hi">कर्मचारी जोड़ें</span>
+            <span class="lang-only-en">Add worker</span>
+          </button>
+        </div>
+
+        <!-- KPI -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-card__label" data-i18n="b2b.kpi.active">Активных</div>
+            <div class="kpi-card__value tnum" id="kpi-active-value">—</div>
+            <div class="kpi-card__delta" id="kpi-active-delta"></div>
+            <div class="spark spark-bars">
+              <span style="height:30%"></span><span style="height:55%"></span><span style="height:40%"></span>
+              <span style="height:65%"></span><span style="height:50%"></span><span style="height:75%"></span><span style="height:90%"></span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card__label" data-i18n="b2b.kpi.pending">Ожидают приезда</div>
+            <div class="kpi-card__value tnum" id="kpi-pending-value">0</div>
+            <div class="kpi-card__delta" id="kpi-pending-delta"></div>
+          </div>
+          <div class="kpi-card" id="kpi-escalations-card">
+            <div class="kpi-card__label" data-i18n="b2b.kpi.escalations">Эскалаций сегодня</div>
+            <div class="kpi-card__value tnum" id="kpi-escalations-value">0</div>
+            <div class="kpi-card__delta" id="kpi-escalations-delta"></div>
+          </div>
+          <div class="kpi-card" id="kpi-expiring-card">
+            <div class="kpi-card__label" data-i18n="b2b.kpi.expiring">До истечения &lt; 30 дн</div>
+            <div class="kpi-card__value tnum" id="kpi-expiring-value">0</div>
+            <div class="kpi-card__delta" id="kpi-expiring-delta"></div>
+          </div>
+        </div>
+
+        <!-- Workers table -->
+        <section class="workers-card">
+          <div class="workers-card__head">
+            <div class="workers-card__title">
+              <span class="lang-only-ru">Сотрудники</span>
+              <span class="lang-only-hi">कर्मचारी</span>
+              <span class="lang-only-en">Workers</span>
+              <span class="count">· — из —</span>
+            </div>
+            <div class="workers-filters">
+              <button class="is-active">Все</button>
+              <button>На объекте</button>
+              <button>SOS</button>
+              <button>Ожидают</button>
+              <button>Документы</button>
+            </div>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ФИО</th>
+                <th>Страна</th>
+                <th>Объект</th>
+                <th>Статус</th>
+                <th>Документы</th>
+                <th>Обновлено</th>
+                <th style="text-align:right">Действия</th>
+              </tr>
+            </thead>
+            <tbody class="workers-tbody"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- Side panel: live escalations -->
+      <aside class="side-panel">
+        <div class="side-panel__head">
+          <div class="side-panel__title">
+            <span class="live-dot"></span>
+            <span class="lang-only-ru">Эскалации в реальном времени</span>
+            <span class="lang-only-hi">रीयल-टाइम एस्केलेशन</span>
+            <span class="lang-only-en">Live escalations</span>
+          </div>
+        </div>
+        <div class="side-panel__body tickets-feed"></div>
+        <div class="side-panel__footer">
+          <a href="18-ticket-inbox.html">
+            <span class="lang-only-ru">Открыть все тикеты →</span>
+            <span class="lang-only-hi">सभी टिकट खोलें →</span>
+            <span class="lang-only-en">Open all tickets →</span>
+          </a>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script defer>
+    // ===== API CONFIG =====
+    const API = window.ADAPTA_API_BASE_URL || window.location.origin;
+    const JWT_KEY = 'adapta_jwt';
+
+    // ===== TOAST =====
+    function showToast(msg, type) {
+      type = type || 'info';
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+        document.body.appendChild(container);
+      }
+      const t = document.createElement('div');
+      t.className = 'toast';
+      const borderColor = type === 'error' ? 'var(--danger)' : type === 'success' ? 'var(--brand-emerald)' : 'var(--brand-cyan)';
+      t.style.cssText = 'background:var(--surface-2);border:1px solid var(--hairline);border-radius:var(--rounded-md);padding:12px 18px;font-size:13px;color:var(--ink);min-width:260px;max-width:380px;box-shadow:var(--shadow-md);pointer-events:auto;word-break:break-word;border-left:3px solid ' + borderColor + ';';
+      t.textContent = msg;
+      container.appendChild(t);
+      setTimeout(() => t.remove(), 5000);
+    }
+
+    // ===== DOM HELPERS =====
+    function el(tag, attrs, children) {
+      const node = document.createElement(tag);
+      if (attrs) Object.entries(attrs).forEach(([k, v]) => {
+        if (k === 'style') node.style.cssText = v;
+        else if (k === 'class') node.className = v;
+        else if (k === 'text') node.textContent = v;
+        else node.setAttribute(k, v);
+      });
+      if (children) children.forEach(c => { if (c) node.appendChild(c); });
+      return node;
+    }
+    function inp(id, type, placeholder) {
+      const i = document.createElement('input');
+      i.id = id; i.type = type; i.placeholder = placeholder; i.className = 'input';
+      i.style.cssText = 'width:100%;box-sizing:border-box;';
+      return i;
+    }
+
+    // ===== LOGIN SCREEN =====
+    function showLoginScreen() {
+      const overlay = el('div', { id: 'login-overlay', style: 'position:fixed;inset:0;background:var(--canvas);z-index:8000;display:flex;align-items:center;justify-content:center;' });
+
+      const card = el('div', { style: 'background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--rounded-xl);padding:40px;width:380px;display:flex;flex-direction:column;gap:20px;' });
+
+      const logoArea = el('div', { style: 'text-align:center;' });
+      const logoMark = el('div', { style: 'font-size:32px;margin-bottom:8px;', text: 'S' });
+      const logoName = el('div', { style: 'font-size:20px;font-weight:700;background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;color:transparent;', text: 'AdaptaAI HR' });
+      const logoSub = el('div', { style: 'font-size:13px;color:var(--ink-subtle);margin-top:4px;', text: 'Вход в систему' });
+      logoArea.append(logoMark, logoName, logoSub);
+
+      const fields = el('div', { style: 'display:flex;flex-direction:column;gap:10px;' });
+      const emailInp = inp('login-email', 'email', 'Email');
+      const passInp = inp('login-password', 'password', 'Пароль');
+      fields.append(emailInp, passInp);
+
+      const loginBtn = el('button', { id: 'login-btn', class: 'btn btn-primary btn-block', text: 'Войти' });
+      const demoBtn = el('button', { id: 'demo-login-btn', class: 'btn btn-secondary btn-block', style: 'font-size:12px;', text: 'Войти как Дарья (Застройщик№1) — демо' });
+      const errEl = el('div', { id: 'login-error', style: 'color:var(--danger);font-size:12px;text-align:center;display:none;' });
+
+      card.append(logoArea, fields, loginBtn, demoBtn, errEl);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      demoBtn.addEventListener('click', () => {
+        emailInp.value = 'daria@pik.demo';
+        passInp.value = 'demo';
+      });
+
+      async function doLogin() {
+        const email = emailInp.value.trim();
+        const password = passInp.value;
+        errEl.style.display = 'none';
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Входим…';
+        try {
+          const res = await fetch(API + '/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            errEl.textContent = (data && data.error && data.error.message) || 'Неверный email или пароль';
+            errEl.style.display = 'block';
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Войти';
+            return;
+          }
+          localStorage.setItem(JWT_KEY, data.access_token);
+          if (data.user) {
+            const nameEl = document.querySelector('.avatar-row .name');
+            if (nameEl) nameEl.textContent = data.user.first_name + ' ' + data.user.last_name.charAt(0) + '.';
+            const avatarEl = document.querySelector('.avatar');
+            if (avatarEl) avatarEl.textContent = (data.user.first_name.charAt(0) + data.user.last_name.charAt(0)).toUpperCase();
+          }
+          overlay.remove();
+          initDashboard();
+        } catch (e) {
+          errEl.textContent = 'Ошибка сети. Проверьте соединение.';
+          errEl.style.display = 'block';
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Войти';
+        }
+      }
+
+      loginBtn.addEventListener('click', doLogin);
+      [emailInp, passInp].forEach(function(elem) {
+        elem.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+      });
+    }
+
+    // ===== RENDER WORKERS TABLE =====
+    const statusMap = {
+      'on-site':  { cls: 'pill-verified', label: 'На объекте' },
+      'sos':      { cls: 'pill-blocked',  label: 'SOS' },
+      'arriving': { cls: 'pill-pending',  label: 'Ожидается' },
+      'on-leave': { cls: 'pill-offline',  label: 'Отгул' },
+    };
+    const docsMap = {
+      'ok':       { cls: 'pill-verified', label: 'Все ОК' },
+      'expiring': { cls: 'pill-warning',  label: 'Истекает' },
+      'pending':  { cls: 'pill-pending',  label: 'В работе' },
+      'expired':  { cls: 'pill-blocked',  label: 'Просрочен' },
+    };
+
+    function renderWorkersTable(workers, total) {
+      const seen = new Set();
+      workers = workers.filter(function(w) {
+        const fullName = ((w.first_name || '') + ' ' + (w.last_name || '')).trim().toLowerCase();
+        if (!fullName) return true;
+        if (seen.has(fullName)) return false;
+        seen.add(fullName);
+        return true;
+      });
+
+      // Update all total-driven UI elements (even on empty list)
+      const realTotal = total != null ? total : workers.length;
+      const countEl = document.querySelector('.workers-card__title .count');
+      if (countEl) countEl.textContent = '· ' + workers.length + ' из ' + realTotal;
+      const badgeSoft = document.getElementById('sidebar-workers-badge');
+      if (badgeSoft) badgeSoft.textContent = realTotal;
+      const kpiActive = document.getElementById('kpi-active-value');
+      if (kpiActive) kpiActive.textContent = realTotal;
+      const QUOTA_MAX = 150;
+      const fillEl = document.getElementById('sidebar-quota-fill');
+      if (fillEl) fillEl.style.width = Math.min(100, Math.round(realTotal / QUOTA_MAX * 100)) + '%';
+      const quotaTextEl = document.getElementById('sidebar-quota-text');
+      if (quotaTextEl) quotaTextEl.textContent = realTotal + ' / ' + QUOTA_MAX;
+      const topbarUsed = document.getElementById('topbar-quota-used');
+      if (topbarUsed) topbarUsed.textContent = realTotal;
+
+      const tbody = document.querySelector('.workers-tbody');
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+      if (workers.length === 0) {
+        const emptyTr = document.createElement('tr');
+        const emptyTd = document.createElement('td');
+        emptyTd.setAttribute('colspan', '7');
+        emptyTd.style.cssText = 'text-align:center;padding:32px;color:var(--ink-subtle);font-size:13px;';
+        emptyTd.textContent = 'Нет сотрудников. Добавьте первого через кнопку «Добавить сотрудника».';
+        emptyTr.appendChild(emptyTd);
+        tbody.appendChild(emptyTr);
+        return;
+      }
+
+      workers.forEach(function(w) {
+        const tr = document.createElement('tr');
+        const fullName = w.name || ((w.first_name || '') + ' ' + (w.last_name || '')).trim();
+        const country = w.country || '—';
+        const object = w.object || w.site_name || '—';
+        const wStatus = w.status || 'on-site';
+        const wDocs = w.docs || 'ok';
+        const updatedText = w.updated ? w.updated + ' назад' : (w.accepted_at ? new Date(w.accepted_at).toLocaleDateString('ru-RU') : '—');
+
+        const s = statusMap[wStatus] || statusMap['on-site'];
+        const d = docsMap[wDocs] || docsMap['ok'];
+
+        const tdName = el('td', { class: 'name-cell', text: fullName });
+        if (w.id || w.worker_id) tdName.dataset.workerId = w.id || w.worker_id;
+
+        const tdCountry = document.createElement('td');
+        const flagSpan = el('span', { class: 'country-flag', text: country });
+        tdCountry.appendChild(flagSpan);
+
+        const tdObj = el('td', { text: object });
+
+        const tdStatus = document.createElement('td');
+        const sPill = el('span', { class: 'pill ' + s.cls, text: s.label });
+        tdStatus.appendChild(sPill);
+
+        const tdDocs = document.createElement('td');
+        const dPill = el('span', { class: 'pill ' + d.cls, text: d.label });
+        tdDocs.appendChild(dPill);
+
+        const tdUpd = el('td', { text: updatedText });
+
+        const tdAct = document.createElement('td');
+        const acts = el('div', { class: 'row-actions' });
+        const btnChat = el('button', { title: 'Чат', text: '💬' });
+        acts.appendChild(btnChat);
+        if (w.flagAi) {
+          acts.appendChild(el('button', { class: 'is-sos', title: 'Эскалация', text: '🆘' }));
+        } else {
+          acts.appendChild(el('button', { title: 'Профиль', text: '→' }));
+        }
+        tdAct.appendChild(acts);
+
+        tr.append(tdName, tdCountry, tdObj, tdStatus, tdDocs, tdUpd, tdAct);
+        tr.addEventListener('click', (function(worker) { return function() { localStorage.setItem('adapta_active_worker', JSON.stringify(worker)); window.location.href = '16-worker-detail.html'; }; })(w));
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ===== FETCH WORKERS FROM API =====
+    async function fetchWorkers() {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) return;
+      try {
+        const res = await fetch(API + '/api/v1/workers', {
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        if (res.status === 401) { localStorage.removeItem(JWT_KEY); showLoginScreen(); return; }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const workers = Array.isArray(data) ? data : (data.items || []);
+        const total = Array.isArray(data) ? workers.length : (data.total != null ? data.total : workers.length);
+        renderWorkersTable(workers, total);
+      } catch (e) {
+        showToast('Ошибка загрузки сотрудников: ' + e.message, 'error');
+      }
+    }
+
+    // ===== NOTIFICATIONS POLLING =====
+    let lastNotifTime = new Date().toISOString();
+
+    function startNotificationPolling() {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) return;
+      setInterval(async function() {
+        try {
+          const res = await fetch(API + '/api/v1/workers/notifications/new?since=' + encodeURIComponent(lastNotifTime), {
+            headers: { 'Authorization': 'Bearer ' + jwt },
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          const items = data.items || [];
+          if (data.server_time) lastNotifTime = data.server_time;
+          items.forEach(function(item) {
+            const name = ((item.first_name || '') + ' ' + (item.last_name || '')).trim() || item.worker_id;
+            showToast('Новый сотрудник: ' + name, 'success');
+            const bell = document.querySelector('.icon-btn[title="Уведомления"]');
+            if (bell && !bell.querySelector('.dot')) {
+              const dot = document.createElement('span'); dot.className = 'dot'; bell.appendChild(dot);
+            }
+            const acceptedAt = item.accepted_at ? new Date(item.accepted_at) : null;
+            if (acceptedAt && (Date.now() - acceptedAt.getTime()) < 5 * 60 * 1000) {
+              highlightNewWorker(item.worker_id || item.id);
+            }
+          });
+        } catch (_) { /* silent */ }
+      }, 3000);
+    }
+
+    function highlightNewWorker(workerId) {
+      document.querySelectorAll('.workers-tbody tr').forEach(function(row) {
+        const nameCell = row.querySelector('.name-cell');
+        if (nameCell && nameCell.dataset.workerId === workerId && !row.querySelector('.new-badge')) {
+          const badge = el('span', { class: 'new-badge', text: 'новый', style: 'margin-left:8px;font-size:9px;padding:2px 6px;background:var(--brand-emerald);color:#fff;border-radius:8px;font-weight:700;letter-spacing:0.5px;' });
+          nameCell.appendChild(badge);
+        }
+      });
+    }
+
+    // ===== INVITE MODAL =====
+    function showInviteModal() {
+      const overlay = el('div', { id: 'invite-overlay', style: 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:8000;display:flex;align-items:center;justify-content:center;' });
+
+      const card = el('div', { style: 'background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--rounded-xl);padding:36px;width:420px;display:flex;flex-direction:column;gap:18px;' });
+
+      const headerRow = el('div', { style: 'display:flex;align-items:center;justify-content:space-between;' });
+      const title = el('div', { style: 'font-size:16px;font-weight:700;', text: 'Пригласить сотрудника' });
+      const closeBtn = el('button', { id: 'invite-close', style: 'background:none;font-size:18px;color:var(--ink-muted);padding:4px 8px;', text: '✕' });
+      headerRow.append(title, closeBtn);
+
+      const fields = el('div', { style: 'display:flex;flex-direction:column;gap:10px;' });
+      const invEmail = inp('inv-email', 'email', 'Email *');
+      const invFirst = inp('inv-first', 'text', 'Имя *');
+      const invLast  = inp('inv-last',  'text', 'Фамилия *');
+      const invLang  = document.createElement('select');
+      invLang.id = 'inv-lang'; invLang.className = 'input';
+      invLang.style.cssText = 'width:100%;box-sizing:border-box;';
+      [['ru','Русский'],['hi','हिन्दी'],['en','English'],['uz',"O'zbek"],['tg','Тоҷикӣ']].forEach(function(opt) {
+        const o = document.createElement('option'); o.value = opt[0]; o.textContent = opt[1]; invLang.appendChild(o);
+      });
+      fields.append(invEmail, invFirst, invLast, invLang);
+
+      const linkBlock = el('div', { id: 'invite-link-block', style: 'display:none;background:var(--canvas-soft);border:1px solid var(--hairline);border-radius:var(--rounded-md);padding:12px;font-size:12px;word-break:break-all;color:var(--brand-cyan-soft);font-family:var(--font-mono);' });
+      const submitBtn = el('button', { id: 'invite-submit', class: 'btn btn-primary btn-block', text: 'Отправить приглашение' });
+      const invErr = el('div', { id: 'invite-error', style: 'color:var(--danger);font-size:12px;text-align:center;display:none;' });
+
+      card.append(headerRow, fields, linkBlock, submitBtn, invErr);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      closeBtn.addEventListener('click', function() { overlay.remove(); });
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+
+      submitBtn.addEventListener('click', async function() {
+        const email = invEmail.value.trim();
+        const first_name = invFirst.value.trim();
+        const last_name  = invLast.value.trim();
+        const preferred_language = invLang.value;
+        invErr.style.display = 'none';
+        if (!email || !first_name || !last_name) {
+          invErr.textContent = 'Заполните все обязательные поля'; invErr.style.display = 'block'; return;
+        }
+        submitBtn.disabled = true; submitBtn.textContent = 'Отправляем…';
+        const jwt = localStorage.getItem(JWT_KEY);
+        try {
+          const res = await fetch(API + '/api/v1/invites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+            body: JSON.stringify({ email, first_name, last_name, preferred_language }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            invErr.textContent = (data && data.error && data.error.message) || 'Ошибка создания приглашения';
+            invErr.style.display = 'block';
+            submitBtn.disabled = false; submitBtn.textContent = 'Отправить приглашение';
+            return;
+          }
+          showToast('Приглашение отправлено: ' + first_name + ' ' + last_name, 'success');
+          linkBlock.textContent = API + '/i/' + data.token;
+          linkBlock.style.display = 'block';
+          submitBtn.textContent = 'Отправлено!';
+          setTimeout(function() { overlay.remove(); }, 4000);
+        } catch (e) {
+          invErr.textContent = 'Ошибка сети: ' + e.message; invErr.style.display = 'block';
+          submitBtn.disabled = false; submitBtn.textContent = 'Отправить приглашение';
+        }
+      });
+    }
+
+    // ===== TICKETS FEED — реальные эскалации из чата =====
+    function renderEmptyTicketsFeed() {
+      const feed = document.querySelector('.tickets-feed');
+      while (feed.firstChild) feed.removeChild(feed.firstChild);
+      const empty = el('div', {
+        class: 'ticket-empty',
+        style: 'padding: 24px 18px; text-align: center; color: var(--ink-subtle); font-size: 13px; line-height: 1.5;',
+      });
+      empty.append(
+        el('div', { text: '💬', style: 'font-size: 32px; margin-bottom: 12px; opacity: 0.5;' }),
+        el('div', { text: 'Пока нет эскалаций', style: 'font-weight: 600; color: var(--ink-muted); margin-bottom: 6px;' }),
+        el('div', { text: 'Сюда попадают вопросы мигрантов, на которые ИИ ответил с низкой уверенностью.', style: 'font-size: 12px;' })
+      );
+      feed.appendChild(empty);
+    }
+
+    // Эскалации-KPI: число и красная подсветка карточки зависят от реальных данных.
+    function setEscalationsKpi(n) {
+      const v = document.getElementById('kpi-escalations-value');
+      if (v) v.textContent = n;
+      const card = document.getElementById('kpi-escalations-card');
+      if (card) card.classList.toggle('is-danger', n > 0);
+    }
+
+    async function fetchAndRenderTicketsFeed() {
+      const feed = document.querySelector('.tickets-feed');
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) { setEscalationsKpi(0); renderEmptyTicketsFeed(); return; }
+      try {
+        const res = await fetch(API + '/api/v1/chat/escalations?limit=5', {
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        // Endpoint в разработке — 404/501. Возвращаем пустое состояние без шума.
+        if (!res.ok) { setEscalationsKpi(0); renderEmptyTicketsFeed(); return; }
+        const data = await res.json();
+        const items = data.items || data;
+        const totalEsc = (data && typeof data.total === 'number') ? data.total
+                         : (Array.isArray(items) ? items.length : 0);
+        setEscalationsKpi(totalEsc);
+        if (!Array.isArray(items) || items.length === 0) { renderEmptyTicketsFeed(); return; }
+        // Реальные эскалации — рендерим
+        while (feed.firstChild) feed.removeChild(feed.firstChild);
+        const sevClass = { critical: 'is-critical', high: 'is-high', medium: 'is-medium' };
+        items.forEach(function(t) {
+          const isCritical = t.severity === 'critical';
+          const isEmergency = isCritical && t.reason === 'emergency';
+          let itemClass = 'ticket-item ' + (sevClass[t.severity] || '');
+          if (isCritical) itemClass += ' ticket-item--critical';
+          const item = el('div', { class: itemClass });
+          item.addEventListener('click', function() { window.location.href = '18-ticket-inbox.html'; });
+          const head = el('div', { class: 'ticket-item__head' });
+
+          // Pulse dot for emergency, plain icon for others
+          if (isEmergency) {
+            head.appendChild(el('span', { class: 'ticket-item__pulse-dot' }));
+          } else {
+            head.appendChild(el('span', { text: t.icon || '🟡' }));
+          }
+
+          head.append(
+            el('span', { text: t.flag || '' }),
+            el('span', { class: 'ticket-item__name', text: t.worker_name || t.worker || 'Без имени' }),
+            el('span', { class: 'ticket-item__time', text: t.relative_time || t.time || '' })
+          );
+
+          // Emergency or critical badge inserted before the time element
+          if (isEmergency) {
+            const badge = el('span', { class: 'ticket-item__badge-emergency' });
+            const rocketSpan = document.createElement('span');
+            rocketSpan.textContent = '🚨';
+            const labelSpan = document.createElement('span');
+            labelSpan.textContent = 'ЭКСТРЕННО';
+            badge.appendChild(rocketSpan);
+            badge.appendChild(labelSpan);
+            head.insertBefore(badge, head.querySelector('.ticket-item__time'));
+          } else if (isCritical) {
+            const badge = el('span', { class: 'ticket-item__badge-emergency' });
+            badge.style.background = '#cf1322';
+            badge.textContent = 'Критично';
+            head.insertBefore(badge, head.querySelector('.ticket-item__time'));
+          }
+
+          const text = el('div', { class: 'ticket-item__text', text: t.text || t.question || '' });
+          item.append(head, text);
+          feed.appendChild(item);
+        });
+      } catch (e) {
+        setEscalationsKpi(0);
+        renderEmptyTicketsFeed();
+      }
+    }
+
+    // ===== INIT DASHBOARD =====
+    async function initDashboard() {
+      // Никаких mock-данных — показываем реальное состояние.
+      renderWorkersTable([]);
+      renderEmptyTicketsFeed();  // мгновенный empty-state
+      await fetchWorkers();
+      await fetchAndRenderTicketsFeed();  // попытка live-fetch (тихо падает если endpoint не готов)
+      startNotificationPolling();
+    }
+
+    // ===== DEMO PASSWORD HELPERS =====
+    // Masked password modal (replaces window.prompt, which renders input as
+    // plain text). Returns a Promise<string|null> — null if the user cancels.
+    function promptDemoPassword() {
+      return new Promise(function(resolve) {
+        var overlay = el('div', { id: 'demo-pw-overlay', style: 'position:fixed;inset:0;background:rgba(8,12,20,.6);backdrop-filter:blur(4px);z-index:9000;display:flex;align-items:center;justify-content:center;' });
+        var card = el('div', { style: 'background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--rounded-xl);padding:32px;width:360px;display:flex;flex-direction:column;gap:16px;' });
+        var title = el('div', { style: 'font-size:16px;font-weight:600;color:var(--ink);', text: 'Демо-доступ AdaptaAI' });
+        var sub = el('div', { style: 'font-size:13px;color:var(--ink-subtle);', text: 'Введите демо-пароль (получите у команды Digital Teams).' });
+        var pwInp = inp('demo-pw-input', 'password', 'Демо-пароль');
+        var errEl = el('div', { style: 'color:var(--danger);font-size:12px;display:none;' });
+        var btn = el('button', { class: 'btn btn-primary btn-block', text: 'Войти' });
+        card.append(title, sub, pwInp, errEl, btn);
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+        setTimeout(function() { pwInp.focus(); }, 0);
+
+        function submit() {
+          var v = pwInp.value.trim();
+          if (!v) { errEl.textContent = 'Введите пароль'; errEl.style.display = 'block'; return; }
+          overlay.remove();
+          resolve(v);
+        }
+        function cancel() { overlay.remove(); resolve(null); }
+        btn.addEventListener('click', submit);
+        pwInp.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') submit();
+          else if (e.key === 'Escape') cancel();
+        });
+      });
+    }
+
+    async function ensureDemoPassword() {
+      var pw = sessionStorage.getItem('adapta_demo_password');
+      if (pw) return pw;
+      pw = await promptDemoPassword();
+      if (!pw) return null;
+      sessionStorage.setItem('adapta_demo_password', pw);
+      return pw;
+    }
+
+    async function demoFetch(url) {
+      var pw = await ensureDemoPassword();
+      if (!pw) throw new Error('Демо-пароль не введён');
+      var res = await fetch(url, {
+        method: 'POST',
+        headers: { 'X-Demo-Password': pw, 'Content-Type': 'application/json' },
+      });
+      if (res.status === 401) {
+        sessionStorage.removeItem('adapta_demo_password');
+        throw new Error('Неверный пароль — попробуйте ещё раз');
+      }
+      if (res.status === 403) {
+        throw new Error('Демо-режим выключен на сервере');
+      }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }
+
+    // ===== INVISIBLE DEMO AUTO-LOGIN =====
+    async function demoAutoLogin() {
+      try {
+        const data = await demoFetch(API + '/api/v1/demo/login-hr');
+        localStorage.setItem(JWT_KEY, data.access_token);
+        if (data.user) localStorage.setItem('adapta_user', JSON.stringify(data.user));
+        initDashboard();
+      } catch (e) {
+        if (e.message === 'Демо-пароль не введён') {
+          // User cancelled the prompt — fall back to login screen
+          showLoginScreen();
+          return;
+        }
+        showToast(e.message || 'Ошибка демо-входа', 'error');
+        showLoginScreen();
+      }
+    }
+
+    // Re-establish the HttpOnly session cookie from a localStorage JWT so that
+    // navigations to gated pages (tickets / RAG / worker detail) carry it.
+    // Heals returning users whose JWT predates the cookie.
+    async function ensureSessionCookie() {
+      var jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) return;
+      try {
+        await fetch(API + '/api/v1/auth/cookie', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+      } catch (e) { /* navigation will fall back to the login screen */ }
+    }
+
+    // ===== BOOT =====
+    window.addEventListener('DOMContentLoaded', async function() {
+      // Wire "Добавить сотрудника" button to invite modal
+      const addBtn = document.querySelector('.btn.btn-primary.btn-sm');
+      if (addBtn) addBtn.addEventListener('click', showInviteModal);
+
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) {
+        demoAutoLogin();
+      } else {
+        await ensureSessionCookie();
+        initDashboard();
+      }
+    });
+  </script>
+</body>
+</html>

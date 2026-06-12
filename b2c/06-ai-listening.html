@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Слушаю</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { background: #eef2f3; }
+    .device-frame {
+      min-height: 920px;
+      background: radial-gradient(circle at 50% 38%,
+        rgba(6, 182, 212, 0.10) 0%,
+        rgba(16, 185, 129, 0.06) 40%,
+        var(--canvas) 75%);
+    }
+
+    .listen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-4);
+    }
+
+    /* Top bar */
+    .listen-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-2) 0;
+      flex-shrink: 0;
+    }
+    .listen-top__back {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink);
+    }
+    .listen-top__back:hover { background: var(--surface-3); }
+
+    /* Stage indicators */
+    .stages-rail {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-top: var(--space-4);
+      margin-bottom: var(--space-5);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .stages-rail .stage {
+      transition: opacity var(--dur-base) var(--ease-out);
+    }
+    .stages-rail .stage--off {
+      opacity: 0.3;
+      filter: saturate(0.4);
+    }
+    .stages-rail .stage--off::before { animation: none; }
+
+    /* Listening core */
+    .listen-core {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: var(--space-6);
+      text-align: center;
+      padding: var(--space-4) 0;
+    }
+
+    /* Giant pulsing mic */
+    .listen-mic-wrap {
+      position: relative;
+      width: 200px; height: 200px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .listen-mic-wrap::before,
+    .listen-mic-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(6, 182, 212, 0.4);
+      animation: listen-ripple 2.4s var(--ease-out) infinite;
+    }
+    .listen-mic-wrap::after {
+      animation-delay: 1.2s;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+    @keyframes listen-ripple {
+      0% { transform: scale(0.7); opacity: 1; }
+      80% { opacity: 0; }
+      100% { transform: scale(1.45); opacity: 0; }
+    }
+    .voice-mic--xl.is-recording {
+      width: 140px; height: 140px;
+      font-size: 52px;
+      box-shadow: 0 16px 40px rgba(6, 182, 212, 0.35);
+    }
+
+    /* Waveform — bigger */
+    .listen-waveform {
+      height: 64px;
+      gap: 5px;
+    }
+    .listen-waveform .waveform__bar {
+      width: 4px;
+      background: linear-gradient(180deg, var(--brand-cyan), var(--brand-emerald));
+    }
+    .listen-waveform .waveform__bar:nth-child(1)  { height: 30%; animation-delay: 0s; }
+    .listen-waveform .waveform__bar:nth-child(2)  { height: 55%; animation-delay: 0.08s; }
+    .listen-waveform .waveform__bar:nth-child(3)  { height: 85%; animation-delay: 0.16s; }
+    .listen-waveform .waveform__bar:nth-child(4)  { height: 100%; animation-delay: 0.24s; }
+    .listen-waveform .waveform__bar:nth-child(5)  { height: 65%; animation-delay: 0.32s; }
+    .listen-waveform .waveform__bar:nth-child(6)  { height: 90%; animation-delay: 0.40s; }
+    .listen-waveform .waveform__bar:nth-child(7)  { height: 45%; animation-delay: 0.48s; }
+    .listen-waveform .waveform__bar:nth-child(8)  { height: 75%; animation-delay: 0.56s; }
+    .listen-waveform .waveform__bar:nth-child(9)  { height: 60%; animation-delay: 0.64s; }
+    .listen-waveform .waveform__bar:nth-child(10) { height: 95%; animation-delay: 0.72s; }
+    .listen-waveform .waveform__bar:nth-child(11) { height: 40%; animation-delay: 0.80s; }
+    .listen-waveform .waveform__bar:nth-child(12) { height: 70%; animation-delay: 0.88s; }
+    .listen-waveform .waveform__bar:nth-child(13) { height: 35%; animation-delay: 0.96s; }
+
+    /* Transcription */
+    .listen-transcript {
+      max-width: 340px;
+      font-family: var(--font-hindi);
+      font-size: 30px;
+      line-height: 1.4;
+      font-weight: 500;
+      color: var(--ink);
+      letter-spacing: 0;
+      margin-top: var(--space-2);
+    }
+    .listen-transcript__cursor {
+      display: inline-block;
+      width: 2px;
+      height: 28px;
+      background: var(--brand-cyan);
+      margin-left: 4px;
+      vertical-align: middle;
+      animation: cursor-blink 0.8s ease-in-out infinite;
+    }
+    @keyframes cursor-blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    .listen-transcript__ru {
+      display: block;
+      margin-top: 10px;
+      font-family: var(--font-sans);
+      font-size: 15px;
+      color: var(--ink-muted);
+      font-weight: 400;
+      font-style: italic;
+    }
+
+    /* Detected language */
+    .listen-detected {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-pill);
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+    .listen-detected__flag {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      background: var(--canvas);
+    }
+    .listen-detected__check {
+      color: var(--success);
+      font-weight: 700;
+    }
+    .listen-detected__bar {
+      width: 60px;
+      height: 4px;
+      background: var(--hairline);
+      border-radius: var(--rounded-pill);
+      overflow: hidden;
+      position: relative;
+    }
+    .listen-detected__bar::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      width: 92%;
+      background: linear-gradient(90deg, var(--brand-cyan), var(--brand-emerald));
+      border-radius: inherit;
+    }
+    .listen-detected__pct {
+      font-weight: 600;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Hint */
+    .listen-hint {
+      font-size: 13px;
+      color: var(--ink-subtle);
+      max-width: 280px;
+      margin-top: -8px;
+    }
+
+    /* Actions */
+    .listen-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-5) 0 calc(var(--space-4) + env(safe-area-inset-bottom, 0));
+      flex-shrink: 0;
+    }
+    .listen-actions .btn-primary {
+      min-width: 220px;
+      height: 56px;
+      font-size: 17px;
+      box-shadow: 0 8px 24px rgba(6, 182, 212, 0.30);
+    }
+    .listen-cancel {
+      font-size: 14px;
+      color: var(--ink-muted);
+      padding: 8px 14px;
+      border-radius: var(--rounded-md);
+    }
+    .listen-cancel:hover { background: var(--surface-2); color: var(--ink); }
+
+    /* Duration timer */
+    .listen-timer {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--ink-muted);
+      letter-spacing: 1px;
+    }
+    .listen-timer__rec {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      margin-right: 6px;
+      animation: pulse-soft 1.2s ease-in-out infinite;
+      vertical-align: middle;
+    }
+
+    /* Compact lang switch */
+    .lang-switch--compact { padding: 3px; }
+    .lang-switch--compact .lang-switch__btn { height: 22px; padding: 0 7px; font-size: 10px; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <div class="device-frame">
+    <section class="listen">
+      <!-- Top bar — close + lang switch + timer -->
+      <header class="listen-top">
+        <a href="05-ai-chat.html" class="listen-top__back" aria-label="Закрыть">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6l-12 12"/><path d="M6 6l12 12"/>
+          </svg>
+        </a>
+        <span class="listen-timer">
+          <span class="listen-timer__rec"></span>
+          <span>00:00</span>
+        </span>
+        <div class="lang-switch lang-switch--compact">
+          <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+          <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+          <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+        </div>
+      </header>
+
+      <!-- Stage rail -->
+      <nav class="stages-rail" aria-label="AI states">
+        <span class="stage stage-listening">
+          <span class="lang-only-ru">слушаю</span>
+          <span class="lang-only-hi">सुन रहा हूँ</span>
+          <span class="lang-only-en">listening</span>
+        </span>
+        <span class="stage stage-thinking stage--off">
+          <span class="lang-only-ru">понимаю</span>
+          <span class="lang-only-hi">समझ रहा हूँ</span>
+          <span class="lang-only-en">understanding</span>
+        </span>
+        <span class="stage stage-searching stage--off">
+          <span class="lang-only-ru">ищу</span>
+          <span class="lang-only-hi">खोज रहा हूँ</span>
+          <span class="lang-only-en">searching</span>
+        </span>
+        <span class="stage stage-drafting stage--off">
+          <span class="lang-only-ru">отвечаю</span>
+          <span class="lang-only-hi">जवाब</span>
+          <span class="lang-only-en">drafting</span>
+        </span>
+      </nav>
+
+      <!-- Core -->
+      <div class="listen-core">
+        <!-- Mic -->
+        <div class="listen-mic-wrap">
+          <span class="voice-mic voice-mic--xl is-recording" aria-hidden="true">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <path d="M8 21l8 0"/>
+              <path d="M12 17l0 4"/>
+            </svg>
+          </span>
+        </div>
+
+        <!-- Waveform -->
+        <div class="waveform listen-waveform" aria-hidden="true">
+          <span class="waveform__bar"></span><span class="waveform__bar"></span>
+          <span class="waveform__bar"></span><span class="waveform__bar"></span>
+          <span class="waveform__bar"></span><span class="waveform__bar"></span>
+          <span class="waveform__bar"></span><span class="waveform__bar"></span>
+          <span class="waveform__bar"></span><span class="waveform__bar"></span>
+          <span class="waveform__bar"></span><span class="waveform__bar"></span>
+          <span class="waveform__bar"></span>
+        </div>
+
+        <!-- Live transcript -->
+        <div>
+          <div class="listen-transcript">
+            <span>मैं कहाँ हूँ</span><span class="listen-transcript__cursor" aria-hidden="true"></span>
+            <span class="listen-transcript__ru">[пер.] Где я нахожусь…</span>
+          </div>
+        </div>
+
+        <!-- Detected language indicator -->
+        <div class="listen-detected">
+          <span class="listen-detected__flag">🇮🇳</span>
+          <span>
+            <span class="lang-only-ru">Понял: <strong style="color:var(--ink)">हिन्दी</strong></span>
+            <span class="lang-only-hi">पहचाना: <strong style="color:var(--ink)">हिन्दी</strong></span>
+            <span class="lang-only-en">Detected: <strong style="color:var(--ink)">हिन्दी</strong></span>
+          </span>
+          <span class="listen-detected__check">✓</span>
+          <span>·</span>
+          <span class="lang-only-ru">уверенность</span>
+          <span class="lang-only-hi">विश्वास</span>
+          <span class="lang-only-en">confidence</span>
+          <span class="listen-detected__bar" aria-hidden="true"></span>
+          <span class="listen-detected__pct">92%</span>
+        </div>
+
+        <!-- Hint -->
+        <p class="listen-hint">
+          <span class="lang-only-ru">Говорите свободно. Если не на хинди — переключится автоматически.</span>
+          <span class="lang-only-hi">खुलकर बोलें। हिन्दी न होने पर भाषा अपने आप बदल जाएगी।</span>
+          <span class="lang-only-en">Speak freely. If not Hindi — language switches automatically.</span>
+        </p>
+      </div>
+
+      <!-- Actions -->
+      <div class="listen-actions">
+        <a href="05-ai-chat.html" class="btn btn-primary btn-block" style="text-decoration:none">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12l5 5l10 -10"/>
+          </svg>
+          <span data-i18n="common.done">Готово</span>
+        </a>
+        <a href="05-ai-chat.html" class="listen-cancel" data-i18n="common.cancel">Отмена</a>
+      </div>
+    </section>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script defer>
+    // ─── Timer tick ───────────────────────────────────────────────────────────────
+    const timerEl = document.querySelector('.listen-timer span:last-child');
+    let secs = 0;
+    const timerInterval = setInterval(() => {
+      secs += 1;
+      const m = String(Math.floor(secs / 60)).padStart(2, '0');
+      const s = String(secs % 60).padStart(2, '0');
+      if (timerEl) timerEl.textContent = m + ':' + s;
+    }, 1000);
+
+    // ─── Language detection for Speech API ───────────────────────────────────────
+    function getSpeechLang() {
+      const l = localStorage.getItem('adapta_lang') ||
+                document.documentElement.getAttribute('data-lang') || 'ru';
+      return l === 'hi' ? 'hi-IN' : (l === 'en' ? 'en-US' : 'ru-RU');
+    }
+
+    // ─── DOM refs ─────────────────────────────────────────────────────────────────
+    const transcriptTextEl = document.querySelector('.listen-transcript > span:first-child');
+    const transcriptRuEl   = document.querySelector('.listen-transcript__ru');
+    const doneBtn          = document.querySelector('.listen-actions .btn-primary');
+    const cancelBtn        = document.querySelector('.listen-cancel');
+    const micWrap          = document.querySelector('.listen-mic-wrap');
+    const stageListening   = document.querySelector('.stage-listening');
+    const stageThinking    = document.querySelector('.stage-thinking');
+
+    // ─── Navigate back with optional text ────────────────────────────────────────
+    function goBackToChat(text) {
+      clearInterval(timerInterval);
+      if (text && text.trim()) {
+        sessionStorage.setItem('adapta_voice_text', text.trim());
+      }
+      window.location.href = '05-ai-chat.html';
+    }
+
+    // Attach static cancel / done links behaviour (prevent default nav; let JS route)
+    if (doneBtn) {
+      doneBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const final = transcriptTextEl ? transcriptTextEl.textContent.trim() : '';
+        goBackToChat(final);
+      });
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        goBackToChat('');
+      });
+    }
+
+    // Also handle close (×) button at top
+    const closeBtn = document.querySelector('.listen-top__back');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        goBackToChat('');
+      });
+    }
+
+    // ─── Web Speech API (opportunistic) ──────────────────────────────────────────
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      // Browser does not support — just show static transcript, let user hit Done
+      if (transcriptRuEl) {
+        transcriptRuEl.textContent = 'Голосовой ввод не поддерживается браузером — введите текст вручную.';
+      }
+    } else {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = getSpeechLang();
+      recognition.maxAlternatives = 1;
+
+      let finalTranscript = '';
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const t = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += t;
+          } else {
+            interim += t;
+          }
+        }
+        if (transcriptTextEl) {
+          transcriptTextEl.textContent = finalTranscript + interim;
+        }
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+          // Permission denied — close overlay, fallback to text input
+          goBackToChat('');
+        }
+        // other errors (network, no-speech, aborted) — silently ignore, keep UI
+      };
+
+      recognition.onend = () => {
+        // Recognition ended (e.g. timeout or silence) — update stage UI
+        if (stageListening) stageListening.classList.add('stage--off');
+        if (stageThinking) stageThinking.classList.remove('stage--off');
+        // Auto-submit if we captured something
+        if (finalTranscript.trim()) {
+          goBackToChat(finalTranscript.trim());
+        }
+      };
+
+      try {
+        recognition.start();
+      } catch (e) {
+        // Already started or not available — ignore
+      }
+
+      // Stop recognition when user taps Done
+      if (doneBtn) {
+        doneBtn.addEventListener('click', () => {
+          try { recognition.stop(); } catch (_) { /* ignore */ }
+        }, true); // capture before the other handler navigates
+      }
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+          try { recognition.abort(); } catch (_) { /* ignore */ }
+        }, true);
+      }
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          try { recognition.abort(); } catch (_) { /* ignore */ }
+        }, true);
+      }
+    }
+  </script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+</body>
+</html>

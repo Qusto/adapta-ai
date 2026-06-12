@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Срочная помощь</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { background: #eef2f3; }
+
+    /* Header */
+    .app-header { position: relative; }
+    .app-header__title {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .app-header__title .pulse-dot {
+      width: 8px; height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+      animation: dot-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes dot-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+      70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    /* Hero intro */
+    .help-intro {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) 0 var(--space-4);
+    }
+    .help-intro__icon {
+      width: 56px; height: 56px;
+      border-radius: var(--rounded-lg);
+      background: linear-gradient(135deg, #fee2e2 0%, #fef3c7 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+    .help-intro__title { font-size: 20px; font-weight: 600; line-height: 1.2; margin-bottom: 2px; }
+    .help-intro__sub { font-size: 13px; color: var(--ink-muted); }
+
+    /* Tiles grid */
+    .help-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+    }
+    .help-tile {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4) var(--space-3);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-2);
+      min-height: 132px;
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-out);
+      text-align: left;
+      position: relative;
+    }
+    .help-tile:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--hairline-strong);
+    }
+    .help-tile__icon {
+      font-size: 36px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px; height: 60px;
+      background: var(--canvas-soft);
+      border-radius: var(--rounded-md);
+    }
+    .help-tile__label {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.3;
+      color: var(--ink);
+    }
+    .help-tile__sub {
+      font-size: 12px;
+      color: var(--ink-subtle);
+      margin-top: -2px;
+    }
+    .help-tile__arrow {
+      position: absolute;
+      top: var(--space-3);
+      right: var(--space-3);
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink-muted);
+      opacity: 0;
+      transition: opacity var(--dur-fast) var(--ease-out);
+    }
+    .help-tile:hover .help-tile__arrow { opacity: 1; }
+
+    /* Variants */
+    .help-tile--critical {
+      background: linear-gradient(180deg, #fff5f5 0%, #ffffff 60%);
+      border-color: #fecaca;
+    }
+    .help-tile--critical .help-tile__icon {
+      background: #fee2e2;
+    }
+    .help-tile--warning {
+      background: linear-gradient(180deg, #fffbeb 0%, #ffffff 60%);
+      border-color: #fde68a;
+    }
+    .help-tile--warning .help-tile__icon { background: #fef3c7; }
+
+    .help-tile__chip {
+      position: absolute;
+      top: var(--space-3);
+      right: var(--space-3);
+    }
+
+    /* Info card */
+    .info-card {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      display: flex;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .info-card__icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--info-soft);
+      color: var(--info-dark);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+    .info-card__body { flex: 1; }
+    .info-card__title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .info-card__text { font-size: 13px; color: var(--ink-muted); line-height: 1.5; }
+    .info-card__row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px dashed var(--hairline); }
+    .info-card__row strong { color: var(--ink); font-weight: 600; }
+
+    /* Emergency 103 callout */
+    .emergency-callout {
+      background: linear-gradient(135deg, #fef3c7 0%, #fee2e2 100%);
+      border: 1px solid #fca5a5;
+      border-radius: var(--rounded-lg);
+      padding: var(--space-3) var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .emergency-callout__icon { font-size: 28px; flex-shrink: 0; }
+    .emergency-callout__body { font-size: 13px; line-height: 1.4; }
+    .emergency-callout__body strong {
+      font-size: 18px;
+      color: var(--danger-dark);
+      display: block;
+      letter-spacing: -0.3px;
+    }
+
+    /* HR contact block */
+    .hr-block {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-xl);
+      padding: var(--space-4);
+      margin-bottom: var(--space-3);
+    }
+    .hr-block__head {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+    .hr-block__avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c4b5fd, #f0abfc);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .hr-block__name { font-size: 15px; font-weight: 600; line-height: 1.2; }
+    .hr-block__role {
+      font-size: 12px; color: var(--ink-subtle);
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 2px;
+    }
+    .hr-block__role .online-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--success);
+    }
+    .hr-block__phone {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+    }
+
+    /* CTA call button */
+    .btn-call {
+      background: var(--danger);
+      color: #fff;
+      height: 56px;
+      font-size: 17px;
+      font-weight: 600;
+      border-radius: var(--rounded-lg);
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25);
+      text-decoration: none;
+    }
+    .btn-call:hover { filter: brightness(0.95); transform: translateY(-1px); text-decoration: none; }
+    .btn-call__icon {
+      animation: phone-ring 1.6s ease-in-out infinite;
+      transform-origin: center;
+    }
+    @keyframes phone-ring {
+      0%, 100% { transform: rotate(0deg); }
+      8% { transform: rotate(-15deg); }
+      16% { transform: rotate(15deg); }
+      24% { transform: rotate(-15deg); }
+      32% { transform: rotate(15deg); }
+      40% { transform: rotate(0deg); }
+    }
+    .btn-call__sub {
+      font-size: 11px;
+      font-weight: 500;
+      opacity: 0.85;
+      margin-left: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Whatsapp / Chat secondary */
+    .secondary-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
+    .secondary-actions .btn {
+      height: 44px;
+      font-size: 14px;
+    }
+
+    /* Section title */
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--ink-subtle);
+      margin-bottom: var(--space-2);
+      padding-left: 4px;
+    }
+
+    /* Compact lang switch */
+    .lang-switch--compact { padding: 3px; }
+    .lang-switch--compact .lang-switch__btn { height: 22px; padding: 0 7px; font-size: 10px; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <div class="device-frame">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="row row-3">
+        <a href="04-hub.html" class="app-header__back" aria-label="Назад">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/>
+          </svg>
+        </a>
+        <span class="app-header__title">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span data-i18n="help.title">Срочная помощь</span>
+        </span>
+      </div>
+      <div class="lang-switch lang-switch--compact">
+        <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+        <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+        <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+      </div>
+    </header>
+
+    <!-- Body -->
+    <main class="app-body">
+      <!-- Intro -->
+      <section class="help-intro">
+        <div class="help-intro__icon">🆘</div>
+        <div>
+          <div class="help-intro__title">
+            <span class="lang-only-ru">Что случилось?</span>
+            <span class="lang-only-hi">क्या हुआ?</span>
+            <span class="lang-only-en">What happened?</span>
+          </div>
+          <div class="help-intro__sub">
+            <span class="lang-only-ru">Выберите тему — HR ответит в течение 30 минут</span>
+            <span class="lang-only-hi">विषय चुनें — HR 30 मिनट में जवाब देगा</span>
+            <span class="lang-only-en">Pick a topic — HR replies within 30 min</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tiles -->
+      <div class="section-title">
+        <span class="lang-only-ru">Выберите тип проблемы</span>
+        <span class="lang-only-hi">समस्या का प्रकार चुनें</span>
+        <span class="lang-only-en">Choose problem type</span>
+      </div>
+      <div class="help-grid">
+        <button class="help-tile help-tile--critical" type="button" data-help-key="sick">
+          <span class="help-tile__icon">🤒</span>
+          <span class="help-tile__label" data-i18n="help.sick">Я заболел</span>
+          <span class="help-tile__sub">
+            <span class="lang-only-ru">Температура, травма</span>
+            <span class="lang-only-hi">बुखार, चोट</span>
+            <span class="lang-only-en">Fever, injury</span>
+          </span>
+          <span class="help-tile__chip pill pill-danger pill-flat">
+            <span class="lang-only-ru">срочно</span>
+            <span class="lang-only-hi">तत्काल</span>
+            <span class="lang-only-en">urgent</span>
+          </span>
+        </button>
+
+        <button class="help-tile help-tile--critical" type="button" data-help-key="accident">
+          <span class="help-tile__icon">🆘</span>
+          <span class="help-tile__label" data-i18n="help.accident">Авария на объекте</span>
+          <span class="help-tile__sub">
+            <span class="lang-only-ru">ЧП, травма коллеги</span>
+            <span class="lang-only-hi">हादसा, सहयोगी</span>
+            <span class="lang-only-en">Incident at site</span>
+          </span>
+          <span class="help-tile__chip pill pill-danger pill-flat">
+            <span class="lang-only-ru">срочно</span>
+            <span class="lang-only-hi">तत्काल</span>
+            <span class="lang-only-en">urgent</span>
+          </span>
+        </button>
+
+        <button class="help-tile help-tile--warning" type="button" data-help-key="docs">
+          <span class="help-tile__icon">📋</span>
+          <span class="help-tile__label" data-i18n="help.docs">Проблема с документами</span>
+          <span class="help-tile__sub">
+            <span class="lang-only-ru">Патент, СНИЛС, виза</span>
+            <span class="lang-only-hi">पेटेंट, SNILS, वीज़ा</span>
+            <span class="lang-only-en">Patent, SNILS, visa</span>
+          </span>
+          <span class="help-tile__arrow">→</span>
+        </button>
+
+        <button class="help-tile help-tile--warning" type="button" data-help-key="salary">
+          <span class="help-tile__icon">💸</span>
+          <span class="help-tile__label" data-i18n="help.salary">Не пришла зарплата</span>
+          <span class="help-tile__sub">
+            <span class="lang-only-ru">Сумма, дата выплаты</span>
+            <span class="lang-only-hi">राशि, भुगतान तिथि</span>
+            <span class="lang-only-en">Amount, payday</span>
+          </span>
+          <span class="help-tile__arrow">→</span>
+        </button>
+
+        <button class="help-tile" type="button" data-help-key="dorm">
+          <span class="help-tile__icon">🏠</span>
+          <span class="help-tile__label" data-i18n="help.dorm">Проблема в общежитии</span>
+          <span class="help-tile__sub">
+            <span class="lang-only-ru">Бытовое, ремонт</span>
+            <span class="lang-only-hi">घरेलू, मरम्मत</span>
+            <span class="lang-only-en">Household, repair</span>
+          </span>
+          <span class="help-tile__arrow">→</span>
+        </button>
+
+        <button class="help-tile" type="button" data-help-key="other">
+          <span class="help-tile__icon">💬</span>
+          <span class="help-tile__label" data-i18n="help.other">Другое</span>
+          <span class="help-tile__sub">
+            <span class="lang-only-ru">Свободная форма</span>
+            <span class="lang-only-hi">मुक्त संदेश</span>
+            <span class="lang-only-en">Free message</span>
+          </span>
+          <span class="help-tile__arrow">→</span>
+        </button>
+      </div>
+
+      <!-- Info card -->
+      <section class="info-card">
+        <div class="info-card__icon">⏱️</div>
+        <div class="info-card__body">
+          <div class="info-card__title">
+            <span class="lang-only-ru">Среднее время ответа HR — 30 минут</span>
+            <span class="lang-only-hi">HR का औसत उत्तर समय — 30 मिनट</span>
+            <span class="lang-only-en">Avg HR response time — 30 minutes</span>
+          </div>
+          <div class="info-card__text">
+            <span class="lang-only-ru">Дарья и команда работают пн–сб 9:00–19:00 МСК. В нерабочее время сообщение примет AI и эскалирует утром.</span>
+            <span class="lang-only-hi">दारिया और टीम सोम-शनि 9:00–19:00 MSK काम करते हैं। बाकी समय AI संदेश लेगा।</span>
+            <span class="lang-only-en">Daria and team work Mon-Sat 9:00–19:00 MSK. Outside hours AI accepts the message.</span>
+          </div>
+          <div class="info-card__row">
+            <span style="font-size:14px">🇮🇳</span>
+            <span style="font-size:12px; color: var(--ink-muted);">
+              <span class="lang-only-ru">Вы пишете на</span>
+              <span class="lang-only-hi">आप लिख रहे हैं</span>
+              <span class="lang-only-en">You write in</span>
+              <strong> हिन्दी</strong> ·
+              <span class="lang-only-ru">HR получит автоперевод на русский</span>
+              <span class="lang-only-hi">HR को रूसी अनुवाद मिलेगा</span>
+              <span class="lang-only-en">HR will get Russian translation</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Emergency 103 callout -->
+      <div class="emergency-callout" role="alert">
+        <div class="emergency-callout__icon">🚨</div>
+        <div class="emergency-callout__body">
+          <span class="lang-only-ru">Медицинская срочность? Звоните</span>
+          <span class="lang-only-hi">चिकित्सा आपात? कॉल करें</span>
+          <span class="lang-only-en">Medical emergency? Call</span>
+          <strong>103</strong>
+          <span class="lang-only-ru">— скорая, бесплатно с любого телефона</span>
+          <span class="lang-only-hi">— एम्बुलेंस, किसी भी फ़ोन से मुफ़्त</span>
+          <span class="lang-only-en">— ambulance, free from any phone</span>
+        </div>
+      </div>
+
+      <!-- HR block -->
+      <div class="section-title">
+        <span class="lang-only-ru">Прямой контакт</span>
+        <span class="lang-only-hi">सीधा संपर्क</span>
+        <span class="lang-only-en">Direct contact</span>
+      </div>
+      <section class="hr-block">
+        <header class="hr-block__head">
+          <div class="hr-block__avatar" aria-hidden="true">👩‍💼</div>
+          <div style="flex:1; min-width:0;">
+            <div class="hr-block__name">
+              <span class="lang-only-ru">Дарья Соколова</span>
+              <span class="lang-only-hi">दारिया क्लिमेंको</span>
+              <span class="lang-only-en">Daria Klimenko</span>
+            </div>
+            <div class="hr-block__role">
+              <span class="online-dot" aria-hidden="true"></span>
+              <span class="lang-only-ru">HR-менеджер · Застройщик№1</span>
+              <span class="lang-only-hi">HR मैनेजर · Застройщик№1</span>
+              <span class="lang-only-en">HR Manager · Застройщик№1</span>
+              <span>·</span>
+              <span class="lang-only-ru">ответит в рабочее время</span>
+              <span class="lang-only-hi">कार्य समय में उत्तर देगी</span>
+              <span class="lang-only-en">responds during working hours</span>
+            </div>
+            <div class="hr-block__phone">+7 495 987 65 43</div>
+          </div>
+        </header>
+
+        <a href="tel:+74959876543" class="btn-call">
+          <span class="btn-call__icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 4h4l2 5l-2.5 1.5a11 11 0 0 0 5 5l1.5 -2.5l5 2v4a2 2 0 0 1 -2 2a16 16 0 0 1 -15 -15a2 2 0 0 1 2 -2"/>
+            </svg>
+          </span>
+          <span>
+            <span class="lang-only-ru">Позвонить HR</span>
+            <span class="lang-only-hi">HR को कॉल करें</span>
+            <span class="lang-only-en">Call HR</span>
+          </span>
+          <span class="btn-call__sub">+7 495 987 65 43</span>
+        </a>
+
+        <div class="secondary-actions">
+          <button class="btn btn-secondary" type="button" onclick="window.location='05-ai-chat.html'">
+            <span aria-hidden="true">💬</span>
+            <span class="lang-only-ru">Написать</span>
+            <span class="lang-only-hi">लिखें</span>
+            <span class="lang-only-en">Message</span>
+          </button>
+          <button class="btn btn-secondary" type="button" style="display:none">
+            <span aria-hidden="true">📱</span>
+            <span>WhatsApp</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom nav -->
+    <nav class="app-bottom-nav">
+      <a href="04-hub.html" class="app-bottom-nav__item">
+        <span class="icon">🏠</span>
+        <span data-i18n="nav.home">Главная</span>
+      </a>
+      <a href="05-ai-chat.html" class="app-bottom-nav__item">
+        <span class="icon">💬</span>
+        <span data-i18n="nav.ai">AI</span>
+      </a>
+      <a href="09-documents.html" class="app-bottom-nav__item">
+        <span class="icon">📄</span>
+        <span data-i18n="nav.docs">Документы</span>
+      </a>
+      <a href="10-about-employer.html" class="app-bottom-nav__item is-active">
+        <span class="icon">🏢</span>
+        <span data-i18n="nav.employer">HR</span>
+      </a>
+      <a href="14-profile.html" class="app-bottom-nav__item">
+        <span class="icon">👤</span>
+        <span data-i18n="nav.profile">Профиль</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script defer>
+    // WS-9: preset messages for help tiles
+    var HELP_PREFILLS = {
+      sick:     'Я заболел: высокая температура. Что делать и куда обратиться?',
+      accident: 'На объекте произошла авария, есть пострадавший. Что срочно делать?',
+      docs:     'У меня проблема с документами (патент/СНИЛС/виза). Помогите разобраться.',
+      salary:   'Мне не пришла зарплата. Как проверить и к кому обратиться?',
+      dorm:     'В общежитии бытовая проблема, нужен ремонт. Куда сообщить?',
+      other:    ''
+    };
+
+    // Wire HR phone from mock data if available
+    window.addEventListener('load', function () {
+      try {
+        var phone = window.AdaptaMock && window.AdaptaMock.employer && window.AdaptaMock.employer.hr && window.AdaptaMock.employer.hr.phone;
+        if (phone) {
+          var callBtn = document.querySelector('.btn-call');
+          if (callBtn) callBtn.setAttribute('href', 'tel:' + phone.replace(/\s+/g, ''));
+          document.querySelectorAll('.hr-block__phone, .btn-call__sub').forEach(function (n) { n.textContent = phone; });
+        }
+      } catch (e) { /* noop */ }
+    });
+
+    // Tile click: set prefill in localStorage then navigate to AI chat
+    document.querySelectorAll('.help-tile[data-help-key]').forEach(function (tile) {
+      tile.addEventListener('click', function () {
+        // Visual feedback — outline selected tile
+        document.querySelectorAll('.help-tile').forEach(function (t) { t.style.outline = ''; });
+        tile.style.outline = '2px solid var(--brand-cyan)';
+        tile.style.outlineOffset = '2px';
+
+        var key = tile.getAttribute('data-help-key');
+        var msg = HELP_PREFILLS[key];
+        if (msg && msg.trim()) {
+          localStorage.setItem('adapta_chat_prefill', msg.trim());
+        } else {
+          localStorage.removeItem('adapta_chat_prefill');
+        }
+        window.location.href = '05-ai-chat.html';
+      });
+    });
+  </script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+</body>
+</html>

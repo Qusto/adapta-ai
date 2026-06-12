@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Главная</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    /* ----------- Top bar ----------- */
+    .hub__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-3) var(--space-5) var(--space-2);
+      background: var(--canvas);
+      flex-shrink: 0;
+    }
+
+    .hub__brand {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    /* ----------- Body ----------- */
+    .hub__body {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-3) var(--space-5) var(--space-6);
+      background: var(--canvas-soft);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+    .hub__body > * { flex-shrink: 0; }
+
+    /* Greeting + status capsule */
+    .hub__greet { display: flex; align-items: center; gap: var(--space-3); padding-top: var(--space-2); }
+    .hub__avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 18px;
+      flex-shrink: 0;
+      letter-spacing: 0;
+    }
+    .hub__greet-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+    .hub__greet-hi { font-size: 13px; color: var(--ink-subtle); }
+    .hub__greet-name { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; line-height: 1.15; }
+
+    .hub__notif {
+      width: 40px; height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: 50%;
+      color: var(--ink);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .hub__notif:hover { background: var(--surface-2); }
+    .hub__notif::after {
+      display: none;
+    }
+
+    /* Status row of pills */
+    .hub__status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    /* Hero AI card */
+    .hub__hero {
+      background: var(--surface-1);
+      border-radius: var(--rounded-xl);
+      padding: var(--space-5);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .hub__hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--rounded-xl);
+      padding: 1px;
+      background: var(--brand-gradient);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .hub__hero::after {
+      content: '';
+      position: absolute;
+      top: -40%; right: -20%;
+      width: 240px; height: 240px;
+      background: radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hub__hero-head {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      position: relative;
+      z-index: 1;
+    }
+    .hub__hero-text { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .hub__hero-title { font-size: 18px; font-weight: 600; }
+    .hub__hero-sub { font-size: 13px; color: var(--ink-muted); line-height: 1.4; }
+
+    .hub__chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hub__chip {
+      padding: 8px var(--space-3);
+      background: var(--surface-2);
+      border-radius: var(--rounded-pill);
+      font-size: 13px;
+      color: var(--ink);
+      border: 1px solid transparent;
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+    .hub__chip:hover {
+      background: var(--canvas);
+      border-color: var(--brand-cyan);
+      color: var(--brand-cyan-deep);
+    }
+
+    /* Section heading */
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 0 var(--space-1);
+    }
+    .section-head__title { font-size: 13px; font-weight: 600; color: var(--ink-subtle); text-transform: uppercase; letter-spacing: 0.6px; }
+    .section-head__action { font-size: 12px; color: var(--brand-cyan-deep); font-weight: 500; }
+
+    /* Tiles grid */
+    .hub__tiles {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-3);
+    }
+
+    .tile {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      min-height: 116px;
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      color: var(--ink);
+      text-align: left;
+      transition: all var(--dur-fast) var(--ease-out);
+      position: relative;
+    }
+    .tile:hover {
+      transform: translateY(-2px);
+      border-color: var(--hairline-strong);
+      box-shadow: var(--shadow-md);
+    }
+
+    .tile__icon {
+      width: 40px; height: 40px;
+      border-radius: var(--rounded-md);
+      background: var(--surface-2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .tile__title { font-size: 15px; font-weight: 600; line-height: 1.25; }
+    .tile__meta { font-size: 12px; color: var(--ink-subtle); margin-top: 2px; line-height: 1.3; }
+    .tile__badge {
+      position: absolute;
+      top: 12px; right: 12px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      border-radius: var(--rounded-pill);
+      background: var(--warning-soft);
+      color: var(--warning-dark);
+    }
+    .tile__badge.is-info { background: var(--info-soft); color: var(--info-dark); }
+    .tile__badge.is-success { background: var(--success-soft); color: var(--success-dark); }
+
+    /* Help-me tile — danger emphasis */
+    .tile--help {
+      background:
+        linear-gradient(135deg, var(--danger-soft) 0%, color-mix(in srgb, var(--danger-soft) 60%, #fff) 100%);
+      border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+      color: var(--danger-dark);
+    }
+    .tile--help .tile__icon {
+      background: var(--danger);
+      color: #fff;
+    }
+    .tile--help .tile__title { color: var(--danger-dark); }
+    .tile--help .tile__meta { color: color-mix(in srgb, var(--danger-dark) 80%, transparent); }
+    .tile--help:hover {
+      border-color: var(--danger);
+      box-shadow: 0 8px 20px rgba(239,68,68,0.18);
+    }
+    .tile--help::after {
+      content: '';
+      position: absolute;
+      top: 14px; right: 14px;
+      width: 8px; height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      animation: pulse-soft 1.6s ease-in-out infinite;
+    }
+
+    /* tnum for dates */
+    .tnum-inline { font-variant-numeric: tabular-nums; }
+
+    /* Compact tiles */
+    .tile { min-height: 78px; padding: var(--space-3); gap: var(--space-2); }
+    .tile__icon { width: 32px; height: 32px; font-size: 18px; }
+    .tile__meta { line-height: 1.2; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <div class="device-frame">
+    <header class="hub__top">
+      <div class="hub__brand"><span class="brand-wordmark">AdaptaAI</span></div>
+      <div class="lang-switch">
+        <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+        <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+        <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+      </div>
+    </header>
+
+    <main class="hub__body">
+      <section class="hub__greet">
+        <span class="hub__avatar" aria-hidden="true">РШ</span>
+        <div class="hub__greet-text">
+          <span class="hub__greet-hi">
+            <span data-i18n="hub.greeting">Здравствуйте</span>,
+          </span>
+          <span class="hub__greet-name" data-user-name>Раджу!</span>
+        </div>
+        <button class="hub__notif" aria-label="Notifications">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+          </svg>
+        </button>
+      </section>
+
+      <div class="hub__status-row">
+        <span class="pill pill-pending">
+          <span class="lang-only-ru">0/12 шагов · Начнём</span>
+          <span class="lang-only-hi" lang="hi">0/12 चरण · चलिए शुरू करें</span>
+          <span class="lang-only-en">0/12 steps · Let's start</span>
+        </span>
+      </div>
+
+      <section class="card card-flat" style="display: flex; gap: var(--space-3); align-items: center;">
+        <span style="font-size: 24px;" aria-hidden="true">🏢</span>
+        <div style="flex:1;">
+          <div style="font-size: 14px; font-weight: 600; margin-bottom: 2px;">
+            <span class="lang-only-ru">Застройщик№1 пригласил вас</span>
+            <span class="lang-only-hi" lang="hi">Застройщик№1 ने आपको आमंत्रित किया</span>
+            <span class="lang-only-en">Застройщик№1 invited you</span>
+          </div>
+          <div class="caption">
+            <span class="lang-only-ru">Загрузите документы для верификации</span>
+            <span class="lang-only-hi" lang="hi">सत्यापन के लिए दस्तावेज़ अपलोड करें</span>
+            <span class="lang-only-en">Upload documents for verification</span>
+          </div>
+        </div>
+        <a href="09-documents.html" class="btn btn-sm btn-secondary">
+          <span class="lang-only-ru">Загрузить</span>
+          <span class="lang-only-hi" lang="hi">अपलोड</span>
+          <span class="lang-only-en">Upload</span>
+        </a>
+      </section>
+
+      <section class="hub__hero">
+        <div class="hub__hero-head">
+          <div class="hub__hero-text">
+            <span class="hub__hero-title" data-i18n="hub.askAI">Спросите на любом языке</span>
+            <span class="hub__hero-sub">
+              <span class="lang-only-ru">Голос или текст · хинди, узбекский, русский, английский</span>
+              <span class="lang-only-hi" lang="hi">आवाज़ या टेक्स्ट · हिंदी, उज़्बेक, रूसी, अंग्रेज़ी</span>
+              <span class="lang-only-en">Voice or text · Hindi, Uzbek, Russian, English</span>
+            </span>
+          </div>
+          <button class="voice-mic voice-mic--lg" aria-label="Start voice input" onclick="window.location='06-ai-listening.html'">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="3" width="6" height="12" rx="3"/>
+              <path d="M5 11a7 7 0 0 0 14 0"/>
+              <path d="M12 18v3"/>
+              <path d="M8 21h8"/>
+            </svg>
+          </button>
+        </div>
+        <div class="hub__chips">
+          <button class="hub__chip"
+            data-question-ru="Во сколько начинается смена?"
+            data-question-hi="मेरी पाली कब शुरू होती है?">
+            <span class="lang-only-ru">Смена?</span>
+            <span class="lang-only-hi" lang="hi">पाली?</span>
+            <span class="lang-only-en">Shift?</span>
+          </button>
+          <button class="hub__chip"
+            data-question-ru="Где получить ДМС?"
+            data-question-hi="मुझे डीएमएस कहाँ मिलेगा?">
+            <span class="lang-only-ru">ДМС?</span>
+            <span class="lang-only-hi" lang="hi">डीएमएस?</span>
+            <span class="lang-only-en">DMS?</span>
+          </button>
+          <button class="hub__chip"
+            data-question-ru="Какие документы нужны?"
+            data-question-hi="कौन से दस्तावेज़ चाहिए?">
+            <span class="lang-only-ru">Документы?</span>
+            <span class="lang-only-hi" lang="hi">दस्तावेज़?</span>
+            <span class="lang-only-en">Documents?</span>
+          </button>
+          <button class="hub__chip"
+            data-question-ru="Где общежитие?"
+            data-question-hi="मेरा छात्रावास कहाँ है?">
+            <span class="lang-only-ru">Общежитие?</span>
+            <span class="lang-only-hi" lang="hi">छात्रावास?</span>
+            <span class="lang-only-en">Dorm?</span>
+          </button>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head mb-3">
+          <span class="section-head__title">
+            <span class="lang-only-ru">Разделы</span>
+            <span class="lang-only-hi" lang="hi">सेक्शन</span>
+            <span class="lang-only-en">Sections</span>
+          </span>
+          <span class="section-head__action">
+            <span class="lang-only-ru">Все 8</span>
+            <span class="lang-only-hi" lang="hi">सभी 8</span>
+            <span class="lang-only-en">All 8</span>
+          </span>
+        </div>
+
+        <div class="hub__tiles">
+          <a href="08-status.html" class="tile">
+            <span class="tile__icon" aria-hidden="true">📊</span>
+            <span>
+              <span class="tile__title" data-i18n="hub.section.status">Статус</span>
+              <span class="tile__meta">
+                <span class="lang-only-ru">0 из 12 шагов</span>
+                <span class="lang-only-hi" lang="hi">0 / 12 चरण</span>
+                <span class="lang-only-en">0 of 12 steps</span>
+              </span>
+            </span>
+            <span class="tile__badge is-info">
+              <span class="lang-only-ru">Старт</span>
+              <span class="lang-only-hi" lang="hi">शुरू</span>
+              <span class="lang-only-en">Start</span>
+            </span>
+          </a>
+
+          <a href="09-documents.html" class="tile">
+            <span class="tile__icon" aria-hidden="true">📄</span>
+            <span>
+              <span class="tile__title" data-i18n="hub.section.docs">Документы</span>
+              <span class="tile__meta">
+                <span class="lang-only-ru">Загрузите паспорт и патент</span>
+                <span class="lang-only-hi" lang="hi">पासपोर्ट और पेटेंट अपलोड करें</span>
+                <span class="lang-only-en">Upload passport and patent</span>
+              </span>
+            </span>
+            <span class="tile__badge">!</span>
+          </a>
+
+          <a href="10-about-employer.html" class="tile">
+            <span class="tile__icon" aria-hidden="true">🏢</span>
+            <span>
+              <span class="tile__title" data-i18n="hub.section.employer">О работодателе</span>
+              <span class="tile__meta">Застройщик№1 · Метрополия-14</span>
+            </span>
+          </a>
+
+          <a href="11-life-in-russia.html" class="tile">
+            <span class="tile__icon" aria-hidden="true">🇷🇺</span>
+            <span>
+              <span class="tile__title">
+                <span class="lang-only-ru">Жизнь и финансы в России</span>
+                <span class="lang-only-hi" lang="hi">रूस में जीवन और वित्त</span>
+                <span class="lang-only-en">Life &amp; finance in Russia</span>
+              </span>
+              <span class="tile__meta">
+                <span class="lang-only-ru">Статьи · карта · промо</span>
+                <span class="lang-only-hi" lang="hi">लेख · कार्ड · प्रोमो</span>
+                <span class="lang-only-en">Articles · card · promos</span>
+              </span>
+            </span>
+          </a>
+
+          <a href="13-lifestyle.html" class="tile">
+            <span class="tile__icon" aria-hidden="true">🛒</span>
+            <span>
+              <span class="tile__title" data-i18n="hub.section.lifestyle">Lifestyle</span>
+              <span class="tile__meta">
+                <span class="lang-only-ru">3 промо для иностранных сотрудников</span>
+                <span class="lang-only-hi" lang="hi">3 प्रोमो विदेशी कर्मचारियों के लिए</span>
+                <span class="lang-only-en">3 promos for foreign workers</span>
+              </span>
+            </span>
+          </a>
+
+          <a href="07-help-me.html" class="tile tile--help">
+            <span class="tile__icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 12l2 2 4-4"/>
+                <path d="M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0z"/>
+              </svg>
+            </span>
+            <span>
+              <span class="tile__title" data-i18n="hub.section.help">Help Me</span>
+              <span class="tile__meta">
+                <span class="lang-only-ru">HR ответит за 30 минут</span>
+                <span class="lang-only-hi" lang="hi">HR 30 मिनट में जवाब देगा</span>
+                <span class="lang-only-en">HR replies in 30 min</span>
+              </span>
+            </span>
+          </a>
+
+          <a href="14-profile.html" class="tile">
+            <span class="tile__icon" aria-hidden="true">⚙️</span>
+            <span>
+              <span class="tile__title" data-i18n="nav.profile">Профиль</span>
+              <span class="tile__meta" data-profile-meta>
+                <span class="lang-only-ru">Настройки</span>
+                <span class="lang-only-hi" lang="hi">सेटिंग्स</span>
+                <span class="lang-only-en">Settings</span>
+              </span>
+            </span>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <nav class="app-bottom-nav">
+      <a href="04-hub.html" class="app-bottom-nav__item is-active">
+        <span class="icon" aria-hidden="true">🏠</span>
+        <span data-i18n="nav.home">Главная</span>
+      </a>
+      <a href="05-ai-chat.html" class="app-bottom-nav__item">
+        <span class="icon" aria-hidden="true">💬</span>
+        <span data-i18n="nav.ai">AI</span>
+      </a>
+      <a href="09-documents.html" class="app-bottom-nav__item">
+        <span class="icon" aria-hidden="true">📄</span>
+        <span data-i18n="nav.docs">Документы</span>
+      </a>
+      <a href="10-about-employer.html" class="app-bottom-nav__item">
+        <span class="icon" aria-hidden="true">🏢</span>
+        <span data-i18n="nav.employer">HR</span>
+      </a>
+      <a href="14-profile.html" class="app-bottom-nav__item">
+        <span class="icon" aria-hidden="true">👤</span>
+        <span data-i18n="nav.profile">Профиль</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script defer>
+    // ── Toast helper ─────────────────────────────────────────────────────────
+    function showToast(msg, type) {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText =
+          'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;' +
+          'display:flex;flex-direction:column;gap:8px;max-width:360px;width:90%;pointer-events:none;';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.style.cssText =
+        'padding:12px 16px;border-radius:10px;font-size:14px;line-height:1.4;pointer-events:auto;' +
+        'box-shadow:0 4px 16px rgba(0,0,0,0.14);color:#fff;' +
+        (type === 'error'
+          ? 'background:var(--danger,#ef4444);'
+          : 'background:var(--success,#10b981);');
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => { toast.remove(); }, 4000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const nameEl = document.querySelector('[data-user-name]');
+      const avatarEl = document.querySelector('.hub__avatar');
+
+      // ── Load user from localStorage (set during invite accept) ───────────
+      let apiUser = null;
+      try {
+        const raw = localStorage.getItem('adapta_user');
+        if (raw) apiUser = JSON.parse(raw);
+      } catch (e) { /* malformed JSON — fall back to mock */ }
+
+      // ── Resolve display name and initials ─────────────────────────────────
+      function getDisplayData() {
+        const lang = (window.AdaptaI18n && window.AdaptaI18n.lang) || 'ru';
+        if (apiUser) {
+          const firstName = apiUser.first_name || '';
+          const lastName  = apiUser.last_name  || '';
+          const initials  = (firstName[0] || '') + (lastName[0] || '');
+          return { firstName, initials };
+        }
+        // Fallback: mock persona
+        const me = window.AdaptaMock && window.AdaptaMock.me;
+        if (!me) return { firstName: '', initials: '' };
+        const full = me.fullName[lang] || me.fullName.ru;
+        const parts = full.split(' ');
+        const firstName = parts[0] || '';
+        const initials  = parts.map((p) => p[0]).join('').slice(0, 2);
+        return { firstName, initials };
+      }
+
+      function renderUserGreeting() {
+        const { firstName, initials } = getDisplayData();
+        if (nameEl) nameEl.textContent = (firstName || 'Друг') + '!';
+        if (avatarEl) avatarEl.textContent = initials || 'РШ';
+      }
+
+      function renderProfileMeta() {
+        const metaEl = document.querySelector('[data-profile-meta]');
+        if (!metaEl || !apiUser) return;
+        const lang = (apiUser.preferred_language || 'ru').toUpperCase();
+        metaEl.textContent = lang;
+      }
+
+      renderUserGreeting();
+      renderProfileMeta();
+
+      // Apply saved language from user profile or localStorage
+      if (apiUser && apiUser.preferred_language) {
+        const lang = apiUser.preferred_language;
+        if (['ru', 'hi', 'en'].includes(lang) && window.AdaptaI18n) {
+          window.AdaptaI18n.set(lang);
+        }
+      }
+
+      // Re-render name when language changes (observe lang attr on <html>)
+      const obs = new MutationObserver(renderUserGreeting);
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
+      // ── Quick-chip → navigate to chat with pre-filled question ──────────
+      document.querySelectorAll('.hub__chip').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+          const lang = localStorage.getItem('adapta_lang') ||
+                       document.documentElement.getAttribute('data-lang') || 'ru';
+          let question = '';
+          if (lang === 'hi') {
+            question = chip.getAttribute('data-question-hi') || chip.getAttribute('data-question-ru') || '';
+          } else {
+            question = chip.getAttribute('data-question-ru') || '';
+          }
+          if (!question) {
+            // fallback: use visible text of first lang span
+            const span = chip.querySelector('.lang-only-ru') ||
+                         chip.querySelector('.lang-only-hi') ||
+                         chip.querySelector('.lang-only-en');
+            question = span ? span.textContent.trim() : '';
+          }
+          window.location.href = '05-ai-chat.html?q=' + encodeURIComponent(question);
+        });
+      });
+
+      // ── Hero AI card → navigate to chat ───────────────────────────────────
+      const heroCard = document.querySelector('.hub__hero');
+      if (heroCard) {
+        heroCard.style.cursor = 'pointer';
+        heroCard.addEventListener('click', (e) => {
+          // Only navigate if the click didn't hit an interactive child (chip or mic)
+          const target = e.target;
+          const isChip = target.closest('.hub__chip');
+          const isMic  = target.closest('.voice-mic');
+          if (!isChip && !isMic) {
+            window.location.href = '05-ai-chat.html';
+          }
+        });
+      }
+    });
+  </script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+  <!-- Onboarding progress (8 steps) from the single-source-of-truth API -->
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function () {
+      var jwt = null;
+      try { jwt = localStorage.getItem('adapta_jwt'); } catch (e) { return; }
+      if (!jwt) return;
+      var base = window.ADAPTA_API_BASE_URL || '';
+      fetch(base + '/api/v1/me/onboarding', { headers: { 'Authorization': 'Bearer ' + jwt } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || typeof d.done !== 'number') return;
+          var done = d.done, total = d.total || 8;
+          var startRu = done >= total ? 'Готово' : 'Начнём';
+          var startHi = done >= total ? 'पूर्ण' : 'चलिए शुरू करें';
+          var startEn = done >= total ? 'Done' : "Let's start";
+          var pill = document.querySelector('.hub__status-row .pill');
+          if (pill) {
+            var pr = pill.querySelector('.lang-only-ru');
+            var ph = pill.querySelector('.lang-only-hi');
+            var pe = pill.querySelector('.lang-only-en');
+            if (pr) pr.textContent = done + '/' + total + ' шагов · ' + startRu;
+            if (ph) ph.textContent = done + '/' + total + ' चरण · ' + startHi;
+            if (pe) pe.textContent = done + '/' + total + ' steps · ' + startEn;
+          }
+          var tile = document.querySelector('a[href="08-status.html"] .tile__meta');
+          if (tile) {
+            var tr = tile.querySelector('.lang-only-ru');
+            var th = tile.querySelector('.lang-only-hi');
+            var te = tile.querySelector('.lang-only-en');
+            if (tr) tr.textContent = done + ' из ' + total + ' шагов';
+            if (th) th.textContent = done + ' / ' + total + ' चरण';
+            if (te) te.textContent = done + ' of ' + total + ' steps';
+          }
+        })
+        .catch(function () { /* keep static fallback */ });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Сканирование паспорта</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    .passport__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-3) var(--space-5);
+      border-bottom: 1px solid var(--hairline);
+      background: var(--canvas);
+      flex-shrink: 0;
+    }
+
+    .passport__header-left { display: flex; align-items: center; gap: var(--space-3); }
+
+    .passport__back {
+      width: 36px; height: 36px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: var(--rounded-md);
+      color: var(--ink);
+    }
+    .passport__back:hover { background: var(--surface-2); }
+
+    .passport__step-meta { display: flex; flex-direction: column; line-height: 1.2; }
+    .passport__step-meta-label { font-size: 11px; font-weight: 600; letter-spacing: 0.6px; color: var(--ink-subtle); text-transform: uppercase; }
+    .passport__step-meta-title { font-size: 15px; font-weight: 600; }
+
+    .passport__steps {
+      display: flex; gap: 4px;
+      padding: 0 var(--space-5) var(--space-3);
+      background: var(--canvas);
+      border-bottom: 1px solid var(--hairline);
+    }
+    .passport__step-dot {
+      flex: 1;
+      height: 4px;
+      background: var(--surface-2);
+      border-radius: var(--rounded-pill);
+    }
+    .passport__step-dot.is-done { background: var(--success); }
+    .passport__step-dot.is-current { background: var(--brand-gradient); }
+
+    .passport__body {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-5);
+      background: var(--canvas-soft);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+    }
+
+    /* ------- Scan view (initial) ------- */
+    .scan-stage { display: flex; flex-direction: column; gap: var(--space-5); }
+    .scan-stage.is-hidden { display: none; }
+
+    .scan-title {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      text-align: left;
+    }
+
+    .scan-viewfinder {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 5 / 3.5;
+      border-radius: var(--rounded-xl);
+      overflow: hidden;
+      background:
+        radial-gradient(120% 70% at 50% 30%, #1a2530 0%, #0b1a1e 100%);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .scan-viewfinder__noise {
+      position: absolute; inset: 0;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 4px);
+      mix-blend-mode: overlay;
+      pointer-events: none;
+    }
+
+    .scan-viewfinder__mask {
+      position: absolute;
+      inset: 12% 7% 12% 7%;
+      border: 2px dashed rgba(255,255,255,0.85);
+      border-radius: var(--rounded-md);
+      box-shadow: 0 0 0 9999px rgba(11,26,30,0.55);
+      background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.0));
+    }
+
+    .scan-viewfinder__mask::before {
+      content: 'PASSPORT';
+      position: absolute;
+      top: 12px; right: 14px;
+      color: rgba(255,255,255,0.55);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    /* corners */
+    .scan-viewfinder__corner {
+      position: absolute;
+      width: 22px; height: 22px;
+      border: 3px solid var(--brand-cyan-soft);
+    }
+    .scan-viewfinder__corner.tl { top: 11%; left: 6%; border-right: 0; border-bottom: 0; border-top-left-radius: var(--rounded-md); }
+    .scan-viewfinder__corner.tr { top: 11%; right: 6%; border-left: 0; border-bottom: 0; border-top-right-radius: var(--rounded-md); }
+    .scan-viewfinder__corner.bl { bottom: 11%; left: 6%; border-right: 0; border-top: 0; border-bottom-left-radius: var(--rounded-md); }
+    .scan-viewfinder__corner.br { bottom: 11%; right: 6%; border-left: 0; border-top: 0; border-bottom-right-radius: var(--rounded-md); }
+
+    .scan-viewfinder__scanline {
+      position: absolute;
+      inset: 12% 7% auto 7%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--brand-cyan-soft) 50%, transparent);
+      box-shadow: 0 0 8px var(--brand-cyan-soft);
+      animation: scanline-y 2.4s ease-in-out infinite;
+    }
+
+    @keyframes scanline-y {
+      0%, 100% { top: 14%; }
+      50% { top: 80%; }
+    }
+
+    .scan-viewfinder__hint {
+      position: absolute;
+      bottom: 14px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(11,26,30,0.65);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: var(--rounded-pill);
+      font-size: 12px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      white-space: nowrap;
+    }
+
+    .scan-tips {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-2);
+    }
+
+    .scan-tip {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      padding: var(--space-3);
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-muted);
+      line-height: 1.3;
+    }
+    .scan-tip__icon { font-size: 22px; display: block; margin-bottom: 4px; }
+
+    .scan-actions { display: flex; flex-direction: column; gap: var(--space-3); }
+
+    .scan-actions__processing { display: none; }
+    .scan-actions.is-processing .scan-actions__primary { display: none; }
+    .scan-actions.is-processing .scan-actions__processing {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      height: 52px;
+      border-radius: var(--rounded-md);
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+      font-weight: 600;
+    }
+
+    .scan-privacy {
+      display: flex;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      background: var(--success-soft);
+      color: var(--success-dark);
+      border-radius: var(--rounded-md);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .scan-privacy__icon { font-size: 18px; line-height: 1.2; flex-shrink: 0; }
+
+    /* ------- Preview view (after scan) ------- */
+    .preview-stage { display: none; flex-direction: column; gap: var(--space-5); }
+    .preview-stage.is-active { display: flex; }
+
+    .preview-success {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      background: var(--success-soft);
+      color: var(--success-dark);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--rounded-md);
+    }
+
+    .preview-success__check {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--success);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .preview-card {
+      background: var(--surface-1);
+      border-radius: var(--rounded-lg);
+      border: 1px solid var(--hairline);
+      padding: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .preview-thumb {
+      width: 100%;
+      aspect-ratio: 5 / 3.5;
+      border-radius: var(--rounded-md);
+      background:
+        linear-gradient(135deg, #f4e9d3 0%, #e6d5b8 100%);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--hairline-strong);
+    }
+
+    .preview-thumb__title {
+      position: absolute;
+      top: 10px; left: 12px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2.4px;
+      color: #6b4f24;
+      text-transform: uppercase;
+    }
+
+    .preview-thumb__face {
+      position: absolute;
+      bottom: 14px; left: 14px;
+      width: 54px; height: 70px;
+      background: linear-gradient(160deg, #c2a778, #8d7042);
+      border: 2px solid #fff;
+      border-radius: var(--rounded-xs);
+      display: flex; align-items: flex-end; justify-content: center;
+      font-size: 24px;
+    }
+
+    .preview-thumb__mrz {
+      position: absolute;
+      bottom: 8px; right: 12px;
+      left: 78px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: #5b4220;
+      line-height: 1.3;
+      text-align: right;
+    }
+
+    .preview-thumb__field {
+      position: absolute;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      color: #5b4220;
+    }
+    .preview-thumb__field.name { top: 38px; right: 14px; font-size: 11px; font-weight: 600; }
+    .preview-thumb__field.num  { top: 56px; right: 14px; }
+
+    .preview-form { display: flex; flex-direction: column; gap: var(--space-3); }
+
+    .preview-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .preview-field__label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.6px;
+      color: var(--ink-subtle);
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .preview-field__confidence {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: var(--success-soft);
+      color: var(--success-dark);
+      border-radius: var(--rounded-pill);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .preview-field__confidence.is-low {
+      background: var(--warning-soft);
+      color: var(--warning-dark);
+    }
+
+    .preview-field__input {
+      padding: 10px var(--space-3);
+      background: var(--surface-2);
+      border: 1px solid transparent;
+      border-radius: var(--rounded-md);
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--ink);
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+    .preview-field__input:focus {
+      outline: none;
+      border-color: var(--brand-cyan);
+      background: var(--surface-1);
+      box-shadow: var(--focus-brand);
+    }
+    .preview-field__input.tnum { font-family: var(--font-mono); letter-spacing: 0.5px; }
+
+    .preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+
+    .preview-actions { display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-2); }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <div class="device-frame">
+    <header class="passport__header">
+      <div class="passport__header-left">
+        <button class="passport__back" aria-label="Back" onclick="window.location='01-welcome.html'">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12l14 0"/>
+            <path d="M5 12l6 6"/>
+            <path d="M5 12l6 -6"/>
+          </svg>
+        </button>
+        <div class="passport__step-meta">
+          <span class="passport__step-meta-label">
+            <span class="lang-only-ru">Шаг 2 из 4</span>
+            <span class="lang-only-hi" lang="hi">चरण 2 / 4</span>
+            <span class="lang-only-en">Step 2 of 4</span>
+          </span>
+          <span class="passport__step-meta-title">
+            <span class="lang-only-ru">Паспорт</span>
+            <span class="lang-only-hi" lang="hi">पासपोर्ट</span>
+            <span class="lang-only-en">Passport</span>
+          </span>
+        </div>
+      </div>
+      <div class="lang-switch">
+        <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+        <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+        <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+      </div>
+    </header>
+
+    <div class="passport__steps" aria-label="Progress">
+      <span class="passport__step-dot is-done"></span>
+      <span class="passport__step-dot is-current"></span>
+      <span class="passport__step-dot"></span>
+      <span class="passport__step-dot"></span>
+    </div>
+
+    <main class="passport__body">
+      <!-- SCAN STAGE -->
+      <section class="scan-stage" data-stage="scan">
+        <header class="scan-title">
+          <h1 class="headline" data-i18n="onboard.passport">Сфотографируйте паспорт</h1>
+          <p class="body-md text-muted">
+            <span class="lang-only-ru">Главная страница с фото. Положите паспорт на ровную поверхность.</span>
+            <span class="lang-only-hi" lang="hi">मुख्य पृष्ठ फ़ोटो के साथ। पासपोर्ट को समतल सतह पर रखें।</span>
+            <span class="lang-only-en">Main page with photo. Place passport on a flat surface.</span>
+          </p>
+        </header>
+
+        <div class="scan-viewfinder" aria-label="Camera viewport">
+          <div class="scan-viewfinder__noise"></div>
+          <div class="scan-viewfinder__mask"></div>
+          <span class="scan-viewfinder__corner tl"></span>
+          <span class="scan-viewfinder__corner tr"></span>
+          <span class="scan-viewfinder__corner bl"></span>
+          <span class="scan-viewfinder__corner br"></span>
+          <div class="scan-viewfinder__scanline"></div>
+          <div class="scan-viewfinder__hint">
+            <span class="lang-only-ru">Совместите паспорт с рамкой</span>
+            <span class="lang-only-hi" lang="hi">पासपोर्ट को फ़्रेम से मिलाएँ</span>
+            <span class="lang-only-en">Align passport with frame</span>
+          </div>
+        </div>
+
+        <div class="scan-tips">
+          <div class="scan-tip">
+            <span class="scan-tip__icon" aria-hidden="true">💡</span>
+            <span class="lang-only-ru">Хорошее освещение</span>
+            <span class="lang-only-hi" lang="hi">अच्छी रोशनी</span>
+            <span class="lang-only-en">Good light</span>
+          </div>
+          <div class="scan-tip">
+            <span class="scan-tip__icon" aria-hidden="true">✋</span>
+            <span class="lang-only-ru">Не дрожать</span>
+            <span class="lang-only-hi" lang="hi">हाथ स्थिर रखें</span>
+            <span class="lang-only-en">Hold steady</span>
+          </div>
+          <div class="scan-tip">
+            <span class="scan-tip__icon" aria-hidden="true">🔆</span>
+            <span class="lang-only-ru">Без бликов</span>
+            <span class="lang-only-hi" lang="hi">चमक नहीं</span>
+            <span class="lang-only-en">No glare</span>
+          </div>
+        </div>
+
+        <div class="scan-actions">
+          <button class="btn btn-primary btn-lg btn-block scan-actions__primary" data-action="scan">
+            <span aria-hidden="true">📷</span>
+            <span data-i18n="onboard.takePhoto">Сфотографировать</span>
+          </button>
+          <div class="scan-actions__processing">
+            <span class="waveform" style="height:18px;">
+              <span class="waveform__bar"></span><span class="waveform__bar"></span><span class="waveform__bar"></span>
+              <span class="waveform__bar"></span><span class="waveform__bar"></span><span class="waveform__bar"></span>
+              <span class="waveform__bar"></span><span class="waveform__bar"></span><span class="waveform__bar"></span>
+            </span>
+            <span>
+              <span class="lang-only-ru">Распознаём данные…</span>
+              <span class="lang-only-hi" lang="hi">डेटा पहचान रहे हैं…</span>
+              <span class="lang-only-en">Recognising data…</span>
+            </span>
+          </div>
+          <button class="btn btn-secondary btn-block" data-action="manual" data-i18n="onboard.enterManual">Ввести вручную</button>
+        </div>
+
+        <div class="scan-privacy">
+          <span class="scan-privacy__icon" aria-hidden="true">🔒</span>
+          <span data-i18n="onboard.passportNote">Данные шифруются, передаются только вашему работодателю</span>
+        </div>
+      </section>
+
+      <!-- PREVIEW STAGE -->
+      <section class="preview-stage" data-stage="preview">
+        <div class="preview-success">
+          <span class="preview-success__check" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12l5 5L20 7"/>
+            </svg>
+          </span>
+          <span>
+            <strong>
+              <span class="lang-only-ru">Паспорт распознан</span>
+              <span class="lang-only-hi" lang="hi">पासपोर्ट पहचाना गया</span>
+              <span class="lang-only-en">Passport recognised</span>
+            </strong>
+            <br>
+            <small style="opacity:0.75;">
+              <span class="lang-only-ru">Проверьте поля и при необходимости исправьте</span>
+              <span class="lang-only-hi" lang="hi">फ़ील्ड जाँचें और ज़रूरत हो तो ठीक करें</span>
+              <span class="lang-only-en">Verify and edit fields if needed</span>
+            </small>
+          </span>
+        </div>
+
+        <div class="preview-card">
+          <div class="preview-thumb" aria-label="Passport scan preview">
+            <span class="preview-thumb__title">Republic of India · Passport</span>
+            <span class="preview-thumb__face" aria-hidden="true">👤</span>
+            <span class="preview-thumb__field name">SHARMA RAJU</span>
+            <span class="preview-thumb__field num">P1234567</span>
+            <span class="preview-thumb__mrz">
+              P&lt;INDSHARMA&lt;&lt;RAJU&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<br>
+              P1234567&lt;1IND9108144M3012313&lt;&lt;&lt;&lt;&lt;&lt;&lt;06
+            </span>
+          </div>
+
+          <form class="preview-form" onsubmit="event.preventDefault();">
+            <div class="preview-grid">
+              <div class="preview-field">
+                <span class="preview-field__label">
+                  <span>
+                    <span class="lang-only-ru">Имя (латиница)</span>
+                    <span class="lang-only-hi" lang="hi">नाम (अंग्रेज़ी)</span>
+                    <span class="lang-only-en">First name</span>
+                  </span>
+                  <span class="preview-field__confidence">98%</span>
+                </span>
+                <input class="preview-field__input" value="RAJU">
+              </div>
+              <div class="preview-field">
+                <span class="preview-field__label">
+                  <span>
+                    <span class="lang-only-ru">Фамилия</span>
+                    <span class="lang-only-hi" lang="hi">उपनाम</span>
+                    <span class="lang-only-en">Surname</span>
+                  </span>
+                  <span class="preview-field__confidence">99%</span>
+                </span>
+                <input class="preview-field__input" value="SHARMA">
+              </div>
+            </div>
+
+            <div class="preview-field">
+              <span class="preview-field__label">
+                <span>
+                  <span class="lang-only-ru">Номер паспорта</span>
+                  <span class="lang-only-hi" lang="hi">पासपोर्ट संख्या</span>
+                  <span class="lang-only-en">Passport number</span>
+                </span>
+                <span class="preview-field__confidence">96%</span>
+              </span>
+              <input class="preview-field__input tnum" value="P1234567">
+            </div>
+
+            <div class="preview-grid">
+              <div class="preview-field">
+                <span class="preview-field__label">
+                  <span>
+                    <span class="lang-only-ru">Дата рождения</span>
+                    <span class="lang-only-hi" lang="hi">जन्म तिथि</span>
+                    <span class="lang-only-en">Date of birth</span>
+                  </span>
+                  <span class="preview-field__confidence">94%</span>
+                </span>
+                <input class="preview-field__input tnum" value="14.08.1991">
+              </div>
+              <div class="preview-field">
+                <span class="preview-field__label">
+                  <span>
+                    <span class="lang-only-ru">Действителен до</span>
+                    <span class="lang-only-hi" lang="hi">मान्य तक</span>
+                    <span class="lang-only-en">Valid until</span>
+                  </span>
+                  <span class="preview-field__confidence is-low">82%</span>
+                </span>
+                <input class="preview-field__input tnum" value="31.12.2030">
+              </div>
+            </div>
+
+            <div class="preview-field">
+              <span class="preview-field__label">
+                <span>
+                  <span class="lang-only-ru">Кем выдан</span>
+                  <span class="lang-only-hi" lang="hi">जारीकर्ता</span>
+                  <span class="lang-only-en">Issued by</span>
+                </span>
+                <span class="preview-field__confidence is-low">76%</span>
+              </span>
+              <input class="preview-field__input" value="Ministry of External Affairs, New Delhi">
+            </div>
+
+            <div class="preview-grid">
+              <div class="preview-field">
+                <span class="preview-field__label">
+                  <span>
+                    <span class="lang-only-ru">Пол</span>
+                    <span class="lang-only-hi" lang="hi">लिंग</span>
+                    <span class="lang-only-en">Sex</span>
+                  </span>
+                  <span class="preview-field__confidence">99%</span>
+                </span>
+                <input class="preview-field__input" value="M">
+              </div>
+              <div class="preview-field">
+                <span class="preview-field__label">
+                  <span>
+                    <span class="lang-only-ru">Гражданство</span>
+                    <span class="lang-only-hi" lang="hi">नागरिकता</span>
+                    <span class="lang-only-en">Nationality</span>
+                  </span>
+                  <span class="preview-field__confidence">99%</span>
+                </span>
+                <input class="preview-field__input" value="IND · India 🇮🇳">
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="preview-actions">
+          <button class="btn btn-primary btn-lg btn-block" onclick="window.location='03-onboarding-ready.html'">
+            <span data-i18n="common.continue">Продолжить</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/>
+              <path d="M13 6l6 6-6 6"/>
+            </svg>
+          </button>
+          <button class="btn btn-ghost btn-block" data-action="rescan">
+            <span aria-hidden="true">↺</span>
+            <span class="lang-only-ru">Сфотографировать заново</span>
+            <span class="lang-only-hi" lang="hi">फिर से फ़ोटो लें</span>
+            <span class="lang-only-en">Retake photo</span>
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      const scan = document.querySelector('[data-stage="scan"]');
+      const preview = document.querySelector('[data-stage="preview"]');
+      const actions = document.querySelector('.scan-actions');
+
+      function showStage(name) {
+        if (name === 'preview') {
+          scan.classList.add('is-hidden');
+          preview.classList.add('is-active');
+        } else {
+          scan.classList.remove('is-hidden');
+          preview.classList.remove('is-active');
+          actions.classList.remove('is-processing');
+        }
+      }
+
+      document.querySelector('[data-action="scan"]').addEventListener('click', () => {
+        actions.classList.add('is-processing');
+        setTimeout(() => showStage('preview'), 1400);
+      });
+
+      document.querySelector('[data-action="manual"]').addEventListener('click', () => showStage('preview'));
+      document.querySelector('[data-action="rescan"]').addEventListener('click', () => showStage('scan'));
+    });
+  </script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+</body>
+</html>

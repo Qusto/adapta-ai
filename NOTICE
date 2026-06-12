@@ -1,0 +1,15 @@
+AdaptaAI
+========
+
+AdaptaAI — open-source AI platform for migrant onboarding.
+
+Copyright 2026 AdaptaAI Contributors
+
+This product is licensed under the Apache License, Version 2.0.
+See the LICENSE file for the full license text.
+
+Third-party components used by this project:
+  - GigaChat (Sber) — AI language model for Russian-language inference
+  - Qwen via OpenRouter — multilingual AI language model
+  - ChromaDB — open-source vector database for RAG retrieval
+  - FastAPI — modern, high-performance Python web framework

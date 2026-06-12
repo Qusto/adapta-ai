@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Сервисы партнёров</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { background: var(--surface-2); }
+
+    /* === Hero promo banner === */
+    .promo-hero {
+      position: relative;
+      border-radius: var(--rounded-xl);
+      padding: var(--space-5);
+      color: #fff;
+      background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      min-height: 148px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .promo-hero::after {
+      content: '🛍️';
+      position: absolute;
+      right: -8px; bottom: -10px;
+      font-size: 110px;
+      opacity: 0.16;
+      pointer-events: none;
+      transform: rotate(-12deg);
+    }
+    .promo-hero__label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      opacity: 0.92;
+    }
+    .promo-hero__title {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.18;
+      letter-spacing: -0.3px;
+      margin-top: 4px;
+    }
+    .promo-hero__sub {
+      font-size: 13px;
+      opacity: 0.92;
+      margin-top: var(--space-1);
+    }
+    .promo-hero__row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-3);
+      position: relative;
+      z-index: 1;
+    }
+    .promo-hero__code {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(4px);
+      border-radius: var(--rounded-md);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    .promo-hero__btn {
+      background: #fff;
+      color: #c2410c;
+      height: 36px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: var(--rounded-md);
+    }
+    .promo-hero__btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.18); }
+
+    /* === Section === */
+    .ls-section { margin-top: var(--space-6); }
+    .ls-section__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: var(--space-3);
+    }
+    .ls-section__title { font-size: 17px; font-weight: 600; }
+    .ls-section__action { font-size: 13px; color: var(--brand-cyan-deep); font-weight: 500; }
+
+    /* === Services grid 3x3 === */
+    .svc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-3);
+    }
+    .svc-tile {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-3);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      transition: all var(--dur-fast) var(--ease-out);
+      text-align: left;
+      min-height: 96px;
+    }
+    .svc-tile:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); border-color: var(--hairline-strong); }
+    .svc-tile__icon { font-size: 26px; line-height: 1; }
+    .svc-tile__title { font-size: 12px; font-weight: 600; line-height: 1.25; }
+    .svc-tile__sub { font-size: 10.5px; color: var(--ink-subtle); line-height: 1.3; }
+
+    /* === Promo cards (horizontal scroll) === */
+    .promo-scroll {
+      display: flex;
+      gap: var(--space-3);
+      overflow-x: auto;
+      padding-bottom: var(--space-2);
+      scroll-snap-type: x mandatory;
+      margin: 0 calc(-1 * var(--space-5));
+      padding-left: var(--space-5);
+      padding-right: var(--space-5);
+    }
+    .promo-scroll::-webkit-scrollbar { display: none; }
+    .promo-scroll { scrollbar-width: none; }
+
+    .promo-card {
+      flex: 0 0 230px;
+      position: relative;
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+      color: #fff;
+      min-height: 132px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      scroll-snap-align: start;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .promo-card__badge {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: rgba(255, 255, 255, 0.24);
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: var(--rounded-pill);
+    }
+    .promo-card__title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.25;
+      max-width: 75%;
+    }
+    .promo-card__sub {
+      font-size: 12px;
+      opacity: 0.94;
+      margin-top: 4px;
+    }
+    .promo-card__cta {
+      align-self: flex-start;
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.95);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--rounded-md);
+    }
+
+    /* === News feed === */
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+    .news-card {
+      display: flex;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+    .news-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    .news-card__icon {
+      width: 56px; height: 56px;
+      border-radius: var(--rounded-md);
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+    .news-card__body { flex: 1; min-width: 0; }
+    .news-card__meta {
+      display: flex;
+      gap: var(--space-2);
+      align-items: center;
+      font-size: 11px;
+      color: var(--ink-subtle);
+      letter-spacing: 0.3px;
+    }
+    .news-card__dot { width: 3px; height: 3px; background: var(--ink-tertiary); border-radius: 50%; }
+    .news-card__title {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-top: 2px;
+    }
+    .news-card__sub {
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+      line-height: 1.35;
+    }
+
+    .news-card__tag {
+      display: inline-block;
+      padding: 1px 7px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      border-radius: var(--rounded-pill);
+      background: var(--info-soft);
+      color: var(--info-dark);
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <div class="device-frame">
+    <header class="app-header">
+      <button class="app-header__back" aria-label="Назад" onclick="if (history.length > 1) history.back(); else window.location='04-hub.html';">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12l14 0"/><path d="M5 12l6 6"/><path d="M5 12l6 -6"/>
+        </svg>
+      </button>
+      <h1 class="app-header__title" data-i18n="lifestyle.title">Сервисы партнёров</h1>
+      <div class="lang-switch">
+        <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+        <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+        <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+      </div>
+    </header>
+
+    <main class="app-body">
+      <!-- Hero promo banner -->
+      <section class="promo-hero">
+        <div>
+          <div class="promo-hero__label">
+            <span class="lang-only-ru">Промокод дня</span>
+            <span class="lang-only-hi">आज का प्रोमो कोड</span>
+            <span class="lang-only-en">Promo of the day</span>
+          </div>
+          <div class="promo-hero__title">
+            <span class="lang-only-ru">Купер · скидка 300 ₽</span>
+            <span class="lang-only-hi">Kuper · ₹300 छूट</span>
+            <span class="lang-only-en">Kuper · 300 ₽ off</span>
+          </div>
+          <div class="promo-hero__sub">
+            <span class="lang-only-ru">Первая доставка продуктов бесплатно</span>
+            <span class="lang-only-hi">पहली ग्रॉसरी डिलीवरी मुफ्त</span>
+            <span class="lang-only-en">First grocery delivery free</span>
+          </div>
+        </div>
+        <div class="promo-hero__row">
+          <span class="promo-hero__code">📋 KUPER300</span>
+          <button class="promo-hero__btn" onclick="(function(btn){navigator.clipboard&&navigator.clipboard.writeText('KUPER300').then(function(){window._lsShowToast&&window._lsShowToast('Промокод скопирован')}).catch(function(){window._lsShowToast&&window._lsShowToast('Промокод скопирован')})})(this)">
+            <span class="lang-only-ru">Использовать</span>
+            <span class="lang-only-hi">उपयोग करें</span>
+            <span class="lang-only-en">Apply</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Services grid 3×3 -->
+      <section class="ls-section">
+        <div class="ls-section__header">
+          <h2 class="ls-section__title">
+            <span class="lang-only-ru">Все сервисы</span>
+            <span class="lang-only-hi">सभी सेवाएँ</span>
+            <span class="lang-only-en">All services</span>
+          </h2>
+        </div>
+        <div class="svc-grid">
+          <button class="svc-tile" onclick="window._lsShowToast&&window._lsShowToast('Скоро')">
+            <span class="svc-tile__icon">📱</span>
+            <span class="svc-tile__title" data-i18n="lifestyle.sberMobile">Связь от партнёра</span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">Мигрант 500₽</span>
+              <span class="lang-only-hi">मिग्रांत 500₽</span>
+              <span class="lang-only-en">Migrant 500₽</span>
+            </span>
+          </button>
+          <button class="svc-tile" onclick="window._lsShowToast&&window._lsShowToast('Скоро')">
+            <span class="svc-tile__icon">🏥</span>
+            <span class="svc-tile__title" data-i18n="lifestyle.health">Телемедицина партнёра</span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">Врач онлайн</span>
+              <span class="lang-only-hi">ऑनलाइन डॉक्टर</span>
+              <span class="lang-only-en">Online doctor</span>
+            </span>
+          </button>
+          <button class="svc-tile" onclick="window._lsShowToast&&window._lsShowToast('Скоро')">
+            <span class="svc-tile__icon">🛡️</span>
+            <span class="svc-tile__title">
+              <span class="lang-only-ru">ДМС</span>
+              <span class="lang-only-hi">DMS बीमा</span>
+              <span class="lang-only-en">Insurance</span>
+            </span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">До 02.2027</span>
+              <span class="lang-only-hi">02.2027 तक</span>
+              <span class="lang-only-en">Until 02.2027</span>
+            </span>
+          </button>
+          <button class="svc-tile" onclick="window._lsShowToast&&window._lsShowToast('Скоро')">
+            <span class="svc-tile__icon">🛍️</span>
+            <span class="svc-tile__title">
+              <span class="lang-only-ru">Купер</span>
+              <span class="lang-only-hi">Kuper</span>
+              <span class="lang-only-en">Kuper</span>
+            </span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">Доставка продуктов</span>
+              <span class="lang-only-hi">ग्रॉसरी डिलीवरी</span>
+              <span class="lang-only-en">Groceries</span>
+            </span>
+          </button>
+          <button class="svc-tile" onclick="window._lsShowToast&&window._lsShowToast('Скоро')">
+            <span class="svc-tile__icon">🛴</span>
+            <span class="svc-tile__title" data-i18n="lifestyle.samokat">Самокат</span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">15 мин — до двери</span>
+              <span class="lang-only-hi">15 मिनट डिलीवरी</span>
+              <span class="lang-only-en">15-min delivery</span>
+            </span>
+          </button>
+          <button class="svc-tile" onclick="window._lsShowToast&&window._lsShowToast('Скоро')">
+            <span class="svc-tile__icon">🎬</span>
+            <span class="svc-tile__title" data-i18n="lifestyle.okko">ОККО</span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">Фильмы и сериалы</span>
+              <span class="lang-only-hi">फिल्में और सीरीज़</span>
+              <span class="lang-only-en">Movies & shows</span>
+            </span>
+          </button>
+          <button class="svc-tile" onclick="window._lsShowToast&&window._lsShowToast('Скоро')">
+            <span class="svc-tile__icon">🎵</span>
+            <span class="svc-tile__title" data-i18n="lifestyle.zvuk">Звук</span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">Музыка и подкасты</span>
+              <span class="lang-only-hi">संगीत और पॉडकास्ट</span>
+              <span class="lang-only-en">Music & podcasts</span>
+            </span>
+          </button>
+          <button class="svc-tile" onclick="window._lsShowToast&&window._lsShowToast('Скоро')">
+            <span class="svc-tile__icon">🗺️</span>
+            <span class="svc-tile__title" data-i18n="lifestyle.maps">2ГИС</span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">Карты Москвы</span>
+              <span class="lang-only-hi">मॉस्को नक्शे</span>
+              <span class="lang-only-en">Moscow maps</span>
+            </span>
+          </button>
+          <button class="svc-tile" onclick="window._lsShowToast&&window._lsShowToast('Скоро')">
+            <span class="svc-tile__icon">📞</span>
+            <span class="svc-tile__title" data-i18n="lifestyle.sbol">СБОЛ</span>
+            <span class="svc-tile__sub">
+              <span class="lang-only-ru">Полный банкинг</span>
+              <span class="lang-only-hi">पूर्ण बैंकिंग</span>
+              <span class="lang-only-en">Full banking</span>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Промо для иностранных сотрудников -->
+      <section class="ls-section">
+        <div class="ls-section__header">
+          <h2 class="ls-section__title">
+            <span class="lang-only-ru">Промо для иностранных сотрудников</span>
+            <span class="lang-only-hi">विदेशी कर्मचारियों के लिए ऑफर</span>
+            <span class="lang-only-en">Promos for foreign workers</span>
+          </h2>
+          <a class="ls-section__action" data-i18n="common.viewAll" style="display:none">Все</a>
+        </div>
+        <div class="promo-scroll" data-promo-scroll></div>
+      </section>
+
+      <!-- Новое от партнёров -->
+      <section class="ls-section">
+        <div class="ls-section__header">
+          <h2 class="ls-section__title">
+            <span class="lang-only-ru">Новое от партнёров</span>
+            <span class="lang-only-hi">Sber में नया</span>
+            <span class="lang-only-en">What's new at Sber</span>
+          </h2>
+        </div>
+        <div class="news-list">
+          <article class="news-card">
+            <div class="news-card__icon">📱</div>
+            <div class="news-card__body">
+              <div class="news-card__meta">
+                <span class="news-card__tag">
+                  <span class="lang-only-ru">Связь</span>
+                  <span class="lang-only-hi">कनेक्शन</span>
+                  <span class="lang-only-en">Telecom</span>
+                </span>
+                <span class="news-card__dot"></span>
+                <span>
+                  <span class="lang-only-ru">2 дня назад</span>
+                  <span class="lang-only-hi">2 दिन पहले</span>
+                  <span class="lang-only-en">2 days ago</span>
+                </span>
+              </div>
+              <div class="news-card__title">
+                <span class="lang-only-ru">Связь — звонки в Индию по 4 ₽/мин</span>
+                <span class="lang-only-hi">SberMobile — भारत कॉल ₹4/मिनट</span>
+                <span class="lang-only-en">SberMobile — calls to India at 4 ₽/min</span>
+              </div>
+              <div class="news-card__sub">
+                <span class="lang-only-ru">Бесплатные минуты внутри РФ на тарифе «Мигрант»</span>
+                <span class="lang-only-hi">"मिग्रांत" टैरिफ पर रूस के अंदर मुफ्त मिनट</span>
+                <span class="lang-only-en">Free minutes inside Russia on "Migrant" plan</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="news-card">
+            <div class="news-card__icon">🏥</div>
+            <div class="news-card__body">
+              <div class="news-card__meta">
+                <span class="news-card__tag">
+                  <span class="lang-only-ru">Здоровье</span>
+                  <span class="lang-only-hi">स्वास्थ्य</span>
+                  <span class="lang-only-en">Health</span>
+                </span>
+                <span class="news-card__dot"></span>
+                <span>
+                  <span class="lang-only-ru">5 дней назад</span>
+                  <span class="lang-only-hi">5 दिन पहले</span>
+                  <span class="lang-only-en">5 days ago</span>
+                </span>
+              </div>
+              <div class="news-card__title">
+                <span class="lang-only-ru">Врач на хинди и узбекском — Телемедицина партнёра</span>
+                <span class="lang-only-hi">SberHealth में हिंदी, उज़्बेक डॉक्टर</span>
+                <span class="lang-only-en">Doctors in Hindi and Uzbek in SberHealth</span>
+              </div>
+              <div class="news-card__sub">
+                <span class="lang-only-ru">Запись онлайн с переводом — 24/7</span>
+                <span class="lang-only-hi">अनुवाद के साथ ऑनलाइन अपॉइंटमेंट — 24/7</span>
+                <span class="lang-only-en">Online booking with translation — 24/7</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="news-card">
+            <div class="news-card__icon">🛍️</div>
+            <div class="news-card__body">
+              <div class="news-card__meta">
+                <span class="news-card__tag">
+                  <span class="lang-only-ru">Доставка</span>
+                  <span class="lang-only-hi">डिलीवरी</span>
+                  <span class="lang-only-en">Delivery</span>
+                </span>
+                <span class="news-card__dot"></span>
+                <span>
+                  <span class="lang-only-ru">1 неделю назад</span>
+                  <span class="lang-only-hi">1 सप्ताह पहले</span>
+                  <span class="lang-only-en">1 week ago</span>
+                </span>
+              </div>
+              <div class="news-card__title">
+                <span class="lang-only-ru">Купер · индийские продукты теперь в каталоге</span>
+                <span class="lang-only-hi">Kuper · अब कैटलॉग में भारतीय उत्पाद</span>
+                <span class="lang-only-en">Kuper · Indian groceries now in catalog</span>
+              </div>
+              <div class="news-card__sub">
+                <span class="lang-only-ru">Бирьяни-микс, дал, гарам масала — 220+ позиций</span>
+                <span class="lang-only-hi">बिरयानी मिक्स, दाल, गरम मसाला — 220+ आइटम</span>
+                <span class="lang-only-en">Biryani mix, dal, garam masala — 220+ items</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <div style="height: var(--space-6);"></div>
+    </main>
+
+    <nav class="app-bottom-nav">
+      <a href="04-hub.html" class="app-bottom-nav__item">
+        <span class="icon">🏠</span>
+        <span data-i18n="nav.home">Главная</span>
+      </a>
+      <a href="05-ai-chat.html" class="app-bottom-nav__item">
+        <span class="icon">💬</span>
+        <span data-i18n="nav.ai">AI</span>
+      </a>
+      <a href="09-documents.html" class="app-bottom-nav__item">
+        <span class="icon">📄</span>
+        <span data-i18n="nav.docs">Документы</span>
+      </a>
+      <a href="10-about-employer.html" class="app-bottom-nav__item">
+        <span class="icon">🏢</span>
+        <span data-i18n="nav.employer">HR</span>
+      </a>
+      <a href="14-profile.html" class="app-bottom-nav__item">
+        <span class="icon">👤</span>
+        <span data-i18n="nav.profile">Профиль</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+  <script defer>
+    // ─── Minimal toast helper ─────────────────────────────────────────────────────
+    window._lsShowToast = function(msg) {
+      var t = document.createElement('div');
+      t.textContent = msg;
+      t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
+        'background:#1e293b;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;' +
+        'z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.2s;white-space:nowrap';
+      document.body.appendChild(t);
+      requestAnimationFrame(function() { t.style.opacity = '1'; });
+      setTimeout(function() {
+        t.style.opacity = '0';
+        setTimeout(function() { t.remove(); }, 200);
+      }, 2000);
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const M = window.AdaptaMock;
+      if (!M || !M.promos) return;
+
+      const scroll = document.querySelector('[data-promo-scroll]');
+      const ctaLabels = {
+        ru: 'Подробнее',
+        hi: 'विवरण',
+        en: 'Details',
+      };
+
+      M.promos.forEach((p) => {
+        const card = document.createElement('article');
+        card.className = 'promo-card';
+        card.style.background = 'linear-gradient(135deg, ' + p.accent + ' 0%, ' + shade(p.accent, -18) + ' 100%)';
+
+        const badge = document.createElement('span');
+        badge.className = 'promo-card__badge';
+        badge.textContent = p.badge;
+
+        const title = document.createElement('div');
+        title.className = 'promo-card__title';
+        title.setAttribute('data-promo-title', '');
+        title.setAttribute('data-ru', p.title.ru);
+        title.setAttribute('data-hi', p.title.hi);
+        title.setAttribute('data-en', p.title.en);
+        title.textContent = p.title.ru;
+
+        const sub = document.createElement('div');
+        sub.className = 'promo-card__sub';
+        sub.setAttribute('data-promo-sub', '');
+        sub.setAttribute('data-ru', p.subtitle.ru);
+        sub.setAttribute('data-hi', p.subtitle.hi);
+        sub.setAttribute('data-en', p.subtitle.en);
+        sub.textContent = p.subtitle.ru;
+
+        const head = document.createElement('div');
+        head.appendChild(title);
+        head.appendChild(sub);
+
+        const cta = document.createElement('button');
+        cta.className = 'promo-card__cta';
+        cta.setAttribute('data-promo-cta', '');
+        cta.textContent = ctaLabels.ru;
+
+        card.appendChild(badge);
+        card.appendChild(head);
+        card.appendChild(cta);
+        scroll.appendChild(card);
+      });
+
+      function shade(hex, percent) {
+        const num = parseInt(hex.replace('#',''), 16);
+        const r = Math.max(0, Math.min(255, (num >> 16) + Math.round(2.55 * percent)));
+        const g = Math.max(0, Math.min(255, ((num >> 8) & 0xff) + Math.round(2.55 * percent)));
+        const b = Math.max(0, Math.min(255, (num & 0xff) + Math.round(2.55 * percent)));
+        return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+      }
+
+      const applyLang = () => {
+        const l = (window.AdaptaI18n && window.AdaptaI18n.lang) || 'ru';
+        document.querySelectorAll('[data-promo-title], [data-promo-sub]').forEach((el) => {
+          el.textContent = el.getAttribute('data-' + l) || el.getAttribute('data-ru');
+        });
+        document.querySelectorAll('[data-promo-cta]').forEach((el) => {
+          el.textContent = ctaLabels[l] || ctaLabels.ru;
+        });
+      };
+      applyLang();
+      document.querySelectorAll('[data-lang-switch]').forEach((btn) => {
+        btn.addEventListener('click', () => setTimeout(applyLang, 0));
+      });
+    });
+  </script>
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+</body>
+</html>

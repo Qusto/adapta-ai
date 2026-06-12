@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdaptaAI — База знаний (RAG)</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { font-size: 14px; background: var(--canvas); }
+
+    /* ===== Sidebar (shared) ===== */
+    .console-sidebar { grid-row: 1 / span 2; background: var(--canvas-soft); border-right: 1px solid var(--hairline); display: flex; flex-direction: column; padding: var(--space-5); }
+    .sidebar__logo { display:flex; align-items:center; gap:10px; font-size:17px; font-weight:700; margin-bottom: var(--space-6); }
+    .sidebar__logo .mark { width:32px; height:32px; border-radius:8px; background: var(--brand-gradient); display:inline-flex; align-items:center; justify-content:center; color: var(--on-brand); font-size:16px; }
+    .sidebar__logo .name { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .sidebar__logo .sub { font-size:11px; color: var(--ink-subtle); letter-spacing:0.6px; text-transform:uppercase; margin-left:4px; }
+    .sidebar__nav { display:flex; flex-direction:column; gap:2px; }
+    .nav-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius: var(--rounded-md); color: var(--ink-muted); font-size:14px; font-weight:500; cursor:pointer; transition: all var(--dur-fast); text-decoration:none; }
+    .nav-item:hover { background: var(--surface-2); color: var(--ink); text-decoration:none; }
+    .nav-item.is-active { background: var(--surface-2); color: var(--ink); }
+    .nav-item.is-active::before { content:''; width:3px; height:18px; background: var(--brand-gradient); border-radius:2px; margin-left:-6px; margin-right:4px; }
+    .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+    .nav-item .badge { margin-left:auto; background: var(--danger); color:#fff; font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; }
+    .nav-item .badge-soft { margin-left:auto; background: var(--surface-3); color: var(--ink-muted); font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; }
+    .sidebar__section { font-size:10px; letter-spacing:1px; text-transform:uppercase; color: var(--ink-tertiary); padding:0 12px; margin: var(--space-5) 0 var(--space-2); }
+    .sidebar__employer { margin-top:auto; padding:14px; border:1px solid var(--hairline); border-radius: var(--rounded-lg); background: var(--surface-1); }
+    .sidebar__employer-header { display:flex; align-items:center; gap:10px; }
+    .sidebar__employer-logo { width:36px; height:36px; border-radius:8px; background: var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:18px; }
+    .sidebar__employer-name { font-weight:600; font-size:13px; }
+    .sidebar__employer-meta { font-size:11px; color: var(--ink-subtle); }
+    .sidebar__quota-bar { margin-top:10px; height:4px; background: var(--surface-3); border-radius:4px; overflow:hidden; }
+    .sidebar__quota-fill { height:100%; background: var(--brand-gradient); width:21%; }
+    .sidebar__quota-text { display:flex; justify-content:space-between; font-size:11px; color: var(--ink-subtle); margin-top:6px; }
+
+    /* ===== Topbar ===== */
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:0 var(--space-6); border-bottom:1px solid var(--hairline); background: var(--canvas); }
+    .breadcrumb { display:flex; align-items:center; gap:10px; font-size:13px; color: var(--ink-muted); }
+    .breadcrumb .current { color: var(--ink); font-weight:600; }
+    .breadcrumb .collection-chip { background: var(--surface-2); padding: 4px 10px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--brand-cyan-soft); border: 1px solid var(--hairline); }
+
+    .topbar__right { display:flex; align-items:center; gap: var(--space-3); }
+    .avatar { width:28px; height:28px; border-radius:50%; background: var(--brand-gradient); color: var(--on-brand); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:11px; }
+    .avatar-row { display:flex; align-items:center; gap:8px; padding:0 12px 0 4px; border-radius:18px; border:1px solid var(--hairline); background: var(--surface-1); height:36px; }
+    .avatar-row .name { font-size:13px; font-weight:600; line-height:1.1; }
+    .avatar-row .role { font-size:10px; color: var(--ink-subtle); line-height:1.1; }
+
+    /* ===== Main ===== */
+    .main {
+      padding: var(--space-6);
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: var(--space-5);
+      overflow-y: auto;
+    }
+    .main__col { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+    .page-title h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .page-title .sub { font-size: 13px; color: var(--ink-subtle); margin-top: 4px; }
+
+    /* Dropzone */
+    .dropzone {
+      background: var(--surface-1);
+      border: 2px dashed var(--hairline-strong);
+      border-radius: var(--rounded-xl);
+      padding: 48px 24px;
+      text-align: center;
+      transition: all var(--dur-base) var(--ease-out);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .dropzone:hover, .dropzone.is-drag {
+      border-color: var(--brand-cyan);
+      background: color-mix(in srgb, var(--brand-cyan) 6%, var(--surface-1));
+    }
+    .dropzone::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 30%, rgba(6,182,212,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .dropzone__icon { font-size: 48px; margin-bottom: var(--space-3); }
+    .dropzone__title { font-size: 18px; font-weight: 600; color: var(--ink); }
+    .dropzone__sub { font-size: 13px; color: var(--ink-subtle); margin-top: 6px; }
+    .dropzone__types { display: flex; gap: 6px; justify-content: center; margin-top: var(--space-4); }
+    .dropzone__types span { font-size: 11px; padding: 3px 10px; border-radius: var(--rounded-pill); background: var(--surface-2); color: var(--ink-muted); }
+    .dropzone__cta { margin-top: var(--space-4); display: inline-flex; align-items: center; gap: 6px; }
+
+    /* Docs table card */
+    .docs-card { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: var(--rounded-lg); overflow: hidden; }
+    .docs-card__head {
+      padding: var(--space-4) var(--space-5);
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .docs-card__title { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .docs-card__title .count { color: var(--ink-subtle); font-weight: 500; }
+
+    .table { font-size: 13px; }
+    .table th { background: var(--canvas-soft); padding: 12px var(--space-5); color: var(--ink-subtle); font-weight: 600; font-size: 10px; letter-spacing: 0.8px; }
+    .table td { padding: 12px var(--space-5); border-bottom: 1px solid var(--hairline); color: var(--ink-muted); vertical-align: top; }
+    .table tr.is-active { background: var(--surface-2); }
+    .table tbody tr { cursor: pointer; }
+    .table tbody tr:hover { background: var(--surface-2); }
+    .table tbody tr:last-child td { border-bottom: 0; }
+    .file-cell { display: flex; align-items: center; gap: 10px; color: var(--ink); }
+    .file-cell .ico { width: 32px; height: 32px; border-radius: 6px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .file-cell .name { font-weight: 500; }
+    .file-cell .ext { font-family: var(--font-mono); font-size: 10px; color: var(--ink-tertiary); }
+
+    .chunks-bar { display: flex; align-items: center; gap: 8px; }
+    .chunks-bar .num { font-family: var(--font-mono); font-size: 12px; color: var(--ink); }
+    .chunks-bar .bar { width: 50px; height: 4px; background: var(--surface-3); border-radius: 2px; overflow: hidden; }
+    .chunks-bar .fill { height: 100%; background: var(--brand-gradient); }
+
+    .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+    .row-actions button { width: 28px; height: 28px; border-radius: 6px; background: var(--surface-2); color: var(--ink-muted); font-size: 12px; display: flex; align-items: center; justify-content: center; }
+    .row-actions button:hover { background: var(--surface-3); color: var(--ink); }
+    .row-actions button.danger { color: var(--danger); }
+
+    /* RAG quality panel */
+    .metric-label {
+      position: relative;
+      cursor: help;
+      border-bottom: 1px dotted var(--ink-tertiary);
+    }
+    .metric-label .metric-tooltip {
+      position: absolute;
+      left: 0;
+      top: calc(100% + 6px);
+      z-index: 50;
+      width: 260px;
+      padding: 10px 12px;
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-md);
+      box-shadow: var(--shadow-lg);
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.45;
+      color: var(--ink-muted);
+      letter-spacing: 0;
+      text-transform: none;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--dur-fast) var(--ease-out);
+      white-space: normal;
+    }
+    .metric-label:hover .metric-tooltip { opacity: 1; }
+
+    .settings-panel { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: var(--rounded-lg); overflow: hidden; align-self: flex-start; position: sticky; top: var(--space-6); }
+    .settings-panel__head { padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--hairline); }
+    .settings-panel__title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .settings-panel__sub { font-size: 11px; color: var(--ink-subtle); margin-top: 4px; font-family: var(--font-mono); }
+
+    .settings-section { padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--hairline); }
+    .settings-section:last-child { border-bottom: 0; }
+    .settings-section__label { font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-tertiary); font-weight: 600; margin-bottom: 8px; }
+
+    .form-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 13px; }
+    .form-row label { color: var(--ink-muted); }
+    .form-row .control { color: var(--ink); font-family: var(--font-mono); font-size: 12px; }
+
+    .select-fake {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--hairline);
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--ink);
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 4px;
+    }
+    .select-fake::after { content: '▾'; color: var(--ink-tertiary); }
+
+    .stat-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .stat-tile { padding: 10px 12px; background: var(--canvas-soft); border-radius: 6px; border: 1px solid var(--hairline); }
+    .stat-tile .lbl { font-size: 10px; letter-spacing: 0.6px; text-transform: uppercase; color: var(--ink-tertiary); }
+    .stat-tile .val { font-size: 18px; font-weight: 700; color: var(--ink); margin-top: 2px; font-family: var(--font-mono); }
+
+    .slider-row { padding: 6px 0; }
+    .slider-row .head { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+    .slider-row .track { height: 4px; background: var(--surface-2); border-radius: 2px; position: relative; }
+    .slider-row .track .fill { position: absolute; top: 0; left: 0; bottom: 0; background: var(--brand-gradient); border-radius: 2px; }
+    .slider-row .track .thumb { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; background: var(--brand-cyan-soft); transform: translate(-50%, -50%); box-shadow: 0 0 0 3px rgba(6,182,212,0.2); }
+
+    /* ===== Upload progress stepper ===== */
+    .upload-stepper { display: flex; align-items: center; gap: 4px; white-space: nowrap; font-size: 11px; flex-wrap: nowrap; }
+    .upload-stepper .step { display: flex; align-items: center; gap: 3px; color: var(--ink-tertiary); }
+    .upload-stepper .step.is-active { color: var(--brand-cyan-soft); font-weight: 600; }
+    .upload-stepper .step.is-done { color: var(--brand-emerald, #10b981); }
+    .upload-stepper .step.is-error { color: var(--danger); font-weight: 600; }
+    .upload-stepper .sep { color: var(--ink-tertiary); font-size: 9px; margin: 0 1px; }
+    .upload-progress-bar { margin-top: 6px; height: 3px; background: var(--surface-3); border-radius: 2px; overflow: hidden; }
+    .upload-progress-bar .fill { height: 100%; background: var(--brand-gradient); border-radius: 2px; transition: width 0.15s ease; }
+  </style>
+</head>
+<body>
+  <div class="console-frame">
+    <!-- Sidebar -->
+    <aside class="console-sidebar">
+      <div class="sidebar__logo">
+        <span class="mark">S</span>
+        <span class="name">AdaptaAI</span>
+        <span class="sub">HR</span>
+      </div>
+      <div class="sidebar__section">Рабочее пространство</div>
+      <nav class="sidebar__nav">
+        <a class="nav-item" href="15-hr-dashboard.html"><span class="icon">👥</span><span data-i18n="b2b.workers">Сотрудники</span><span class="badge-soft">—</span></a>
+        <a class="nav-item" href="18-ticket-inbox.html"><span class="icon">🎫</span><span data-i18n="b2b.tickets">Тикеты</span><span class="badge">—</span></a>
+        <a class="nav-item is-active"><span class="icon">📚</span><span>Документы (RAG)</span></a>
+        <a class="nav-item"><span class="icon">📊</span><span data-i18n="b2b.analytics">Аналитика</span></a>
+        <a class="nav-item"><span class="icon">⚙️</span><span data-i18n="b2b.settings">Настройки</span></a>
+      </nav>
+      <div class="sidebar__employer">
+        <div class="sidebar__employer-header">
+          <div class="sidebar__employer-logo">🏗️</div>
+          <div>
+            <div class="sidebar__employer-name">Застройщик№1 · Москва</div>
+            <div class="sidebar__employer-meta">ID: pik_3422</div>
+          </div>
+        </div>
+        <div class="sidebar__quota-bar"><div class="sidebar__quota-fill"></div></div>
+        <div class="sidebar__quota-text"><span>Квота</span><span class="tnum">— / 150</span></div>
+      </div>
+    </aside>
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="breadcrumb">
+        <span style="font-size:16px">📚</span>
+        <span class="current">База знаний</span>
+        <span style="color:var(--ink-tertiary)">→</span>
+        <span class="collection-chip">employer_docs_pik_3422</span>
+      </div>
+      <div class="topbar__right">
+        <div class="avatar-row">
+          <div class="avatar">ДК</div>
+          <div>
+            <div class="name">Дарья К.</div>
+            <div class="role">HR-директор</div>
+          </div>
+        </div>
+        <div class="lang-switch">
+          <button class="lang-switch__btn is-active" data-lang-switch="ru">RU</button>
+          <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+          <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="main__col">
+        <div class="page-title">
+          <h1>
+            <span class="lang-only-ru">Регламенты и документы</span>
+            <span class="lang-only-hi">नियम और दस्तावेज़</span>
+            <span class="lang-only-en">Regulations & documents</span>
+          </h1>
+          <div class="sub">
+            <span class="lang-only-ru">AI-помощник использует эти документы для ответов сотрудникам</span>
+            <span class="lang-only-hi">AI सहायक कर्मचारियों के सवालों के लिए इन दस्तावेज़ों का उपयोग करता है</span>
+            <span class="lang-only-en">AI agent uses these documents to answer workers</span>
+          </div>
+        </div>
+
+        <!-- Dropzone -->
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone__icon">📥</div>
+          <div class="dropzone__title">
+            <span class="lang-only-ru">Перетащите файлы сюда</span>
+            <span class="lang-only-hi">फ़ाइलें यहाँ खींचें</span>
+            <span class="lang-only-en">Drag files here</span>
+          </div>
+          <div class="dropzone__sub">
+            <span class="lang-only-ru">или нажмите для выбора · до 25 МБ на файл</span>
+            <span class="lang-only-hi">या चुनने के लिए क्लिक करें · 25 MB तक</span>
+            <span class="lang-only-en">or click to select · up to 25 MB per file</span>
+          </div>
+          <div class="dropzone__types">
+            <span>PDF</span>
+            <span>DOCX</span>
+            <span>XLSX</span>
+            <span>TXT</span>
+            <span>MD</span>
+          </div>
+          <button class="btn btn-primary btn-sm dropzone__cta">
+            <span>📂</span>
+            <span>
+              <span class="lang-only-ru">Выбрать файлы</span>
+              <span class="lang-only-hi">फ़ाइलें चुनें</span>
+              <span class="lang-only-en">Choose files</span>
+            </span>
+          </button>
+        </div>
+
+        <!-- Docs table -->
+        <section class="docs-card">
+          <div class="docs-card__head">
+            <div class="docs-card__title">
+              <span>
+                <span class="lang-only-ru">Загруженные документы</span>
+                <span class="lang-only-hi">अपलोड किए गए दस्तावेज़</span>
+                <span class="lang-only-en">Uploaded documents</span>
+              </span>
+              <span class="count">· — файлов · — chunks</span>
+            </div>
+            <button class="btn btn-secondary btn-sm">
+              🔄 <span>
+                <span class="lang-only-ru">Переиндексировать все</span>
+                <span class="lang-only-hi">सब फिर से इंडेक्स करें</span>
+                <span class="lang-only-en">Reindex all</span>
+              </span>
+            </button>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Файл</th>
+                <th>Коллекция</th>
+                <th>Chunks</th>
+                <th>Статус</th>
+                <th>Загружен</th>
+                <th>Размер</th>
+                <th style="text-align:right">Действия</th>
+              </tr>
+            </thead>
+            <tbody class="docs-tbody"></tbody>
+          </table>
+        </section>
+
+      </div>
+
+      <!-- RAG quality panel -->
+      <aside class="settings-panel">
+        <div class="settings-panel__head">
+          <div class="settings-panel__title">
+            <span>🎯</span>
+            <span>Качество RAG</span>
+          </div>
+          <div class="settings-panel__sub" data-rag-collection-id>employer_docs</div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section__label">Коллекция</div>
+          <div class="stat-tiles">
+            <div class="stat-tile">
+              <div class="lbl">Документов</div>
+              <div class="val" data-rag-docs-count>—</div>
+            </div>
+            <div class="stat-tile">
+              <div class="lbl">Chunks</div>
+              <div class="val" data-rag-chunks-count>—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section__label">Технический стек</div>
+          <div class="form-row"><label>Embedding-модель</label><span class="control" style="font-size:11px">multilingual-mpnet</span></div>
+          <div class="form-row"><label>Размерность</label><span class="control">768</span></div>
+          <div class="form-row"><label>Chunk size</label><span class="control">512 tok</span></div>
+          <div class="form-row"><label>Overlap</label><span class="control">64 tok</span></div>
+          <div class="form-row"><label>LLM генерации</label><span class="control">GigaChat-2-Pro</span></div>
+          <div class="form-row"><label>LLM перевода</label><span class="control" style="font-size:11px">Qwen 2.5 (hi↔ru)</span></div>
+          <div class="form-row"><label>Языки</label><span class="control">RU · HI · EN</span></div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section__label">Бенчмарк качества</div>
+          <p style="font-size:12px;color:var(--ink-subtle);line-height:1.5;padding:0 var(--space-5) var(--space-4);margin:0;">
+            Оценка RAG (faithfulness, retrieval hit@3, e2e cosine) и сравнительный анализ ru/hi-pipeline — в paper.<br>
+            <a href="/docs/modules/site/#section-results" style="color:var(--brand-cyan);text-decoration:underline;font-size:12px;">Открыть бенчмарк →</a>
+          </p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script defer>
+    // ===== API CONFIG =====
+    const API = window.ADAPTA_API_BASE_URL || window.location.origin;
+    const JWT_KEY = 'adapta_jwt';
+
+    // ===== TOAST =====
+    function showToast(msg, type) {
+      type = type || 'info';
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+        document.body.appendChild(container);
+      }
+      const t = document.createElement('div');
+      t.className = 'toast';
+      const borderColor = type === 'error' ? 'var(--danger)' : type === 'success' ? 'var(--brand-emerald)' : 'var(--brand-cyan)';
+      t.style.cssText = 'background:var(--surface-2);border:1px solid var(--hairline);border-radius:var(--rounded-md);padding:12px 18px;font-size:13px;color:var(--ink);min-width:260px;max-width:380px;box-shadow:var(--shadow-md);pointer-events:auto;word-break:break-word;border-left:3px solid ' + borderColor + ';';
+      t.textContent = msg;
+      container.appendChild(t);
+      setTimeout(function() { t.remove(); }, 5000);
+    }
+
+    // ===== DOM HELPERS =====
+    function el(tag, attrs, children) {
+      const node = document.createElement(tag);
+      if (attrs) Object.entries(attrs).forEach(([k, v]) => {
+        if (k === 'style') node.style.cssText = v;
+        else if (k === 'class') node.className = v;
+        else if (k === 'text') node.textContent = v;
+        else node.setAttribute(k, v);
+      });
+      if (children) children.forEach(c => { if (c) node.appendChild(c); });
+      return node;
+    }
+    function inp(id, type, placeholder) {
+      const i = document.createElement('input');
+      i.id = id; i.type = type; i.placeholder = placeholder; i.className = 'input';
+      i.style.cssText = 'width:100%;box-sizing:border-box;';
+      return i;
+    }
+
+    // ===== LOGIN SCREEN =====
+    function showLoginScreen() {
+      const overlay = el('div', { id: 'login-overlay', style: 'position:fixed;inset:0;background:var(--canvas);z-index:8000;display:flex;align-items:center;justify-content:center;' });
+
+      const card = el('div', { style: 'background:var(--surface-1);border:1px solid var(--hairline);border-radius:var(--rounded-xl);padding:40px;width:380px;display:flex;flex-direction:column;gap:20px;' });
+
+      const logoArea = el('div', { style: 'text-align:center;' });
+      const logoMark = el('div', { style: 'font-size:32px;margin-bottom:8px;', text: 'S' });
+      const logoName = el('div', { style: 'font-size:20px;font-weight:700;background:var(--brand-gradient);-webkit-background-clip:text;background-clip:text;color:transparent;', text: 'AdaptaAI HR' });
+      const logoSub = el('div', { style: 'font-size:13px;color:var(--ink-subtle);margin-top:4px;', text: 'Вход в систему' });
+      logoArea.append(logoMark, logoName, logoSub);
+
+      const fields = el('div', { style: 'display:flex;flex-direction:column;gap:10px;' });
+      const emailInp = inp('login-email', 'email', 'Email');
+      const passInp = inp('login-password', 'password', 'Пароль');
+      fields.append(emailInp, passInp);
+
+      const loginBtn = el('button', { id: 'login-btn', class: 'btn btn-primary btn-block', text: 'Войти' });
+      const demoBtn = el('button', { id: 'demo-login-btn', class: 'btn btn-secondary btn-block', style: 'font-size:12px;', text: 'Войти как Дарья (Застройщик№1) — демо' });
+      const errEl = el('div', { id: 'login-error', style: 'color:var(--danger);font-size:12px;text-align:center;display:none;' });
+
+      card.append(logoArea, fields, loginBtn, demoBtn, errEl);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      demoBtn.addEventListener('click', () => {
+        emailInp.value = 'daria@pik.demo';
+        passInp.value = 'demo';
+      });
+
+      async function doLogin() {
+        const email = emailInp.value.trim();
+        const password = passInp.value;
+        errEl.style.display = 'none';
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Входим…';
+        try {
+          const res = await fetch(API + '/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            errEl.textContent = (data && data.error && data.error.message) || 'Неверный email или пароль';
+            errEl.style.display = 'block';
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Войти';
+            return;
+          }
+          localStorage.setItem(JWT_KEY, data.access_token);
+          if (data.user) {
+            const nameEl = document.querySelector('.avatar-row .name');
+            if (nameEl) nameEl.textContent = data.user.first_name + ' ' + data.user.last_name.charAt(0) + '.';
+            const avatarEl = document.querySelector('.avatar');
+            if (avatarEl) avatarEl.textContent = (data.user.first_name.charAt(0) + data.user.last_name.charAt(0)).toUpperCase();
+          }
+          overlay.remove();
+          initPage();
+        } catch (e) {
+          errEl.textContent = 'Ошибка сети. Проверьте соединение.';
+          errEl.style.display = 'block';
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Войти';
+        }
+      }
+
+      loginBtn.addEventListener('click', doLogin);
+      [emailInp, passInp].forEach(function(elem) {
+        elem.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+      });
+    }
+
+    function fileIcon(name) {
+      if (!name) return '📄';
+      if (name.endsWith('.pdf'))  return '📕';
+      if (name.endsWith('.docx')) return '📘';
+      if (name.endsWith('.xlsx')) return '📗';
+      return '📄';
+    }
+    function fileExt(name) { return name ? name.split('.').pop().toUpperCase() : ''; }
+    function chunkPct(c) { return Math.min(100, c * 7); }
+    function formatBytes(bytes) {
+      if (!bytes) return '—';
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(0) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    // ===== RENDER ONE ROW =====
+    function renderDocsRow(d, idx, tbody) {
+      const tr = document.createElement('tr');
+      if (idx === 2) tr.classList.add('is-active');
+
+      // file cell
+      const tdFile = document.createElement('td');
+      const cell = document.createElement('div'); cell.className = 'file-cell';
+      const ico = document.createElement('div'); ico.className = 'ico'; ico.textContent = fileIcon(d.name || '');
+      const meta = document.createElement('div');
+      const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = d.name || d.id || '—';
+      const ex = document.createElement('div'); ex.className = 'ext'; ex.textContent = fileExt(d.name || '');
+      meta.append(nm, ex);
+      cell.append(ico, meta);
+      tdFile.appendChild(cell);
+
+      // collection
+      const tdCol = document.createElement('td');
+      const colChip = document.createElement('span');
+      colChip.style.cssText = 'font-family:var(--font-mono);font-size:11px;color:var(--brand-cyan-soft);background:var(--surface-2);padding:3px 8px;border-radius:6px;';
+      colChip.textContent = d.collection || 'employer_docs';
+      tdCol.appendChild(colChip);
+
+      // chunks
+      const tdChunks = document.createElement('td');
+      const cb = document.createElement('div'); cb.className = 'chunks-bar';
+      const chunkCount = d.chunks_count !== undefined ? d.chunks_count : (d.chunks || 0);
+      const numEl = document.createElement('span'); numEl.className = 'num'; numEl.textContent = chunkCount;
+      const bar = document.createElement('div'); bar.className = 'bar';
+      const fillEl = document.createElement('div'); fillEl.className = 'fill'; fillEl.style.width = chunkPct(chunkCount) + '%';
+      bar.appendChild(fillEl);
+      cb.append(numEl, bar);
+      tdChunks.appendChild(cb);
+
+      // status
+      const tdSt = document.createElement('td');
+      const stage = document.createElement('span');
+      const status = d.status || 'indexed';
+      if (status === 'indexed') {
+        stage.className = 'stage stage-done';
+        stage.textContent = 'Indexed';
+      } else if (status === 'failed') {
+        stage.className = 'stage stage-escalated';
+        stage.textContent = 'Failed';
+      } else {
+        stage.className = 'stage stage-thinking';
+        stage.textContent = 'Processing';
+      }
+      tdSt.appendChild(stage);
+
+      // uploaded date
+      const tdUp = document.createElement('td');
+      const rawDate = d.uploaded || d.created_at;
+      tdUp.textContent = rawDate ? new Date(rawDate).toLocaleDateString('ru-RU') : '—';
+
+      // size
+      const tdSz = document.createElement('td');
+      tdSz.style.fontFamily = 'var(--font-mono)';
+      tdSz.style.fontSize = '12px';
+      tdSz.textContent = d.size || formatBytes(d.size_bytes);
+
+      // actions
+      const tdAct = document.createElement('td');
+      const acts = document.createElement('div'); acts.className = 'row-actions';
+      const docId = d.id || null;
+      const docName = d.name || d.id || '—';
+
+      // 👁 view — metadata popup (best-effort, no dedicated endpoint)
+      const viewBtn = document.createElement('button');
+      viewBtn.textContent = '👁️';
+      viewBtn.title = 'View';
+      viewBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const chunks = d.chunks_count !== undefined ? d.chunks_count : (d.chunks || 0);
+        alert(
+          docName + '\n' +
+          'ID: ' + (docId || '—') + '\n' +
+          'Chunks: ' + chunks + '\n' +
+          'Размер: ' + (d.size || formatBytes(d.size_bytes)) + '\n' +
+          'Статус: ' + (d.status || 'indexed')
+        );
+      });
+      acts.appendChild(viewBtn);
+
+      // 🔄 reindex one
+      const reindexBtn = document.createElement('button');
+      reindexBtn.textContent = '🔄';
+      reindexBtn.title = 'Reindex';
+      reindexBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!docId) {
+          showToast('Документ без id — переиндексировать нельзя.', 'error');
+          return;
+        }
+        reindexDocument(docId, docName);
+      });
+      acts.appendChild(reindexBtn);
+
+      // 🗑 delete
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'danger';
+      deleteBtn.textContent = '🗑️';
+      deleteBtn.title = 'Delete';
+      deleteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!docId) {
+          showToast('Документ без id — удалить нельзя.', 'error');
+          return;
+        }
+        if (!confirm('Удалить документ «' + docName + '»? Это удалит и его чанки из базы знаний.')) return;
+        deleteDocument(docId, docName);
+      });
+      acts.appendChild(deleteBtn);
+
+      tdAct.appendChild(acts);
+
+      tr.append(tdFile, tdCol, tdChunks, tdSt, tdUp, tdSz, tdAct);
+      tbody.appendChild(tr);
+    }
+
+    // ===== RENDER FULL LIST =====
+    function renderDocsList(docs) {
+      const tbody = document.querySelector('.docs-tbody');
+      // Remove only non-placeholder rows; keep in-progress upload steppers
+      Array.from(tbody.querySelectorAll('tr:not(.upload-placeholder)')).forEach(function(r) { r.remove(); });
+      docs.forEach(function(d, idx) { renderDocsRow(d, idx, tbody); });
+      const totalChunks = docs.reduce(function(s, d) {
+        return s + (d.chunks_count !== undefined ? d.chunks_count : (d.chunks || 0));
+      }, 0);
+      const countEl = document.querySelector('.docs-card__title .count');
+      if (countEl) countEl.textContent = '· ' + docs.length + ' файлов · ' + totalChunks + ' chunks';
+      const docsEl = document.querySelector('[data-rag-docs-count]');
+      const chunksEl = document.querySelector('[data-rag-chunks-count]');
+      if (docsEl) docsEl.textContent = docs.length;
+      if (chunksEl) chunksEl.textContent = totalChunks;
+    }
+
+    // ===== FETCH RAG METRICS (статический файл /rag-metrics.json) =====
+    async function fetchRagMetrics() {
+      try {
+        const res = await fetch('/rag-metrics.json', { cache: 'no-store' });
+        if (!res.ok) return;
+        const m = await res.json();
+        function fmt(v) {
+          if (v === null || v === undefined) return '—';
+          if (typeof v === 'number') return (Math.round(v * 100) / 100).toFixed(2);
+          return String(v);
+        }
+        // ru-pipeline: support both flat (legacy) and pipelines.gigachat_ru.metrics (new)
+        const ruMetrics = (m.pipelines && m.pipelines.gigachat_ru && m.pipelines.gigachat_ru.metrics) ? m.pipelines.gigachat_ru.metrics : m;
+        document.querySelectorAll('[data-rag-metric]').forEach(function(el) {
+          const key = el.getAttribute('data-rag-metric');
+          if (key === 'updated_at') {
+            el.textContent = m.updated_at || m.run_id || '—';
+          } else {
+            el.textContent = fmt(ruMetrics[key]);
+          }
+        });
+        // hi-pipeline: pipelines.qwen_gigachat.metrics
+        const hiPipeline = m.pipelines && m.pipelines.qwen_gigachat;
+        if (hiPipeline) {
+          const hiMetrics = hiPipeline.metrics || {};
+          document.querySelectorAll('[data-rag-metric-hi]').forEach(function(el) {
+            const key = el.getAttribute('data-rag-metric-hi');
+            if (key === 'run_id') {
+              el.textContent = hiPipeline.run_id || '—';
+            } else {
+              el.textContent = fmt(hiMetrics[key]);
+            }
+          });
+        }
+        // per-step hi-pipeline: pipelines.qwen_gigachat_full.steps
+        const perStepPipeline = m.pipelines && m.pipelines.qwen_gigachat_full;
+        if (perStepPipeline) {
+          const steps = perStepPipeline.steps || {};
+          document.querySelectorAll('[data-rag-metric-step]').forEach(function(el) {
+            const key = el.getAttribute('data-rag-metric-step');
+            if (key === 'run_id') {
+              el.textContent = perStepPipeline.run_id || '—';
+            } else if (key === 'step_a_chrf') {
+              el.textContent = fmt(steps.step_a && steps.step_a.chrf);
+            } else if (key === 'retrieval_hit_at_3') {
+              el.textContent = fmt(steps.retrieval && steps.retrieval.hit_at_3);
+            } else if (key === 'generation_answer_correctness') {
+              el.textContent = fmt(steps.generation && steps.generation.answer_correctness);
+            } else if (key === 'step_b_chrf_roundtrip') {
+              el.textContent = fmt(steps.step_b && steps.step_b.chrf_roundtrip);
+            } else if (key === 'e2e_hi_to_ru_cosine') {
+              const e2e = perStepPipeline.metrics_e2e || {};
+              el.textContent = fmt(e2e.hi_to_ru_cosine);
+            }
+          });
+        }
+      } catch (e) { /* нет метрик — оставляем '—' */ }
+    }
+
+    // ===== FETCH DOCUMENTS FROM API =====
+    // forceRender=true → перерисуем даже пустой список (после удаления / переиндекса).
+    // forceRender=false (по умолчанию) → пустой ответ оставляет мок-данные на месте при первой загрузке.
+    async function fetchDocuments(forceRender) {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) return;
+      try {
+        const res = await fetch(API + '/api/v1/documents?limit=50&offset=0', {
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        if (res.status === 401) {
+          localStorage.removeItem(JWT_KEY);
+          showLoginScreen();
+          return;
+        }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const docs = Array.isArray(data) ? data : (data.items || []);
+        if (forceRender || docs.length > 0) renderDocsList(docs);
+      } catch (e) {
+        showToast('Ошибка загрузки документов: ' + e.message, 'error');
+      }
+    }
+
+    // ===== STEPPER HELPERS =====
+    var STEPS = ['Загрузка', 'Парсинг', 'Чанкинг', 'Эмбеддинги', 'Готово'];
+
+    function buildStepperRow(fileName) {
+      const tr = document.createElement('tr');
+      tr.className = 'upload-placeholder';
+      tr.dataset.file = fileName;
+
+      // file cell
+      const tdFile = document.createElement('td');
+      const cell = document.createElement('div'); cell.className = 'file-cell';
+      const ico = document.createElement('div'); ico.className = 'ico'; ico.textContent = fileIcon(fileName);
+      const meta = document.createElement('div');
+      const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = fileName;
+      meta.appendChild(nm);
+      cell.append(ico, meta);
+      tdFile.appendChild(cell);
+
+      // collection
+      const tdCol = document.createElement('td');
+      const colChip = document.createElement('span');
+      colChip.style.cssText = 'font-family:var(--font-mono);font-size:11px;color:var(--brand-cyan-soft);background:var(--surface-2);padding:3px 8px;border-radius:6px;';
+      colChip.textContent = 'employer_docs';
+      tdCol.appendChild(colChip);
+
+      // chunks (empty)
+      const tdChunks = document.createElement('td');
+      tdChunks.textContent = '—';
+
+      // status — stepper
+      const tdSt = document.createElement('td');
+      tdSt.style.minWidth = '260px';
+      const stepperWrap = document.createElement('div');
+      stepperWrap.className = 'upload-stepper-wrap';
+
+      const stepper = document.createElement('div');
+      stepper.className = 'upload-stepper';
+      STEPS.forEach(function(label, i) {
+        if (i > 0) {
+          const sep = document.createElement('span');
+          sep.className = 'sep';
+          sep.textContent = '→';
+          stepper.appendChild(sep);
+        }
+        const step = document.createElement('span');
+        step.className = 'step' + (i === 0 ? ' is-active' : '');
+        step.dataset.stepIdx = i;
+        step.textContent = (i === 0 ? '●' : '○') + ' ' + label;
+        stepper.appendChild(step);
+      });
+
+      const progressBar = document.createElement('div');
+      progressBar.className = 'upload-progress-bar';
+      const progressFill = document.createElement('div');
+      progressFill.className = 'fill';
+      progressFill.style.width = '0%';
+      progressBar.appendChild(progressFill);
+
+      stepperWrap.append(stepper, progressBar);
+      tdSt.appendChild(stepperWrap);
+
+      const tdUp = document.createElement('td'); tdUp.textContent = '—';
+      const tdSz = document.createElement('td'); tdSz.textContent = '—';
+      const tdAct = document.createElement('td');
+
+      tr.append(tdFile, tdCol, tdChunks, tdSt, tdUp, tdSz, tdAct);
+      return tr;
+    }
+
+    function updateStepperActive(tr, stepIdx, pct, isError) {
+      const steps = tr.querySelectorAll('.upload-stepper .step');
+      steps.forEach(function(s, i) {
+        s.className = 'step';
+        if (i < stepIdx) {
+          s.className = 'step is-done';
+          s.textContent = '● ' + STEPS[i];
+        } else if (i === stepIdx) {
+          s.className = 'step ' + (isError ? 'is-error' : 'is-active');
+          s.textContent = (isError ? '✕' : '●') + ' ' + STEPS[i];
+        } else {
+          s.textContent = '○ ' + STEPS[i];
+        }
+      });
+      const fill = tr.querySelector('.upload-progress-bar .fill');
+      if (fill) fill.style.width = (pct || 0) + '%';
+    }
+
+    // ===== UPLOAD FILE (XHR with progress stepper) =====
+    function uploadFile(file) {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) {
+        showLoginScreen();
+        return;
+      }
+
+      // Insert placeholder row at top of tbody
+      const tbody = document.querySelector('.docs-tbody');
+      const placeholderRow = buildStepperRow(file.name);
+      tbody.insertBefore(placeholderRow, tbody.firstChild);
+
+      var currentStep = 0;
+
+      function advanceStep(stepIdx, pct, isError) {
+        currentStep = stepIdx;
+        updateStepperActive(placeholderRow, stepIdx, pct, isError);
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('name', file.name);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', API + '/api/v1/documents/upload', true);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + jwt);
+
+      // Upload progress: step 0
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+          var pct = Math.round(e.loaded / e.total * 100);
+          advanceStep(0, pct, false);
+        }
+      };
+
+      // Upload transfer done — switch to pseudo-indexing stages
+      xhr.upload.onload = function() {
+        advanceStep(0, 100, false);
+        setTimeout(function() {
+          advanceStep(1, 40, false);
+          setTimeout(function() {
+            advanceStep(2, 70, false);
+            setTimeout(function() {
+              advanceStep(3, 90, false);
+            }, 600);
+          }, 600);
+        }, 300);
+      };
+
+      xhr.onload = function() {
+        var data;
+        try { data = JSON.parse(xhr.responseText); } catch(ex) { data = {}; }
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          advanceStep(4, 100, false);
+          const chunks = (data && data.chunks_count) ? data.chunks_count : 0;
+          showToast('Проиндексировано ' + chunks + ' chunks: ' + (data.name || file.name), 'success');
+          setTimeout(function() {
+            placeholderRow.remove();
+            fetchDocuments(true);
+          }, 800);
+        } else {
+          const msg = (data && data.error && data.error.message) || (data && data.detail) || 'Ошибка загрузки';
+          advanceStep(currentStep, 0, true);
+          const errCell = placeholderRow.querySelector('.upload-stepper-wrap');
+          if (errCell) {
+            const errMsg = document.createElement('div');
+            errMsg.style.cssText = 'font-size:11px;color:var(--danger);margin-top:4px;';
+            errMsg.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg);
+            errCell.appendChild(errMsg);
+          }
+          showToast(typeof msg === 'string' ? msg : JSON.stringify(msg), 'error');
+        }
+      };
+
+      xhr.onerror = function() {
+        advanceStep(currentStep, 0, true);
+        showToast('Ошибка сети при загрузке: ' + file.name, 'error');
+      };
+
+      xhr.send(formData);
+    }
+
+    // ===== DELETE DOCUMENT =====
+    async function deleteDocument(docId, docName) {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) {
+        showLoginScreen();
+        return;
+      }
+      try {
+        const res = await fetch(API + '/api/v1/documents/' + encodeURIComponent(docId), {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        if (res.status === 404) {
+          showToast('Документ уже удалён.', 'info');
+        } else if (!res.ok) {
+          throw new Error('HTTP ' + res.status);
+        } else {
+          showToast('Удалён: ' + docName, 'success');
+        }
+        await fetchDocuments(true);
+      } catch (e) {
+        showToast('Ошибка удаления: ' + e.message, 'error');
+      }
+    }
+
+    // ===== REINDEX ONE =====
+    async function reindexDocument(docId, docName) {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) {
+        showLoginScreen();
+        return;
+      }
+      showToast('Переиндексация: ' + docName + '…', 'info');
+      try {
+        const res = await fetch(API + '/api/v1/documents/' + encodeURIComponent(docId) + '/reindex', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(function() { return {}; });
+          const msg = (body && body.detail && body.detail.error && body.detail.error.message) ||
+                      ('HTTP ' + res.status);
+          throw new Error(msg);
+        }
+        const data = await res.json();
+        showToast('Готово: ' + docName + ' — ' + (data.chunks_count || 0) + ' chunks', 'success');
+        await fetchDocuments(true);
+      } catch (e) {
+        showToast('Ошибка переиндексации: ' + e.message, 'error');
+      }
+    }
+
+    // ===== REINDEX ALL =====
+    async function reindexAll() {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) {
+        showLoginScreen();
+        return;
+      }
+      if (!confirm('Переиндексировать все документы? Может занять несколько минут.')) return;
+      showToast('Переиндексация всех документов…', 'info');
+      try {
+        const res = await fetch(API + '/api/v1/documents/reindex-all', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const ok = data.reindexed || 0;
+        const fail = data.failed || 0;
+        const msg = 'Готово: ' + ok + ' / ' + (data.total || 0) +
+                    (fail ? ' (ошибок: ' + fail + ')' : '');
+        showToast(msg, fail ? 'error' : 'success');
+        await fetchDocuments(true);
+      } catch (e) {
+        showToast('Ошибка переиндексации: ' + e.message, 'error');
+      }
+    }
+
+    // ===== DROPZONE WIRING =====
+    function wireDropzone() {
+      const dz = document.getElementById('dropzone');
+
+      ['dragenter', 'dragover'].forEach(function(ev) {
+        dz.addEventListener(ev, function(e) { e.preventDefault(); dz.classList.add('is-drag'); });
+      });
+      ['dragleave', 'drop'].forEach(function(ev) {
+        dz.addEventListener(ev, function(e) { e.preventDefault(); dz.classList.remove('is-drag'); });
+      });
+
+      dz.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dz.classList.remove('is-drag');
+        const files = e.dataTransfer && e.dataTransfer.files;
+        if (files && files.length > 0) {
+          Array.from(files).forEach(function(f) { uploadFile(f); });
+        }
+      });
+
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.pdf,.docx,.xlsx,.txt,.md';
+      fileInput.multiple = true;
+      fileInput.style.cssText = 'display:none;';
+      document.body.appendChild(fileInput);
+
+      fileInput.addEventListener('change', function() {
+        Array.from(fileInput.files).forEach(function(f) { uploadFile(f); });
+        fileInput.value = '';
+      });
+
+      const ctaBtn = dz.querySelector('.dropzone__cta');
+      if (ctaBtn) {
+        ctaBtn.addEventListener('click', function(e) { e.stopPropagation(); fileInput.click(); });
+      }
+      dz.addEventListener('click', function(e) {
+        if (ctaBtn && (e.target === ctaBtn || ctaBtn.contains(e.target))) return;
+        fileInput.click();
+      });
+    }
+
+    // ===== WIRE TOP-LEVEL BUTTONS =====
+    function wireTopButtons() {
+      // "Переиндексировать всё" — the first .btn-secondary in .docs-card__head
+      const reindexAllBtn = document.querySelector('.docs-card__head .btn-secondary');
+      if (reindexAllBtn) {
+        reindexAllBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          reindexAll();
+        });
+      }
+    }
+
+    // ===== SIDEBAR WORKERS COUNT =====
+    async function fetchWorkersBadge() {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) return;
+      try {
+        const res = await fetch(API + '/api/v1/workers?limit=1&offset=0', {
+          headers: { 'Authorization': 'Bearer ' + jwt },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const total = data.total !== undefined ? data.total : (Array.isArray(data) ? data.length : null);
+        if (total === null) return;
+        // Update badge-soft on Сотрудники nav item
+        const workersItem = document.querySelector('.sidebar__nav .nav-item[href="15-hr-dashboard.html"]');
+        if (workersItem) {
+          const badgeEl = workersItem.querySelector('.badge-soft');
+          if (badgeEl) badgeEl.textContent = total;
+        }
+        // Update quota text
+        const quotaText = document.querySelector('.sidebar__quota-text .tnum');
+        if (quotaText) {
+          const parts = quotaText.textContent.split('/');
+          const limit = parts[1] ? parts[1].trim() : '150';
+          quotaText.textContent = total + ' / ' + limit;
+        }
+        // Update quota fill bar
+        const quotaFill = document.querySelector('.sidebar__quota-fill');
+        if (quotaFill) {
+          const limitNum = parseInt((document.querySelector('.sidebar__quota-text .tnum') || {}).textContent && document.querySelector('.sidebar__quota-text .tnum').textContent.split('/')[1]) || 150;
+          quotaFill.style.width = Math.min(100, Math.round(total / limitNum * 100)) + '%';
+        }
+      } catch (e) { /* sidebar badge is non-critical */ }
+    }
+
+    // ===== INIT PAGE (called after auth) =====
+    function initPage() {
+      renderDocsList([]);
+      wireDropzone();
+      wireTopButtons();
+      fetchRagMetrics();
+      fetchDocuments(true);
+      fetchWorkersBadge();
+    }
+
+    // ===== BOOT =====
+    window.addEventListener('DOMContentLoaded', function() {
+      const jwt = localStorage.getItem(JWT_KEY);
+      if (!jwt) {
+        showLoginScreen();
+      } else {
+        initPage();
+      }
+    });
+  </script>
+</body>
+</html>

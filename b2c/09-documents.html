@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ru" data-lang="ru" class="theme-light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>AdaptaAI — Документы</title>
+  <link rel="stylesheet" href="../design-tokens.css">
+  <style>
+    body { background: var(--surface-2); }
+    .app-header { gap: var(--space-3); }
+    .app-header__title { flex: 1; }
+    .app-body { position: relative; }
+
+    /* Tabs / chips */
+    .doc-tabs {
+      display: flex;
+      gap: var(--space-2);
+      overflow-x: auto;
+      padding-bottom: var(--space-1);
+      margin: 0 -4px;
+      scrollbar-width: none;
+    }
+    .doc-tabs::-webkit-scrollbar { display: none; }
+    .doc-tab {
+      height: 36px;
+      padding: 0 var(--space-4);
+      background: var(--surface-1);
+      color: var(--ink-muted);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-pill);
+      white-space: nowrap;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--dur-fast) var(--ease-out);
+    }
+    .doc-tab__count {
+      background: var(--surface-2);
+      color: var(--ink-subtle);
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: var(--rounded-pill);
+      font-feature-settings: "tnum" 1;
+    }
+    .doc-tab.is-active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+    .doc-tab.is-active .doc-tab__count {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+    }
+
+    /* Doc cards */
+    .doc-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      padding-bottom: 150px;
+    }
+    .doc-card__row .pill {
+      min-width: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .doc-card {
+      display: flex;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      align-items: flex-start;
+      transition: all var(--dur-fast) var(--ease-out);
+      text-align: left;
+      width: 100%;
+    }
+    .doc-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    .doc-card--warning { border-color: color-mix(in srgb, var(--warning) 40%, transparent); background: color-mix(in srgb, var(--warning-soft) 35%, var(--surface-1)); }
+    .doc-card--missing {
+      border-color: var(--hairline);
+      background: var(--surface-1);
+      opacity: 0.75;
+    }
+
+    .doc-card__icon {
+      width: 44px; height: 44px;
+      background: var(--surface-2);
+      border-radius: var(--rounded-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .doc-card--warning .doc-card__icon { background: var(--warning); color: #fff; }
+    .doc-card--missing .doc-card__icon { filter: grayscale(1); opacity: 0.5; }
+
+    .doc-card__body { flex: 1; min-width: 0; }
+    .doc-card__head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--space-2);
+    }
+    .doc-card__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1.3;
+    }
+    .doc-card--missing .doc-card__title { color: var(--ink-muted); }
+    .doc-card__num {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+      font-feature-settings: "tnum" 1, "lnum" 1;
+    }
+    .doc-card__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--space-2);
+      gap: var(--space-2);
+    }
+    .doc-card__chev {
+      color: var(--ink-tertiary);
+      flex-shrink: 0;
+      align-self: center;
+    }
+    .doc-card__action {
+      height: 30px;
+      padding: 0 var(--space-3);
+      background: var(--warning);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--rounded-md);
+    }
+    .doc-card__upload-btn {
+      height: 30px;
+      padding: 0 var(--space-3);
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--rounded-md);
+      white-space: nowrap;
+    }
+
+    /* Floating action button */
+    .fab {
+      position: fixed;
+      right: 20px;
+      bottom: 88px;
+      height: 52px;
+      padding: 0 var(--space-5);
+      background: var(--brand-gradient);
+      color: var(--on-brand);
+      border-radius: var(--rounded-pill);
+      box-shadow: var(--shadow-lg);
+      font-size: 15px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      z-index: 20;
+    }
+    .fab__plus {
+      font-size: 22px;
+      line-height: 1;
+      font-weight: 400;
+    }
+
+    /* Progress strip */
+    .doc-progress {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-4);
+    }
+    .doc-progress__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: var(--space-2);
+    }
+    .doc-progress__label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .doc-progress__fraction {
+      font-size: 12px;
+      color: var(--ink-muted);
+      font-feature-settings: "tnum" 1;
+    }
+    .doc-progress__bar-track {
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: var(--rounded-pill);
+      overflow: hidden;
+    }
+    .doc-progress__bar-fill {
+      height: 100%;
+      background: var(--brand-gradient);
+      border-radius: var(--rounded-pill);
+      transition: width 0.4s var(--ease-out);
+      min-width: 0;
+    }
+    .doc-progress__stats {
+      display: flex;
+      gap: var(--space-3);
+      margin-top: var(--space-3);
+    }
+    .doc-stat { flex: 1; }
+    .doc-stat__num {
+      font-size: 18px;
+      font-weight: 700;
+      font-feature-settings: "tnum" 1;
+    }
+    .doc-stat__num.text-success { color: var(--success-dark); }
+    .doc-stat__num.text-warning { color: var(--warning-dark); }
+    .doc-stat__label {
+      font-size: 11px;
+      color: var(--ink-subtle);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .doc-stat + .doc-stat {
+      border-left: 1px solid var(--hairline);
+      padding-left: var(--space-3);
+    }
+
+    /* Disclaimer */
+    .doc-disclaimer {
+      font-size: 11px;
+      color: var(--ink-subtle);
+      text-align: center;
+      line-height: 1.5;
+      padding: var(--space-2) var(--space-3);
+    }
+
+    /* Upload modal */
+    .upload-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .upload-modal-overlay.hidden { display: none; }
+    .upload-modal {
+      background: var(--surface-1);
+      border-radius: var(--rounded-lg) var(--rounded-lg) 0 0;
+      padding: var(--space-5);
+      width: 100%;
+      max-width: 420px;
+      padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+    }
+    .upload-modal__title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: var(--space-4);
+    }
+    .upload-modal__list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+    .upload-modal__item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      background: var(--surface-2);
+      border-radius: var(--rounded-md);
+      border: 1px solid var(--hairline);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      text-align: left;
+      width: 100%;
+      transition: background var(--dur-fast) var(--ease-out);
+    }
+    .upload-modal__item:hover { background: var(--surface-3, var(--surface-2)); }
+    .upload-modal__item-icon { font-size: 20px; flex-shrink: 0; }
+    .upload-modal__cancel {
+      width: 100%;
+      height: 44px;
+      background: var(--surface-2);
+      color: var(--ink-muted);
+      border-radius: var(--rounded-md);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .upload-modal__empty {
+      font-size: 13px;
+      color: var(--ink-muted);
+      text-align: center;
+      padding: var(--space-4);
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="AdaptaAI">
+</head>
+<body>
+  <main class="device-frame">
+    <header class="app-header">
+      <button class="app-header__back" aria-label="Back" onclick="if (history.length > 1) history.back(); else window.location='04-hub.html';">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12l14 0"/>
+          <path d="M5 12l6 6"/>
+          <path d="M5 12l6 -6"/>
+        </svg>
+      </button>
+      <h1 class="app-header__title" data-i18n="docs.title">Мои документы</h1>
+      <div class="lang-switch">
+        <button class="lang-switch__btn" data-lang-switch="ru">RU</button>
+        <button class="lang-switch__btn" data-lang-switch="hi">हिं</button>
+        <button class="lang-switch__btn" data-lang-switch="en">EN</button>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <div class="stack stack-4">
+        <!-- Progress strip (populated by JS) -->
+        <div class="doc-progress" id="doc-progress">
+          <div class="doc-progress__header">
+            <span class="doc-progress__label" id="progress-label">
+              <span class="lang-only-ru">Документы</span>
+              <span class="lang-only-hi">दस्तावेज़</span>
+              <span class="lang-only-en">Documents</span>
+            </span>
+            <span class="doc-progress__fraction" id="progress-fraction"></span>
+          </div>
+          <div class="doc-progress__bar-track">
+            <div class="doc-progress__bar-fill" id="progress-bar" style="width:0%"></div>
+          </div>
+          <div class="doc-progress__stats">
+            <div class="doc-stat">
+              <div class="doc-stat__num text-success tnum" id="stat-total">7</div>
+              <div class="doc-stat__label">
+                <span class="lang-only-ru">всего</span>
+                <span class="lang-only-hi">कुल</span>
+                <span class="lang-only-en">total</span>
+              </div>
+            </div>
+            <div class="doc-stat">
+              <div class="doc-stat__num text-success tnum" id="stat-uploaded">0</div>
+              <div class="doc-stat__label">
+                <span class="lang-only-ru">загружено</span>
+                <span class="lang-only-hi">अपलोड</span>
+                <span class="lang-only-en">uploaded</span>
+              </div>
+            </div>
+            <div class="doc-stat">
+              <div class="doc-stat__num text-warning tnum" id="stat-expiring">0</div>
+              <div class="doc-stat__label">
+                <span class="lang-only-ru">истекает</span>
+                <span class="lang-only-hi">समाप्ति</span>
+                <span class="lang-only-en">expiring</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="doc-tabs" id="doc-tabs"></div>
+
+        <!-- Document list -->
+        <div class="doc-list" id="doc-list"></div>
+
+        <!-- Disclaimer -->
+        <p class="doc-disclaimer">
+          <span class="lang-only-ru">Документы хранятся как метаданные. Шифрование файлов — в версии 1.1.</span>
+          <span class="lang-only-hi">दस्तावेज़ मेटाडेटा के रूप में सहेजे जाते हैं। फ़ाइल एन्क्रिप्शन — संस्करण 1.1 में।</span>
+          <span class="lang-only-en">Documents are stored as metadata. File encryption — in version 1.1.</span>
+        </p>
+      </div>
+
+      <button class="fab" id="fab-add" aria-label="Add document">
+        <span class="fab__plus">+</span>
+        <span data-i18n="docs.add">Добавить документ</span>
+      </button>
+    </div>
+
+    <nav class="app-bottom-nav">
+      <a href="04-hub.html" class="app-bottom-nav__item">
+        <span class="icon">🏠</span>
+        <span data-i18n="nav.home">Главная</span>
+      </a>
+      <a href="05-ai-chat.html" class="app-bottom-nav__item">
+        <span class="icon">💬</span>
+        <span data-i18n="nav.ai">AI</span>
+      </a>
+      <a href="09-documents.html" class="app-bottom-nav__item is-active">
+        <span class="icon">📄</span>
+        <span data-i18n="nav.docs">Документы</span>
+      </a>
+      <a href="10-about-employer.html" class="app-bottom-nav__item">
+        <span class="icon">🏢</span>
+        <span data-i18n="nav.employer">HR</span>
+      </a>
+      <a href="14-profile.html" class="app-bottom-nav__item">
+        <span class="icon">👤</span>
+        <span data-i18n="nav.profile">Профиль</span>
+      </a>
+    </nav>
+  </main>
+
+  <!-- Upload modal (bottom sheet) -->
+  <div class="upload-modal-overlay hidden" id="upload-overlay" role="dialog" aria-modal="true">
+    <div class="upload-modal">
+      <div class="upload-modal__title">
+        <span class="lang-only-ru">Добавить документ</span>
+        <span class="lang-only-hi">दस्तावेज़ जोड़ें</span>
+        <span class="lang-only-en">Add document</span>
+      </div>
+      <div class="upload-modal__list" id="upload-modal-list"></div>
+      <button class="upload-modal__cancel" id="upload-modal-cancel">
+        <span class="lang-only-ru">Отмена</span>
+        <span class="lang-only-hi">रद्द</span>
+        <span class="lang-only-en">Cancel</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="../i18n.js" defer></script>
+  <script src="../mock-data.js" defer></script>
+
+  <script>
+    /* Toast helper — non-deferred so it is available early */
+    function showToast(msg, isError) {
+      var t = document.createElement('div');
+      t.textContent = msg;
+      var bg = isError ? 'rgba(220,38,38,.88)' : 'rgba(0,0,0,.75)';
+      t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:' + bg + ';color:#fff;padding:8px 18px;border-radius:8px;font-size:14px;z-index:9999;pointer-events:none;max-width:90vw;text-align:center;';
+      document.body.appendChild(t);
+      setTimeout(function() { t.remove(); }, 3000);
+    }
+    /* API base URL — may be overridden by server-side inline script */
+    window.ADAPTA_API_BASE_URL = window.ADAPTA_API_BASE_URL || '';
+  </script>
+
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function() {
+
+      /* ── canonical catalogue of all 7 doc types ── */
+      var DOC_TYPES = [
+        { type: 'passport',       icon: '📕', category: 'passport',
+          label: { ru: 'Паспорт', hi: 'पासपोर्ट', en: 'Passport' } },
+        { type: 'migration_card', icon: '🗂️', category: 'migration',
+          label: { ru: 'Миграционная карта', hi: 'माइग्रेशन कार्ड', en: 'Migration card' } },
+        { type: 'registration',   icon: '📋', category: 'migration',
+          label: { ru: 'Регистрация (уведомление о прибытии)', hi: 'पंजीकरण (आगमन अधिसूचना)', en: 'Registration (arrival notice)' } },
+        { type: 'patent',         icon: '📄', category: 'migration',
+          label: { ru: 'Патент на работу', hi: 'कार्य पेटेंट', en: 'Work patent' } },
+        { type: 'snils',          icon: '🔵', category: 'migration',
+          label: { ru: 'СНИЛС', hi: 'SNILS', en: 'SNILS' } },
+        { type: 'inn',            icon: '🟢', category: 'migration',
+          label: { ru: 'ИНН', hi: 'INN', en: 'INN' } },
+        { type: 'dms',            icon: '🏥', category: 'financial',
+          label: { ru: 'ДМС полис', hi: 'DMS पॉलिसी', en: 'Insurance policy (DMS)' } },
+      ];
+
+      var TYPE_MAP = {};
+      DOC_TYPES.forEach(function(d) { TYPE_MAP[d.type] = d; });
+
+      /* ── tab definitions ── */
+      var TABS = [
+        { key: 'all',       labelKey: 'docs.all',       filter: function() { return true; } },
+        { key: 'passport',  labelKey: 'docs.passport',  filter: function(d) { return d._cat === 'passport'; } },
+        { key: 'migration', labelKey: 'docs.migration', filter: function(d) { return d._cat === 'migration'; } },
+        { key: 'financial', labelKey: 'docs.financial', filter: function(d) { return d._cat === 'financial'; } },
+      ];
+
+      var activeTab = 'all';
+      var mergedDocs = [];
+
+      var tabsEl     = document.getElementById('doc-tabs');
+      var listEl     = document.getElementById('doc-list');
+      var overlay    = document.getElementById('upload-overlay');
+      var uploadList = document.getElementById('upload-modal-list');
+
+      /* ── i18n helpers ── */
+      function getLang() {
+        return (window.AdaptaI18n && window.AdaptaI18n.lang) ? window.AdaptaI18n.lang : 'ru';
+      }
+      function tl(obj) {
+        var lang = getLang();
+        return obj[lang] || obj.ru || '';
+      }
+
+      /* ── generic DOM element factory ── */
+      function el(tag, cls, txt) {
+        var e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (txt != null) e.textContent = txt;
+        return e;
+      }
+
+      /* ── make a trilingual inline element ── */
+      function triLang(texts) {
+        var wrap = document.createDocumentFragment();
+        ['ru', 'hi', 'en'].forEach(function(lang) {
+          var s = el('span', 'lang-only-' + lang, texts[lang] || texts.ru);
+          wrap.appendChild(s);
+        });
+        return wrap;
+      }
+
+      /* ── format ISO date for display ── */
+      function formatDate(iso, lang) {
+        if (!iso) return '';
+        var parts = iso.split('-');
+        if (parts.length === 2) return parts[1] + '/' + parts[0];
+        try {
+          var locales = { ru: 'ru-RU', hi: 'hi-IN', en: 'en-GB' };
+          return new Date(iso).toLocaleDateString(locales[lang] || 'ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        } catch (e2) { return iso; }
+      }
+
+      /* ── merge API docs with canonical set ── */
+      function buildMergedDocs(apiDocs) {
+        var byType = {};
+        (apiDocs || []).forEach(function(d) { byType[d.type] = d; });
+        return DOC_TYPES.map(function(cat) {
+          var api = byType[cat.type] || null;
+          return {
+            type:        cat.type,
+            icon:        cat.icon,
+            label:       cat.label,
+            _cat:        cat.category,
+            status:      api ? api.status : 'missing',
+            number:      api ? (api.number || null)     : null,
+            expires_at:  api ? (api.expires_at || null) : null,
+            uploaded_at: api ? (api.uploaded_at || null): null,
+          };
+        });
+      }
+
+      /* ── update progress bar and stat numbers ── */
+      function updateProgress(apiResp) {
+        var required = (apiResp && apiResp.required != null) ? apiResp.required : DOC_TYPES.length;
+        var uploaded = (apiResp && apiResp.uploaded != null) ? apiResp.uploaded : 0;
+        var expiring = mergedDocs.filter(function(d) { return d.status === 'expiring'; }).length;
+
+        var pct = required > 0 ? Math.round((uploaded / required) * 100) : 0;
+        document.getElementById('progress-bar').style.width = pct + '%';
+
+        var lang = getLang();
+        var ofWord  = lang === 'ru' ? 'из' : lang === 'hi' ? 'में से' : 'of';
+        var uplWord = lang === 'ru' ? 'загружено' : lang === 'hi' ? 'अपलोड' : 'uploaded';
+        document.getElementById('progress-fraction').textContent = uploaded + ' ' + ofWord + ' ' + required + ' ' + uplWord;
+
+        document.getElementById('stat-total').textContent    = String(required);
+        document.getElementById('stat-uploaded').textContent = String(uploaded);
+        document.getElementById('stat-expiring').textContent = String(expiring);
+      }
+
+      /* ── pill for a doc card ── */
+      var PILL_LABELS = {
+        valid:    { ru: '✓ Действителен', hi: '✓ मान्य', en: '✓ Valid' },
+        uploaded: { ru: '↑ Загружен', hi: '↑ अपलोड', en: '↑ Uploaded' },
+        expiring: { ru: '⚠ Истекает', hi: '⚠ समाप्त होगा', en: '⚠ Expiring' },
+        expired:  { ru: '✗ Истёк', hi: '✗ समाप्त', en: '✗ Expired' },
+        missing:  { ru: 'Не загружен', hi: 'अपलोड नहीं', en: 'Not uploaded' },
+      };
+      var PILL_CLASSES = {
+        valid:    'pill pill-verified',
+        uploaded: 'pill pill-pending',
+        expiring: 'pill pill-warning',
+        expired:  'pill pill-blocked',
+        missing:  'pill pill-offline',
+      };
+
+      function buildPill(doc, lang) {
+        var st   = doc.status;
+        var cls  = PILL_CLASSES[st]  || 'pill';
+        var lbls = PILL_LABELS[st]   || { ru: st, hi: st, en: st };
+        var text = lbls[lang] || lbls.ru;
+        if ((st === 'valid' || st === 'expiring') && doc.expires_at) {
+          var untilWord = lang === 'ru' ? 'до' : lang === 'hi' ? 'तक' : 'until';
+          text += ' ' + untilWord + ' ' + formatDate(doc.expires_at, lang);
+        }
+        return el('span', cls, text);
+      }
+
+      /* ── build chevron SVG ── */
+      function buildChevron() {
+        var chev = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        chev.setAttribute('width', '18'); chev.setAttribute('height', '18');
+        chev.setAttribute('viewBox', '0 0 24 24'); chev.setAttribute('fill', 'none');
+        chev.setAttribute('stroke', 'currentColor'); chev.setAttribute('stroke-width', '2');
+        chev.setAttribute('stroke-linecap', 'round'); chev.setAttribute('stroke-linejoin', 'round');
+        chev.classList.add('doc-card__chev');
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M9 6l6 6l-6 6');
+        chev.appendChild(path);
+        return chev;
+      }
+
+      /* ── build a single doc card ── */
+      function buildCard(doc) {
+        var lang      = getLang();
+        var isMissing = doc.status === 'missing';
+        var isWarning = doc.status === 'expiring' || doc.status === 'expired';
+
+        var cardCls = 'doc-card';
+        if (isWarning) cardCls += ' doc-card--warning';
+        if (isMissing) cardCls += ' doc-card--missing';
+
+        var card = el('button', cardCls);
+        card.appendChild(el('div', 'doc-card__icon', doc.icon));
+
+        var body = el('div', 'doc-card__body');
+
+        var head = el('div', 'doc-card__head');
+        var titleWrap = el('div');
+        titleWrap.appendChild(el('div', 'doc-card__title', tl(doc.label)));
+        if (doc.number && !isMissing) {
+          titleWrap.appendChild(el('div', 'doc-card__num', doc.number));
+        }
+        head.appendChild(titleWrap);
+        body.appendChild(head);
+
+        var row = el('div', 'doc-card__row');
+        row.appendChild(buildPill(doc, lang));
+
+        if (isMissing) {
+          var uploadBtn = el('button', 'doc-card__upload-btn');
+          uploadBtn.textContent = lang === 'ru' ? 'Загрузить'
+                                : lang === 'hi' ? 'अपलोड' : 'Upload';
+          (function(docType) {
+            uploadBtn.addEventListener('click', function(evt) {
+              evt.stopPropagation();
+              uploadDoc(docType);
+            });
+          }(doc.type));
+          row.appendChild(uploadBtn);
+        } else if (isWarning) {
+          var actionBtn = el('button', 'doc-card__action');
+          actionBtn.textContent = lang === 'ru' ? 'Оплатить налог'
+                                : lang === 'hi' ? 'कर भуगतान' : 'Pay tax';
+          actionBtn.addEventListener('click', function(e2) {
+            e2.stopPropagation();
+            window.location.href = '12-finance.html';
+          });
+          row.appendChild(actionBtn);
+        }
+
+        body.appendChild(row);
+        card.appendChild(body);
+        card.appendChild(buildChevron());
+        return card;
+      }
+
+      /* ── render tabs ── */
+      function renderTabs() {
+        tabsEl.textContent = '';
+        TABS.forEach(function(t) {
+          var count = mergedDocs.filter(t.filter).length;
+          var btn = el('button', 'doc-tab' + (activeTab === t.key ? ' is-active' : ''));
+          var lbl = el('span');
+          lbl.setAttribute('data-i18n', t.labelKey);
+          btn.appendChild(lbl);
+          btn.appendChild(el('span', 'doc-tab__count', String(count)));
+          (function(key) {
+            btn.addEventListener('click', function() { activeTab = key; renderTabs(); renderList(); });
+          }(t.key));
+          tabsEl.appendChild(btn);
+        });
+        if (window.AdaptaI18n) window.AdaptaI18n.render(tabsEl);
+      }
+
+      /* ── render doc list ── */
+      function renderList() {
+        listEl.textContent = '';
+        var filter = TABS.find(function(t) { return t.key === activeTab; }).filter;
+        mergedDocs.filter(filter).forEach(function(d) { listEl.appendChild(buildCard(d)); });
+      }
+
+      /* ── fetch docs from live API ── */
+      function fetchDocs() {
+        var jwt  = localStorage.getItem('adapta_jwt');
+        var base = (window.ADAPTA_API_BASE_URL || '').replace(/\/$/, '');
+        var headers = { 'Content-Type': 'application/json' };
+        if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
+
+        fetch(base + '/api/v1/me/documents', { headers: headers })
+          .then(function(resp) {
+            if (resp.status === 401) {
+              mergedDocs = buildMergedDocs([]);
+              updateProgress({ required: DOC_TYPES.length, uploaded: 0 });
+              renderTabs();
+              renderList();
+              var lang = getLang();
+              showToast(lang === 'ru' ? 'Войдите, чтобы видеть документы'
+                        : lang === 'hi' ? 'दस्तावेज़ देखने के लिए लॉग इन करें' : 'Log in to view documents', false);
+              return null;
+            }
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            return resp.json();
+          })
+          .then(function(data) {
+            if (!data) return;
+            mergedDocs = buildMergedDocs(data.docs || []);
+            updateProgress(data);
+            renderTabs();
+            renderList();
+          })
+          .catch(function(err) {
+            console.warn('[AdaptaAI] docs fetch failed, using mock', err);
+            var lang = getLang();
+            showToast(
+              lang === 'ru' ? 'Не удалось загрузить документы — показаны сохранённые данные'
+              : lang === 'hi' ? 'दस्तावेज़ लोड नहीं हुए — सहेजा डेटा दिखाया जा रहा है'
+              : 'Could not load documents — showing cached data',
+              true
+            );
+            /* Fallback: derive from mock-data.js */
+            var mockApiDocs = [];
+            if (window.AdaptaMock && window.AdaptaMock.documents) {
+              var statusMap = { 'ok': 'valid', 'expiring-soon': 'expiring' };
+              var typeAlias = { 'passport': 'passport', 'patent': 'patent', 'snils': 'snils', 'inn': 'inn', 'dms': 'dms' };
+              window.AdaptaMock.documents.forEach(function(m) {
+                var mappedType = typeAlias[m.id] || m.type;
+                if (TYPE_MAP[mappedType]) {
+                  mockApiDocs.push({
+                    type:       mappedType,
+                    status:     statusMap[m.status] || m.status || 'uploaded',
+                    number:     m.number || null,
+                    expires_at: m.validUntil || null,
+                    uploaded_at: null,
+                  });
+                }
+              });
+            }
+            mergedDocs = buildMergedDocs(mockApiDocs);
+            updateProgress({ required: DOC_TYPES.length, uploaded: mockApiDocs.length });
+            renderTabs();
+            renderList();
+          });
+      }
+
+      /* ── POST upload a single doc type ── */
+      function uploadDoc(type) {
+        var jwt  = localStorage.getItem('adapta_jwt');
+        var base = (window.ADAPTA_API_BASE_URL || '').replace(/\/$/, '');
+        var headers = { 'Content-Type': 'application/json' };
+        if (jwt) headers['Authorization'] = 'Bearer ' + jwt;
+
+        /* Demo placeholder numbers */
+        var DEMO_NUMBERS = {
+          passport: 'P' + (Math.floor(1000000 + Math.random() * 9000000)),
+          snils:    '123-456-' + (Math.floor(100 + Math.random() * 900)) + ' 00',
+          inn:      '77' + (Math.floor(10000000 + Math.random() * 90000000)),
+        };
+
+        var body = { type: type, status: 'uploaded' };
+        if (DEMO_NUMBERS[type]) body.number = DEMO_NUMBERS[type];
+
+        fetch(base + '/api/v1/me/documents', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(body),
+        })
+          .then(function(resp) {
+            if (resp.status === 401) {
+              var lang = getLang();
+              showToast(lang === 'ru' ? 'Требуется авторизация' : lang === 'hi' ? 'प्राधिकरण आवश्यक' : 'Authorization required', true);
+              return null;
+            }
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            return resp.json();
+          })
+          .then(function(data) {
+            if (!data) return;
+            var lang = getLang();
+            showToast(lang === 'ru' ? 'Документ добавлен' : lang === 'hi' ? 'दс्तावेज़ जоड़ा गया' : 'Document added', false);
+            fetchDocs();
+          })
+          .catch(function(err2) {
+            console.warn('[AdaptaAI] uploadDoc failed', err2);
+            var lang = getLang();
+            showToast(lang === 'ru' ? 'Ошибка при добавлении документа' : lang === 'hi' ? 'दस्тावेज़ जोड़ने में त्रुटि' : 'Error adding document', true);
+          });
+      }
+
+      /* ── upload modal (FAB) ── */
+      function openUploadModal() {
+        uploadList.textContent = '';
+        var lang = getLang();
+
+        var missing = DOC_TYPES.filter(function(cat) {
+          var found = mergedDocs.find(function(d) { return d.type === cat.type; });
+          return !found || found.status === 'missing';
+        });
+
+        if (missing.length === 0) {
+          var msg = el('p', 'upload-modal__empty');
+          msg.textContent = lang === 'ru' ? 'Все документы загружены'
+                          : lang === 'hi' ? 'सभी दस्ताвेज़ अपलोड हो गए'
+                          : 'All documents uploaded';
+          uploadList.appendChild(msg);
+        } else {
+          missing.forEach(function(cat) {
+            var btn = el('button', 'upload-modal__item');
+            var icon = el('span', 'upload-modal__item-icon', cat.icon);
+            var label = el('span', null, tl(cat.label));
+            btn.appendChild(icon);
+            btn.appendChild(label);
+            (function(t) {
+              btn.addEventListener('click', function() {
+                closeUploadModal();
+                uploadDoc(t);
+              });
+            }(cat.type));
+            uploadList.appendChild(btn);
+          });
+        }
+
+        overlay.classList.remove('hidden');
+        if (window.AdaptaI18n) window.AdaptaI18n.render(overlay);
+      }
+
+      function closeUploadModal() {
+        overlay.classList.add('hidden');
+      }
+
+      document.getElementById('fab-add').addEventListener('click', openUploadModal);
+      document.getElementById('upload-modal-cancel').addEventListener('click', closeUploadModal);
+      overlay.addEventListener('click', function(evt) {
+        if (evt.target === overlay) closeUploadModal();
+      });
+
+      /* ── re-render on language switch ── */
+      document.querySelectorAll('[data-lang-switch]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          setTimeout(function() {
+            renderTabs();
+            renderList();
+            /* Refresh progress fraction text in new language */
+            var req = parseInt(document.getElementById('stat-total').textContent, 10) || DOC_TYPES.length;
+            var upl = parseInt(document.getElementById('stat-uploaded').textContent, 10) || 0;
+            updateProgress({ required: req, uploaded: upl });
+          }, 0);
+        });
+      });
+
+      /* ── kick off ── */
+      fetchDocs();
+    });
+  </script>
+
+  <script defer>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+    }
+  </script>
+</body>
+</html>
