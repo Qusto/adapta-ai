@@ -102,7 +102,7 @@ For a detailed component and request-flow diagram, see [ARCHITECTURE.md](ARCHITE
 
 ```bash
 # 1. Clone
-git clone https://github.com/<ORG>/adapta-ai.git
+git clone https://github.com/Qusto/adapta-ai.git
 cd adapta-ai
 
 # 2. Configure
@@ -216,7 +216,9 @@ See `infra/.env.example` for the full list with inline comments.
 
 The companion evaluation dataset is published separately on HuggingFace:
 
-**[https://huggingface.co/datasets/<ORG>/adapta-migrant-onboarding](https://huggingface.co/datasets/<ORG>/adapta-migrant-onboarding)**
+**[https://huggingface.co/datasets/Qusto/adapta-migrant-onboarding](https://huggingface.co/datasets/Qusto/adapta-migrant-onboarding)**
+
+Mirror on GitHub: [github.com/Qusto/adapta-ai-dataset](https://github.com/Qusto/adapta-ai-dataset)
 
 Licensed under **CC-BY-4.0** (see `LICENSE-DATA`).
 
