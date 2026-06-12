@@ -66,10 +66,10 @@ PUBLIC_EXACT: frozenset[str] = frozenset(
         "/b2c/icon-192.png",
         "/b2c/icon-512.png",
         "/b2b/15-hr-dashboard.html",
-        # Partner / Sber-admin entry — has its own client-side login screen,
+        # Partner-admin entry — has its own client-side login screen,
         # so the HTML shell must be reachable anonymously (same as the HR
         # dashboard above). Data APIs it calls still require a valid JWT.
-        "/b2b/20-sber-products.html",
+        "/b2b/20-partner-products.html",
         "/docs",
         "/redoc",
         "/openapi.json",
@@ -215,7 +215,7 @@ def _docs_login_form(error: str = "") -> str:
            placeholder="Введите пароль" autofocus required>
     <button type="submit">Войти →</button>
   </form>
-  <p class="hint">Получить пароль — у команды Digital Teams Сбер Университета.</p>
+  <p class="hint">Получить пароль — у администратора платформы.</p>
 </div>
 </body>
 </html>"""

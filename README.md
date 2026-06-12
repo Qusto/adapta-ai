@@ -130,7 +130,7 @@ make test
 Seed the shared partner-products knowledge base (optional):
 
 ```bash
-make seed-sber
+make seed-partner
 ```
 
 Tear down everything including data volumes:
@@ -169,7 +169,7 @@ adapta-ai/
 │   ├── sw.js
 │   └── 01-welcome.html … 14-profile.html
 ├── b2b/                      # HR/employer dashboard (static HTML/JS, screens 15–20)
-│   └── 15-hr-dashboard.html … 20-sber-products.html
+│   └── 15-hr-dashboard.html … 20-partner-products.html
 ├── infra/
 │   ├── docker-compose.yml
 │   ├── .env.example          # Configuration template (copy to infra/.env)

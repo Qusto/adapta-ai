@@ -130,7 +130,7 @@ def _is_emergency(text: str, lang: str) -> bool:
 # DMS fallback URL for partner_products chunks that have no url in metadata
 # ---------------------------------------------------------------------------
 
-_DMS_FALLBACK_URL = "https://sberbank.ru/dms-migrant"
+_DMS_FALLBACK_URL = ""
 
 
 # ---------------------------------------------------------------------------
@@ -184,7 +184,7 @@ def _dual_retrieve(
     ru_question: str,
     company_id: str,
     top_employer: int = 3,
-    top_sber: int = 3,
+    top_partner: int = 3,
     final_top: int = 5,
 ) -> list[RetrievedChunk]:
     """Retrieve from employer_docs + partner_products and merge top-N by score.
@@ -204,13 +204,13 @@ def _dual_retrieve(
     embedder = get_embedder()
     query_embedding: list[float] = embedder.embed_query(ru_question)
     partner_store = get_partner_products_store()
-    sber_results: list[dict[str, Any]] = partner_store.query(
+    partner_results: list[dict[str, Any]] = partner_store.query(
         query_embedding=query_embedding,
-        n_results=top_sber,
+        n_results=top_partner,
     )
 
-    sber_chunks: list[RetrievedChunk] = []
-    for item in sber_results:
+    partner_chunks: list[RetrievedChunk] = []
+    for item in partner_results:
         chunk = RetrievedChunk(
             chunk_text=item.get("chunk_text", ""),
             score=float(item.get("score", 0.0)),
@@ -231,9 +231,9 @@ def _dual_retrieve(
         chunk.subtitle = item.get("subtitle", "")  # type: ignore[attr-defined]
         chunk.url = item.get("url", "")  # type: ignore[attr-defined]
         chunk.badge = item.get("badge", "")  # type: ignore[attr-defined]
-        sber_chunks.append(chunk)
+        partner_chunks.append(chunk)
 
-    all_chunks = employer_chunks + sber_chunks
+    all_chunks = employer_chunks + partner_chunks
     all_chunks.sort(key=lambda c: c.score, reverse=True)
     return all_chunks[:final_top]
 
@@ -595,10 +595,10 @@ async def stream_chat_response(  # noqa: PLR0912, PLR0915
         c.score for c in chunks if c.company_id != PARTNER_PRODUCTS_COLLECTION
     ]
     employer_top1 = max(employer_scores) if employer_scores else 0.0
-    sber_scores = [
+    partner_scores = [
         c.score for c in chunks if c.company_id == PARTNER_PRODUCTS_COLLECTION
     ]
-    sber_top1 = max(sber_scores) if sber_scores else 0.0
+    partner_top1 = max(partner_scores) if partner_scores else 0.0
 
     gate = rag_score_gate()
     soft_floor = gate - 0.065  # grey band: [soft_floor, gate) → let LLM decide
@@ -606,28 +606,28 @@ async def stream_chat_response(  # noqa: PLR0912, PLR0915
     if employer_top1 >= gate:
         # In-corpus: normal LLM path (fall through below).
         logger.info(
-            "Router: employer_top1=%.3f >= gate=%.3f sber_top1=%.3f → in-corpus, proceed to LLM",
-            employer_top1, gate, sber_top1,
+            "Router: employer_top1=%.3f >= gate=%.3f partner_top1=%.3f → in-corpus, proceed to LLM",
+            employer_top1, gate, partner_top1,
         )
     elif employer_top1 >= soft_floor:
         # Grey zone: borderline score — do NOT early-return; let LLM + is_answerable decide.
         logger.info(
-            "Router: employer_top1=%.3f in grey zone [%.3f, %.3f) sber_top1=%.3f → proceed to LLM",
-            employer_top1, soft_floor, gate, sber_top1,
+            "Router: employer_top1=%.3f in grey zone [%.3f, %.3f) partner_top1=%.3f → proceed to LLM",
+            employer_top1, soft_floor, gate, partner_top1,
         )
-    elif sber_top1 >= gate:
-        # Sber product question: relevant Sber chunk present — proceed to LLM for product card.
+    elif partner_top1 >= gate:
+        # Partner product question: relevant partner chunk present — proceed to LLM for product card.
         logger.info(
-            "Router: employer_top1=%.3f < soft_floor=%.3f but sber_top1=%.3f >= gate=%.3f → Sber product path",
-            employer_top1, soft_floor, sber_top1, gate,
+            "Router: employer_top1=%.3f < soft_floor=%.3f but partner_top1=%.3f >= gate=%.3f → partner product path",
+            employer_top1, soft_floor, partner_top1, gate,
         )
     else:
         # Truly out-of-corpus: graceful fallback + HR ticket, but NOT emergency.
         # out-of-corpus → escalate=True (передано HR), но is_emergency=False →
         # severity high/unanswerable, НЕ emergency.
         logger.info(
-            "Router: employer_top1=%.3f < soft_floor=%.3f sber_top1=%.3f < gate=%.3f → out-of-corpus, graceful fallback",
-            employer_top1, soft_floor, sber_top1, gate,
+            "Router: employer_top1=%.3f < soft_floor=%.3f partner_top1=%.3f < gate=%.3f → out-of-corpus, graceful fallback",
+            employer_top1, soft_floor, partner_top1, gate,
         )
         fallback = no_info_answer(language)
         latency_ms_gate = int(time.time() * 1000) - start_ms
@@ -887,7 +887,7 @@ async def stream_chat_response(  # noqa: PLR0912, PLR0915
 
     # ---- product_card: only when the top-1 chunk is a partner_product AND the
     # answer is actually relevant (is_answerable). Prevents an irrelevant promo
-    # (e.g. СберЗдоровье) from appearing under a "not found / 0% confidence"
+    # (e.g. a partner health service) from appearing under a "not found / 0% confidence"
     # reply to off-topic input like "test".
     product_card: dict[str, str] | None = None
     if chunks and parsed.is_answerable:

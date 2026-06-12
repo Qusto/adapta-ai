@@ -1,4 +1,4 @@
-"""One-off maintenance: re-embed EVERY document (employer + sber global).
+"""One-off maintenance: re-embed EVERY document (employer + partner global).
 
 Run after an embedder change (e.g. ё→е/casefold normalization) that makes all
 existing ChromaDB passage vectors stale. Reads each document from its persisted

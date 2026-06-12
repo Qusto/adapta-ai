@@ -56,12 +56,12 @@ class TestLoadChunksFromContentMarkdown:
 
     def test_md_with_frontmatter_returns_nonempty_chunks(self) -> None:
         """.md with YAML frontmatter is parsed and produces chunks from the body."""
-        chunks = _call(MD_WITH_FRONTMATTER, "sber_product.md", ".md")
+        chunks = _call(MD_WITH_FRONTMATTER, "partner_product.md", ".md")
         assert chunks, "Expected chunks from .md with frontmatter, got empty list"
 
     def test_md_frontmatter_not_in_chunk_text(self) -> None:
         """Frontmatter keys (product_id) must not appear in chunk text."""
-        chunks = _call(MD_WITH_FRONTMATTER, "sber_product.md", ".md")
+        chunks = _call(MD_WITH_FRONTMATTER, "partner_product.md", ".md")
         full_text = " ".join(c.text for c in chunks)
         assert "product_id" not in full_text, (
             "Frontmatter leaked into chunk text: " + full_text[:200]

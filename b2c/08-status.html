@@ -466,7 +466,7 @@
         biometrics:  { ru: 'Сдать биометрию',           hi: 'बायोमेट्रिक्स जमा करें',     en: 'Submit biometrics' },
         patent:      { ru: 'Оформить патент',           hi: 'पेटेंट प्राप्त करें',         en: 'Get work patent' },
         salary_card: { ru: 'Открыть зарплатную карту',  hi: 'वेतन कार्ड खोलें',           en: 'Open salary card' },
-        sbermobile:  { ru: 'Подключить связь',     hi: 'मोबाइल कनेक्ट करें',     en: 'Connect mobile' },
+        mobile:  { ru: 'Подключить связь',     hi: 'मोबाइल कनेक्ट करें',     en: 'Connect mobile' },
         dms:         { ru: 'Получить ДМС',              hi: 'DMS बीमा प्राप्त करें',       en: 'Get DMS insurance' },
       };
 
@@ -494,7 +494,7 @@
 
       // ── Fallback mock data (1/8 brand-new user) ───────────────────────────
       const MOCK_STEPS = window.AdaptaMock ? window.AdaptaMock.timeline.map((s) => ({
-        key: s.key === 'biometry' ? 'biometrics' : s.key === 'card' ? 'salary_card' : s.key === 'sim' ? 'sbermobile' : s.key,
+        key: s.key === 'biometry' ? 'biometrics' : s.key === 'card' ? 'salary_card' : s.key === 'sim' ? 'mobile' : s.key,
         status: normaliseStatus(s.state),
         updated_at: s.date || null,
       })) : [
@@ -504,7 +504,7 @@
         { key: 'biometrics',  status: 'todo',         updated_at: null },
         { key: 'patent',      status: 'todo',         updated_at: null },
         { key: 'salary_card', status: 'todo',         updated_at: null },
-        { key: 'sbermobile',  status: 'todo',         updated_at: null },
+        { key: 'mobile',  status: 'todo',         updated_at: null },
         { key: 'dms',         status: 'todo',         updated_at: null },
       ];
 

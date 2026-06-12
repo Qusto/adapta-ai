@@ -137,7 +137,7 @@
     /* ============ LIFESTYLE ============ */
     'lifestyle.title':     { ru: 'Сервисы партнёров',         hi: 'पार्टनर सेवाएँ',           en: 'Partner Services' },
     'lifestyle.promoDay':  { ru: 'Промокод дня',             hi: 'आज का प्रोमो कोड',         en: "Today's promo" },
-    'lifestyle.sberMobile':{ ru: 'Связь от партнёра',         hi: 'पार्टनर मोबाइल',          en: 'Partner Mobile' },
+    'lifestyle.partnerMobile':{ ru: 'Связь от партнёра',         hi: 'पार्टनर मोबाइल',          en: 'Partner Mobile' },
     'lifestyle.tariff':    { ru: 'Тариф «Мигрант 500₽»',     hi: 'टैरिफ "मिग्रांत 500₽"',   en: '"Migrant 500₽" plan' },
     'lifestyle.health':    { ru: 'Телемедицина партнёра',     hi: 'पार्टनर टेलीमेड',          en: 'Partner Telehealth' },
     'lifestyle.kuper':     { ru: 'Купер · доставка продуктов', hi: 'Kuper · ग्रॉसरी डिलीवरी', en: 'Kuper · grocery delivery' },

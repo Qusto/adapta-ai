@@ -25,14 +25,14 @@
       text: 'Здравствуйте! Я — AI-помощник. Спрашивайте про работу и жизнь в России на родном языке. Многие в первые дни решают два вопроса: как переводить деньги домой и как недорого звонить близким. Вот что поможет 👇',
       cards: [
         { badge: 'СВЯЗЬ', title: 'Связь для мигрантов', subtitle: 'Безлимит на звонки домой от ~500 ₽/мес', url: '#' },
-        { badge: 'КАРТА', title: 'Карта трудового мигранта', subtitle: 'Переводы домой и оплата патента — по льготному курсу', url: 'https://www.sberbank.ru/ru/person/foreign' }
+        { badge: 'КАРТА', title: 'Карта трудового мигранта', subtitle: 'Переводы домой и оплата патента — по льготному курсу', url: '#' }
       ]
     },
     hi: {
       text: 'नमस्ते! मैं आपका AI-सहायक हूँ। रूस में काम और जीवन के बारे में अपनी भाषा में पूछें। शुरुआती दिनों में दो सवाल अक्सर आते हैं: घर पैसे कैसे भेजें और अपनों से सस्ते में कैसे बात करें। ये मदद करेगा 👇',
       cards: [
         { badge: 'कनेक्शन', title: 'प्रवासियों के लिए मोबाइल', subtitle: 'घर असीमित कॉल ~500 ₽/माह से', url: '#' },
-        { badge: 'कार्ड', title: 'श्रम प्रवासी कार्ड', subtitle: 'घर पैसे भेजें और पेटेंट भुगतान — रियायती दर पर', url: 'https://www.sberbank.ru/ru/person/foreign' }
+        { badge: 'कार्ड', title: 'श्रम प्रवासी कार्ड', subtitle: 'घर पैसे भेजें और पेटेंट भुगतान — रियायती दर पर', url: '#' }
       ]
     }
   };
@@ -648,7 +648,7 @@
             renderCitations(sourcesDiv, payload.citations || []);
             scrollToBottom();
           } else if (eventName === 'product_card') {
-            // Sber product recommendation — render after stream completes.
+            // Partner product recommendation — render after stream completes.
             pendingProductCard = payload.product_card || null;
           } else if (eventName === 'done') {
             const now = new Date();
